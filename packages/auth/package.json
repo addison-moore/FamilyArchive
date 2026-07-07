@@ -1,0 +1,23 @@
+{
+  "name": "@familyarchive/auth",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@auth/drizzle-adapter": "^1.10.0",
+    "@familyarchive/config": "workspace:*",
+    "@familyarchive/db": "workspace:*",
+    "next-auth": "^5.0.0-beta.29"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "typescript": "^5.8.3"
+  }
+}

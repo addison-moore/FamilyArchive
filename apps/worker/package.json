@@ -1,0 +1,22 @@
+{
+  "name": "@familyarchive/worker",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@familyarchive/config": "workspace:*",
+    "bullmq": "^5.56.0",
+    "pino": "^9.7.0",
+    "tsx": "^4.20.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "typescript": "^5.8.3"
+  }
+}

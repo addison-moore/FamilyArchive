@@ -1,0 +1,40 @@
+{
+  "name": "familyarchive",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/familyarchive/familyarchive"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.30.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "msgpackr-extract",
+      "sharp"
+    ]
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @familyarchive/web --filter @familyarchive/worker dev",
+    "build": "pnpm -r build",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r typecheck",
+    "db:generate": "pnpm --filter @familyarchive/db generate",
+    "db:migrate": "pnpm --filter @familyarchive/db migrate"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.0",
+    "@next/eslint-plugin-next": "^15.3.4",
+    "eslint": "^9.30.0",
+    "eslint-config-prettier": "^10.1.5",
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.35.0"
+  }
+}

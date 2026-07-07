@@ -1,0 +1,4 @@
+# Single-command deployment entry point (PRD §30.1): `docker compose up -d`.
+# The actual service definitions live in docker/ per the repo layout.
+include:
+  - docker/docker-compose.yml

@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+@theme {
+  /* Warm family-archive palette (PRD §29.1) — refine as the design matures. */
+  --color-archive-50: #faf7f2;
+  --color-archive-100: #f3ede2;
+  --color-archive-700: #6b5d4a;
+  --color-archive-900: #3d3427;
+  --color-accent-600: #b45309;
+}

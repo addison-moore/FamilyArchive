@@ -1,0 +1,26 @@
+{
+  "name": "@familyarchive/db",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "drizzle-kit generate",
+    "migrate": "tsx src/migrate.ts"
+  },
+  "dependencies": {
+    "@familyarchive/config": "workspace:*",
+    "drizzle-orm": "^0.44.2",
+    "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "drizzle-kit": "^0.31.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}

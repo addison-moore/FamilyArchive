@@ -1,0 +1,63 @@
+import { z } from "zod";
+
+/**
+ * Environment configuration for FamilyArchive (PRD §30.3).
+ *
+ * Only variables needed by Milestone 1 are required. SMTP, storage, AI provider,
+ * public-indexing, and audit-retention variables are declared optional here so the
+ * schema is the single documented source of truth, and become required/used as
+ * their milestones land.
+ */
+const envSchema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+
+  // Core (required in M1)
+  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
+  APP_URL: z.string().url().default("http://localhost:3000"),
+  REDIS_URL: z.string().min(1).default("redis://localhost:6379"),
+
+  // Storage (used from Milestone 6; local driver is the default, PRD §24)
+  MEDIA_STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
+  MEDIA_LOCAL_PATH: z.string().default("/data/media"),
+  S3_ENDPOINT: z.string().optional(),
+  S3_BUCKET: z.string().optional(),
+  S3_ACCESS_KEY_ID: z.string().optional(),
+  S3_SECRET_ACCESS_KEY: z.string().optional(),
+  S3_REGION: z.string().optional(),
+  S3_FORCE_PATH_STYLE: z.enum(["true", "false"]).optional(),
+
+  // SMTP (used from Milestone 2; invites still work without it, PRD §9.3)
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().positive().optional(),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASSWORD: z.string().optional(),
+  SMTP_FROM: z.string().optional(),
+
+  // External AI providers (disabled by default, PRD §31.4; used from Milestone 8)
+  AI_PROVIDER: z.enum(["openai", "anthropic"]).optional(),
+  AI_API_KEY: z.string().optional(),
+});
+
+export type Env = z.infer<typeof envSchema>;
+
+let cached: Env | undefined;
+
+/**
+ * Parse and cache environment configuration. Throws with a readable message when
+ * required variables are missing or invalid. Called lazily so importing modules
+ * (e.g. during `next build`) does not require a full runtime environment.
+ */
+export function getEnv(): Env {
+  if (!cached) {
+    const result = envSchema.safeParse(process.env);
+    if (!result.success) {
+      const details = result.error.issues
+        .map((issue) => `  ${issue.path.join(".")}: ${issue.message}`)
+        .join("\n");
+      throw new Error(`Invalid environment configuration:\n${details}`);
+    }
+    cached = result.data;
+  }
+  return cached;
+}
