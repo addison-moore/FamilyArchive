@@ -13,3 +13,5 @@ export function assertNever(value: never): never {
 
 export * from "./roles";
 export * from "./jobs";
+export * from "./people";
+export * from "./dates";

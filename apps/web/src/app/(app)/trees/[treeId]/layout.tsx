@@ -8,9 +8,12 @@ import type { ReactNode } from "react";
 import { getAccessibleTrees } from "@/lib/trees";
 
 /** Tree-level navigation (PRD §7.3). Feature pages activate as milestones land. */
+const ACTIVE_NAV = [
+  { label: "Tree", path: "" },
+  { label: "People", path: "people" },
+] as const;
+
 const PLACEHOLDER_NAV = [
-  { label: "Tree", milestone: 4 },
-  { label: "People", milestone: 3 },
   { label: "Media", milestone: 6 },
   { label: "Collections", milestone: 10 },
   { label: "Search", milestone: 10 },
@@ -66,6 +69,15 @@ export default async function TreeLayout({
           </div>
         </details>
         <nav aria-label="Tree navigation" className="flex flex-wrap items-center gap-1">
+          {ACTIVE_NAV.map((item) => (
+            <Link
+              key={item.label}
+              href={item.path ? `/trees/${treeId}/${item.path}` : `/trees/${treeId}`}
+              className="rounded-md px-3 py-1.5 text-sm text-archive-700 hover:bg-archive-100"
+            >
+              {item.label}
+            </Link>
+          ))}
           {PLACEHOLDER_NAV.map((item) => (
             <span
               key={item.label}
