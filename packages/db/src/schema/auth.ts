@@ -1,3 +1,4 @@
+import type { GlobalRole } from "@familyarchive/shared";
 import { integer, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 
 /**
@@ -16,6 +17,14 @@ export const users = pgTable("users", {
   emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
   passwordHash: text("password_hash"),
+  /** Instance-level role; the first registered user becomes "owner" (PRD §8.1, §30.4). */
+  role: text("role").$type<GlobalRole>().notNull().default("user"),
+  /**
+   * Preferred landing tree (PRD §7.2). Plain column, no FK: a circular
+   * users↔trees reference isn't worth it — access is re-checked on every
+   * redirect, so a stale value just falls back to the tree list.
+   */
+  defaultTreeId: text("default_tree_id"),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
 });

@@ -11,12 +11,15 @@
   },
   "dependencies": {
     "@familyarchive/config": "workspace:*",
+    "@familyarchive/shared": "workspace:*",
     "bullmq": "^5.56.0",
+    "nodemailer": "^9.0.3",
     "pino": "^9.7.0",
     "tsx": "^4.20.3"
   },
   "devDependencies": {
     "@types/node": "^22.20.0",
+    "@types/nodemailer": "^8.0.1",
     "typescript": "^5.8.3"
   }
 }

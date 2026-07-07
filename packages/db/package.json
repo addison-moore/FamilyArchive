@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@familyarchive/config": "workspace:*",
+    "@familyarchive/shared": "workspace:*",
     "drizzle-orm": "^0.44.2",
     "postgres": "^3.4.7"
   },

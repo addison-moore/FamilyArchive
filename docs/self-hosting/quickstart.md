@@ -27,6 +27,14 @@ Then open <http://localhost:3000>.
 Database migrations run automatically (the one-shot `migrate` service) before the
 app and worker start.
 
+## First run: create the owner account
+
+Open <http://localhost:3000/register> and create the first account — it
+automatically becomes the instance **Owner**. After that, registration is
+invite-only: family members join through invite links created by tree admins
+(Settings → Invites). If SMTP is configured (see `.env.example`), invites can be
+emailed directly; otherwise copy the invite link and share it yourself.
+
 ## Checking status
 
 ```bash

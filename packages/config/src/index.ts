@@ -50,7 +50,11 @@ let cached: Env | undefined;
  */
 export function getEnv(): Env {
   if (!cached) {
-    const result = envSchema.safeParse(process.env);
+    // Empty strings count as unset: compose files render absent vars as "".
+    const provided = Object.fromEntries(
+      Object.entries(process.env).filter(([, value]) => value !== ""),
+    );
+    const result = envSchema.safeParse(provided);
     if (!result.success) {
       const details = result.error.issues
         .map((issue) => `  ${issue.path.join(".")}: ${issue.message}`)
