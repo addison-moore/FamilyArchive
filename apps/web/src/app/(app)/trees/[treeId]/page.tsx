@@ -28,11 +28,18 @@ export default async function TreePage({
   searchParams,
 }: {
   params: Promise<{ treeId: string }>;
-  searchParams: Promise<{ selected?: string; mode?: string; error?: string }>;
+  searchParams: Promise<{
+    selected?: string;
+    mode?: string;
+    error?: string;
+    imported?: string;
+    people?: string;
+    rels?: string;
+  }>;
 }) {
   const { treeId } = await params;
   const { user, role } = await requireTreeRole(treeId, "viewer");
-  const { selected, mode: modeRaw, error } = await searchParams;
+  const { selected, mode: modeRaw, error, imported, people, rels } = await searchParams;
   const mode: TreeViewMode = isTreeViewMode(modeRaw) ? modeRaw : "both";
 
   const startPerson = await resolveStartingPerson(user.id, treeId);
@@ -76,6 +83,16 @@ export default async function TreePage({
   return (
     <div>
       <FormError message={error} />
+      {imported && (
+        <div className="mb-4 rounded-md border border-accent-600/30 bg-archive-100/60 px-4 py-3 text-sm text-archive-800">
+          GEDCOM import complete: {people ?? "?"} people and {rels ?? "?"} relationships.{" "}
+          {treeRoleAtLeast(role, "editor") && (
+            <Link href={`/trees/${treeId}/duplicates`} className="text-accent-600 hover:underline">
+              Review possible duplicates
+            </Link>
+          )}
+        </div>
+      )}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="flex rounded-md border border-archive-100 bg-white p-0.5">
           {TREE_VIEW_MODES.map((m) => (

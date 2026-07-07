@@ -1,0 +1,62 @@
+import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { Card } from "@/components/form";
+import { PersonAvatar, personLifespan } from "@/components/person-summary";
+import { findDuplicatePairs } from "@/lib/duplicates";
+
+/** Possible-duplicates review (PRD §14.7). No merge in v1 — review and edit by hand. */
+export default async function DuplicatesPage({ params }: { params: Promise<{ treeId: string }> }) {
+  const { treeId } = await params;
+  try {
+    await requireTreeRole(treeId, "editor");
+  } catch (error) {
+    if (error instanceof AuthorizationError) notFound();
+    throw error;
+  }
+
+  const pairs = await findDuplicatePairs(treeId);
+
+  return (
+    <div className="mx-auto max-w-3xl">
+      <h1 className="mb-1 text-2xl font-semibold">Possible duplicates</h1>
+      <p className="mb-6 text-sm text-archive-700/80">
+        People with the same name and compatible birth years. FamilyArchive doesn&apos;t merge
+        people (v1) — review each pair and edit or delete by hand.
+      </p>
+      {pairs.length === 0 ? (
+        <Card>
+          <p className="text-sm text-archive-700">No possible duplicates found.</p>
+        </Card>
+      ) : (
+        <ul className="space-y-3">
+          {pairs.map((pair) => (
+            <li key={`${pair.a.id}-${pair.b.id}`}>
+              <Card>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {[pair.a, pair.b].map((person) => (
+                    <div key={person.id} className="flex items-center gap-3">
+                      <PersonAvatar name={person.fullName} />
+                      <div className="min-w-0">
+                        <Link
+                          href={`/trees/${treeId}/people/${person.id}`}
+                          className="font-medium hover:text-accent-600"
+                        >
+                          {person.fullName}
+                        </Link>
+                        <div className="text-xs text-archive-700/70">
+                          {personLifespan(person) ?? "no dates"}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

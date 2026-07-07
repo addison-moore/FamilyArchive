@@ -233,6 +233,21 @@ export default async function TreeSettingsPage({
         )}
       </Card>
 
+      <Card>
+        <h2 className="mb-1 text-lg font-semibold">GEDCOM export</h2>
+        <p className="mb-4 text-sm text-archive-700/80">
+          Download this tree as a GEDCOM 5.5.1 file — people, relationships, dates, places, and
+          notes. Media is not included (PRD v1).
+        </p>
+        <a
+          href={`/api/trees/${treeId}/gedcom`}
+          className={`${subtleButtonClass} inline-block no-underline`}
+          download
+        >
+          Download .ged file
+        </a>
+      </Card>
+
       {user.role === "owner" && (
         <Card>
           <h2 id="danger" className="mb-1 text-lg font-semibold text-red-700">

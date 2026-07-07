@@ -1,8 +1,19 @@
 /**
- * Minimal GEDCOM parser/exporter. Implementation lands in Milestone 5 (PRD §14):
- * people, names, birth/death facts, parent-child and partner relationships, notes,
- * and raw GEDCOM preservation in metadata JSON.
+ * Minimal GEDCOM parser/exporter (PRD §14): people, names, birth/death facts,
+ * parent-child and partner relationships, notes, raw record preservation.
  */
 
-/** GEDCOM versions the v1 parser targets. */
 export const SUPPORTED_GEDCOM_VERSIONS = ["5.5", "5.5.1"] as const;
+
+export { parseGedcom } from "./parse";
+export { buildGedcom } from "./export";
+export type { ExportEvent, ExportFamily, ExportIndividual } from "./export";
+export { formatGedcomDate, parseGedcomDate } from "./dates";
+export type {
+  GedcomDateParts,
+  GedcomEvent,
+  GedcomFamily,
+  GedcomIndividual,
+  GedcomNode,
+  ParsedGedcom,
+} from "./types";

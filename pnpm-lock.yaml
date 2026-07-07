@@ -44,6 +44,9 @@ importers:
       '@familyarchive/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@familyarchive/gedcom':
+        specifier: workspace:*
+        version: link:../../packages/gedcom
       '@familyarchive/shared':
         specifier: workspace:*
         version: link:../../packages/shared

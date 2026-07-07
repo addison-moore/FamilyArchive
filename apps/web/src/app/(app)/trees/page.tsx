@@ -18,9 +18,14 @@ export default async function TreesPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Family trees</h1>
         {showCreate && (
-          <Link href="/trees/new" className={`${buttonClass} no-underline`}>
-            New tree
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/trees/import" className={`${subtleButtonClass} no-underline`}>
+              Import GEDCOM
+            </Link>
+            <Link href="/trees/new" className={`${buttonClass} no-underline`}>
+              New tree
+            </Link>
+          </div>
         )}
       </div>
 

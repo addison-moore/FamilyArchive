@@ -16,6 +16,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { findSimilarPeople } from "@/lib/duplicates";
 import { getPerson, resolvePlaceId } from "@/lib/people";
 
 function peoplePath(treeId: string): string {
@@ -119,7 +120,14 @@ export async function createPersonAction(formData: FormData): Promise<void> {
       createdBy: user.id,
     })
     .returning({ id: people.id });
-  redirect(`${peoplePath(treeId)}/${rows[0]?.id}`);
+  const newId = rows[0]?.id;
+
+  // Non-blocking duplicate warning (PRD §14.7): the person is created either way.
+  const similar = newId
+    ? await findSimilarPeople(treeId, form.fields.fullName, form.birth.year, newId)
+    : [];
+  const suffix = similar.length > 0 ? `?dupWarning=${similar.map((p) => p.id).join(",")}` : "";
+  redirect(`${peoplePath(treeId)}/${newId}${suffix}`);
 }
 
 export async function updatePersonAction(formData: FormData): Promise<void> {

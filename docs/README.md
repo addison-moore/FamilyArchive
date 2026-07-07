@@ -7,9 +7,9 @@ and media archive application.
 
 - [Quickstart (Docker Compose)](self-hosting/quickstart.md)
 - [Environment variables reference](self-hosting/environment.md)
+- [GEDCOM import/export](self-hosting/gedcom.md)
 - Storage configuration — _coming with Milestone 6_
 - Backup and restore — _coming with Milestone 12_
-- GEDCOM import/export — _coming with Milestone 5_
 
 ## For contributors
 

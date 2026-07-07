@@ -144,14 +144,26 @@ export default async function PersonProfilePage({
   searchParams,
 }: {
   params: Promise<{ treeId: string; personId: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; dupWarning?: string }>;
 }) {
   const { treeId, personId } = await params;
   const { role } = await requireTreeRole(treeId, "viewer");
-  const { error } = await searchParams;
+  const { error, dupWarning } = await searchParams;
 
   const person = await getPerson(treeId, personId);
   if (!person) notFound();
+
+  // Possible-duplicate warning after creation (PRD §14.7); tree-scoped lookups only.
+  const dupPeople = dupWarning
+    ? (
+        await Promise.all(
+          dupWarning
+            .split(",")
+            .slice(0, 5)
+            .map((id) => getPerson(treeId, id)),
+        )
+      ).filter((p): p is NonNullable<typeof p> => p !== null)
+    : [];
 
   const [graph, names, birthPlace, deathPlace, allPeople] = await Promise.all([
     getRelationshipGraph(treeId, personId),
@@ -196,6 +208,24 @@ export default async function PersonProfilePage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <FormError message={error} />
+      {dupPeople.length > 0 && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <strong>Possible duplicate:</strong> similar people already exist —{" "}
+          {dupPeople.map((dup, index) => (
+            <span key={dup.id}>
+              {index > 0 && ", "}
+              <Link
+                href={`/trees/${treeId}/people/${dup.id}`}
+                className="text-accent-600 hover:underline"
+              >
+                {dup.fullName}
+                {personLifespan(dup) ? ` (${personLifespan(dup)})` : ""}
+              </Link>
+            </span>
+          ))}
+          . Review before adding details.
+        </div>
+      )}
 
       <Card>
         <div className="flex flex-wrap items-center gap-5">
