@@ -53,3 +53,5 @@ storage/
 
 # Claude
 .claude/
+
+_scratch/

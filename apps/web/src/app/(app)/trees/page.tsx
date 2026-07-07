@@ -16,14 +16,14 @@ export default async function TreesPage() {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Family trees</h1>
+        <h1 className="text-2xl font-semibold">Family archives</h1>
         {showCreate && (
           <div className="flex gap-2">
             <Link href="/trees/import" className={`${subtleButtonClass} no-underline`}>
               Import GEDCOM
             </Link>
             <Link href="/trees/new" className={`${buttonClass} no-underline`}>
-              New tree
+              New archive
             </Link>
           </div>
         )}
@@ -33,8 +33,8 @@ export default async function TreesPage() {
         <Card>
           <p className="text-sm text-archive-700">
             {showCreate
-              ? "No trees yet. Create the first one to get started."
-              : "You don't have access to any trees yet. Ask a family member for an invite link."}
+              ? "No archives yet. Create the first one to get started."
+              : "You don't have access to any archives yet. Ask a family member for an invite link."}
           </p>
         </Card>
       ) : (

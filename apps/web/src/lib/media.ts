@@ -3,6 +3,7 @@ import { getEnv } from "@familyarchive/config";
 import {
   getDb,
   mediaDerivatives,
+  mediaFaces,
   mediaItems,
   mediaPeople,
   mediaTags,
@@ -10,7 +11,7 @@ import {
 } from "@familyarchive/db";
 import { createStorageDriver, type StorageDriver } from "@familyarchive/media";
 import { treeRoleAtLeast, type TreeRole } from "@familyarchive/shared";
-import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 
 export type MediaRow = typeof mediaItems.$inferSelect;
 export type TagRow = typeof tags.$inferSelect;
@@ -88,9 +89,10 @@ export async function listMedia(treeId: string, filters: MediaFilters): Promise<
     );
   }
   if (filters.personId) {
-    query = query.innerJoin(
-      mediaPeople,
-      and(eq(mediaPeople.mediaId, mediaItems.id), eq(mediaPeople.personId, filters.personId)),
+    // Simple people tags OR assigned face boxes both count (PRD §12.6, §17.6).
+    conditions.push(
+      sql`(exists (select 1 from media_people mp where mp.media_id = ${mediaItems.id} and mp.person_id = ${filters.personId})
+        or exists (select 1 from media_faces mf where mf.media_id = ${mediaItems.id} and mf.person_id = ${filters.personId}))`,
     );
   }
   const rows = await query.where(and(...conditions)).orderBy(desc(mediaItems.createdAt));
@@ -100,6 +102,30 @@ export async function listMedia(treeId: string, filters: MediaFilters): Promise<
 /** Media items where a person is tagged (person profile media tab, PRD §12.6). */
 export async function listMediaForPerson(treeId: string, personId: string): Promise<MediaRow[]> {
   return listMedia(treeId, { personId });
+}
+
+/**
+ * mediaId → person ids tagged on it (simple tags + assigned face tags), for
+ * branch-view filtering (PRD §10.6). Media absent from the map is untagged.
+ */
+export async function taggedPersonIdsByMedia(mediaIds: string[]): Promise<Map<string, string[]>> {
+  if (mediaIds.length === 0) return new Map();
+  const [simple, faces] = await Promise.all([
+    getDb()
+      .select({ mediaId: mediaPeople.mediaId, personId: mediaPeople.personId })
+      .from(mediaPeople)
+      .where(inArray(mediaPeople.mediaId, mediaIds)),
+    getDb()
+      .select({ mediaId: mediaFaces.mediaId, personId: mediaFaces.personId })
+      .from(mediaFaces)
+      .where(inArray(mediaFaces.mediaId, mediaIds)),
+  ]);
+  const result = new Map<string, string[]>();
+  for (const row of [...simple, ...faces]) {
+    if (!row.personId) continue;
+    result.set(row.mediaId, [...(result.get(row.mediaId) ?? []), row.personId]);
+  }
+  return result;
 }
 
 export function mediaUrl(treeId: string, mediaId: string): string {

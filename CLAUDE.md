@@ -38,11 +38,12 @@ The v1 scope is intentionally limited. **Never implement v2/out-of-scope feature
 even if they seem like natural extensions. Out of scope for v1 (PRD §3), including:
 
 - Timeline view, map view, comments, activity feeds
-- Person merge, shared people across trees
+- Sharing people/data across _archives_ (merge within an archive IS in scope, PRD §10.5)
 - Living-person privacy rules, configurable media visibility
 - Full archive export, native JSON backup/import
 - DNA features, advanced genealogy reports/citations
 - Setup wizard, hosted demo
+- Face recognition/person suggestions (detection only in v1)
 
 If a task seems to require one of these, stop and raise it instead of building it.
 
@@ -92,9 +93,14 @@ familyarchive/
 - **Soft deletes:** people and media use soft-delete fields, not hard deletes.
 - **Original media is immutable (PRD §5.6):** never modify uploaded originals.
   Thumbnails, previews, OCR text, and face boxes are derivatives stored separately.
-- **Multi-tenancy:** everything is tree-scoped. Every query touching people,
-  relationships, media, collections, or suggestions must filter by tree ID and
-  enforce the caller's per-tree role (PRD §8, §31.2). Trees are fully isolated in v1.
+- **Multi-tenancy (PRD §10):** the container is an **archive** (the `trees`
+  table; an isolated shared graph — UI copy says "archive", routes/columns keep
+  the tree naming). Every query touching people, relationships, media,
+  collections, or suggestions must filter by tree ID (= archive scope) and
+  enforce the caller's per-tree role (PRD §8, §31.2). Archives are fully
+  isolated; _within_ an archive there is one canonical graph, GEDCOM imports are
+  provenance "sources", duplicate people are resolved by manual merge, and
+  per-user "branch views" filter browsing (convenience, never a privacy boundary).
 - **Roles:** global Owner; per-tree Admin / Editor / Contributor / Viewer. Check the
   permission tables in PRD §8 before adding any mutation.
 
@@ -154,9 +160,10 @@ Work proceeds milestone by milestone. One plan document per milestone in `_plans
 7. Processing Pipeline — BullMQ + Valkey, processing states, image/video/PDF thumbnails, retries, status UI
 8. OCR and Transcription — Tesseract OCR, storage + indexing, manual transcription, optional AI provider interface
 9. Face Detection and Tagging — MediaPipe worker, face boxes, manual person assignment
-10. Collections and Search — collections CRUD, Postgres full-text search, filters, grouped results
-11. Suggestions, Audit, Public Mode — structured suggestions, review flow, audit log, public trees
-12. Polish and Release — responsive browsing, docs, smoke tests, sample data, GitHub release
+10. Shared Archive Graph — sources/provenance, import-into-archive, person merge, branch views (PRD §10, amended 2026-07-07)
+11. Collections and Search — collections CRUD, Postgres full-text search, filters, grouped results
+12. Suggestions, Audit, Public Mode — structured suggestions, review flow, audit log, public trees
+13. Polish and Release — responsive browsing, docs, smoke tests, sample data, GitHub release
 
 Don't pull work forward from a later milestone unless the current plan explicitly
 calls for it.

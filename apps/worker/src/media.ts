@@ -9,13 +9,19 @@ import { promisify } from "node:util";
 import { getDb, mediaDerivatives, mediaItems } from "@familyarchive/db";
 import { derivativeKey } from "@familyarchive/media";
 import {
+  FACES_QUEUE,
+  isFaceDetectionEligible,
+  isOcrEligible,
   MAX_PDF_PREVIEW_PAGES,
   MEDIA_QUEUE,
+  OCR_QUEUE,
   THUMB_SIZE,
+  type FaceDetectJob,
   type MediaProcessJob,
+  type OcrJob,
   type ProcessingStatus,
 } from "@familyarchive/shared";
-import { Worker, type ConnectionOptions, type Job } from "bullmq";
+import { Queue, Worker, type ConnectionOptions, type Job } from "bullmq";
 import { eq } from "drizzle-orm";
 import sharp from "sharp";
 import type pino from "pino";
@@ -144,7 +150,12 @@ async function setStatus(mediaId: string, status: ProcessingStatus, error?: stri
     .where(eq(mediaItems.id, mediaId));
 }
 
-async function processMedia(job: Job<MediaProcessJob>, logger: pino.Logger): Promise<void> {
+async function processMedia(
+  job: Job<MediaProcessJob>,
+  logger: pino.Logger,
+  ocrQueue: Queue<OcrJob>,
+  facesQueue: Queue<FaceDetectJob>,
+): Promise<void> {
   const { mediaId, treeId } = job.data;
   const db = getDb();
   const rows = await db.select().from(mediaItems).where(eq(mediaItems.id, mediaId)).limit(1);
@@ -205,15 +216,44 @@ async function processMedia(job: Job<MediaProcessJob>, logger: pino.Logger): Pro
 
     await setStatus(mediaId, "processed");
     logger.info({ mediaId, derivatives: outputs.length }, "media processed");
+
+    // Documents and PDFs continue into OCR (PRD §18.1, §26.4).
+    if (isOcrEligible(media.mediaType)) {
+      await ocrQueue.add("ocr", { treeId, mediaId });
+    }
+    // Photos continue into face detection (PRD §17.2, §26.4).
+    if (isFaceDetectionEligible(media.mediaType, media.mimeType)) {
+      await facesQueue.add("detect", { treeId, mediaId });
+    }
   } finally {
     await rm(workDir, { recursive: true, force: true });
   }
 }
 
 export function startMediaWorker(connection: ConnectionOptions, logger: pino.Logger): Worker {
-  const worker = new Worker<MediaProcessJob>(MEDIA_QUEUE, (job) => processMedia(job, logger), {
+  const ocrQueue = new Queue<OcrJob>(OCR_QUEUE, {
     connection,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 10_000 },
+      removeOnComplete: 200,
+      removeOnFail: 500,
+    },
   });
+  const facesQueue = new Queue<FaceDetectJob>(FACES_QUEUE, {
+    connection,
+    defaultJobOptions: {
+      attempts: 3,
+      backoff: { type: "exponential", delay: 10_000 },
+      removeOnComplete: 200,
+      removeOnFail: 500,
+    },
+  });
+  const worker = new Worker<MediaProcessJob>(
+    MEDIA_QUEUE,
+    (job) => processMedia(job, logger, ocrQueue, facesQueue),
+    { connection },
+  );
 
   worker.on("failed", (job, error) => {
     logger.error({ jobId: job?.id, mediaId: job?.data.mediaId, err: error }, "media job failed");

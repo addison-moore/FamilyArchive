@@ -1,12 +1,23 @@
 import { getEnv } from "@familyarchive/config";
-import { MEDIA_QUEUE, redisConnectionOptions, type MediaProcessJob } from "@familyarchive/shared";
+import {
+  AI_QUEUE,
+  FACES_QUEUE,
+  MEDIA_QUEUE,
+  OCR_QUEUE,
+  redisConnectionOptions,
+  type AiCleanupJob,
+  type FaceDetectJob,
+  type MediaProcessJob,
+  type OcrJob,
+} from "@familyarchive/shared";
 import { Queue } from "bullmq";
 
-let queue: Queue<MediaProcessJob> | undefined;
+const queues = new Map<string, Queue>();
 
-function getMediaQueue(): Queue<MediaProcessJob> {
+function getQueue<T>(name: string): Queue<T> {
+  let queue = queues.get(name);
   if (!queue) {
-    queue = new Queue<MediaProcessJob>(MEDIA_QUEUE, {
+    queue = new Queue(name, {
       connection: redisConnectionOptions(getEnv().REDIS_URL),
       defaultJobOptions: {
         attempts: 3,
@@ -15,11 +26,30 @@ function getMediaQueue(): Queue<MediaProcessJob> {
         removeOnFail: 500,
       },
     });
+    queues.set(name, queue);
   }
-  return queue;
+  return queue as Queue<T>;
 }
 
 /** Kick off processing for an uploaded/reprocessed media item (PRD §15.5, §26.4). */
 export async function enqueueMediaProcessing(treeId: string, mediaId: string): Promise<void> {
-  await getMediaQueue().add("process", { treeId, mediaId });
+  await getQueue<MediaProcessJob>(MEDIA_QUEUE).add("process", { treeId, mediaId });
+}
+
+export async function enqueueOcr(treeId: string, mediaId: string): Promise<void> {
+  await getQueue<OcrJob>(OCR_QUEUE).add("ocr", { treeId, mediaId });
+}
+
+export async function enqueueAiCleanup(treeId: string, mediaId: string): Promise<void> {
+  await getQueue<AiCleanupJob>(AI_QUEUE).add("cleanup", { treeId, mediaId });
+}
+
+export async function enqueueFaceDetection(treeId: string, mediaId: string): Promise<void> {
+  await getQueue<FaceDetectJob>(FACES_QUEUE).add("detect", { treeId, mediaId });
+}
+
+/** AI features render only when the admin configured a provider (PRD §31.4). */
+export function aiConfigured(): boolean {
+  const env = getEnv();
+  return Boolean(env.AI_PROVIDER && env.AI_API_KEY);
 }

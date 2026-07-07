@@ -1,6 +1,11 @@
 "use server";
 
-import { AuthorizationError, canCreateTrees, requireUser } from "@familyarchive/auth";
+import {
+  AuthorizationError,
+  canCreateTrees,
+  requireTreeRole,
+  requireUser,
+} from "@familyarchive/auth";
 import { redirect } from "next/navigation";
 
 import { importGedcom } from "@/lib/gedcom-import";
@@ -9,8 +14,16 @@ const MAX_GEDCOM_BYTES = 10 * 1024 * 1024;
 
 export async function importGedcomAction(formData: FormData): Promise<void> {
   const user = await requireUser();
-  if (!(await canCreateTrees(user))) {
-    throw new AuthorizationError("Importing requires owner or admin access");
+  const target = String(formData.get("target") ?? "new");
+
+  // Permission per PRD §14.3 (amended): archive admin to import into it,
+  // archive-creation rights for a new one.
+  if (target === "new") {
+    if (!(await canCreateTrees(user))) {
+      throw new AuthorizationError("Creating an archive requires owner or admin access");
+    }
+  } else {
+    await requireTreeRole(target, "admin");
   }
 
   const fail = (message: string) => redirect(`/trees/import?error=${encodeURIComponent(message)}`);
@@ -23,7 +36,10 @@ export async function importGedcomAction(formData: FormData): Promise<void> {
 
   let result;
   try {
-    result = await importGedcom(user, file.name, await file.text(), treeName);
+    result = await importGedcom(user, file.name, await file.text(), {
+      treeName,
+      targetTreeId: target === "new" ? undefined : target,
+    });
   } catch (error) {
     if (error instanceof Error && "digest" in error) throw error; // Next redirects
     return fail(error instanceof Error ? error.message : "Import failed");

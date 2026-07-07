@@ -12,7 +12,9 @@ import Link from "next/link";
 import { Card, inputClass, subtleButtonClass } from "@/components/form";
 import { MediaThumb } from "@/components/media-thumb";
 import { MediaUpload } from "@/components/media-upload";
-import { listMedia, thumbUrls } from "@/lib/media";
+import { ScopeToggle } from "@/components/scope-toggle";
+import { resolveView } from "@/lib/branch";
+import { listMedia, taggedPersonIdsByMedia, thumbUrls } from "@/lib/media";
 import { listPeople } from "@/lib/people";
 
 /** Media library grid (PRD §15.3, §29.3): all/my-uploads, type, tag, person filters. */
@@ -21,13 +23,20 @@ export default async function MediaPage({
   searchParams,
 }: {
   params: Promise<{ treeId: string }>;
-  searchParams: Promise<{ type?: string; tag?: string; person?: string; mine?: string }>;
+  searchParams: Promise<{
+    type?: string;
+    tag?: string;
+    person?: string;
+    mine?: string;
+    scope?: string;
+  }>;
 }) {
   const { treeId } = await params;
   const { user, role } = await requireTreeRole(treeId, "viewer");
-  const { type, tag, person, mine } = await searchParams;
+  const { type, tag, person, mine, scope: scopeParam } = await searchParams;
 
-  const [mediaList, treeTags, peopleList] = await Promise.all([
+  const [view, allMedia, treeTags, peopleList] = await Promise.all([
+    resolveView(user.id, treeId, scopeParam),
     listMedia(treeId, {
       type,
       tagId: tag,
@@ -37,6 +46,18 @@ export default async function MediaPage({
     getDb().select().from(tags).where(eq(tags.treeId, treeId)).orderBy(asc(tags.name)),
     listPeople(treeId),
   ]);
+
+  // Branch scope (PRD §10.6): hide media tagged exclusively with out-of-branch
+  // people; untagged media belongs to the whole archive and stays visible.
+  let mediaList = allMedia;
+  if (view.branchIds) {
+    const taggedBy = await taggedPersonIdsByMedia(allMedia.map((m) => m.id));
+    mediaList = allMedia.filter((m) => {
+      const tagged = taggedBy.get(m.id);
+      if (!tagged || tagged.length === 0) return true;
+      return tagged.some((personId) => view.branchIds!.has(personId));
+    });
+  }
 
   const thumbs = await thumbUrls(
     treeId,
@@ -51,6 +72,7 @@ export default async function MediaPage({
     if (tag) params.set("tag", tag);
     if (person) params.set("person", person);
     if (mineValue) params.set("mine", "1");
+    if (view.scope === "all") params.set("scope", "all");
     const query = params.toString();
     return `/trees/${treeId}/media${query ? `?${query}` : ""}`;
   };
@@ -73,8 +95,15 @@ export default async function MediaPage({
             My uploads
           </Link>
         </div>
+        <ScopeToggle
+          basePath={`/trees/${treeId}/media`}
+          scope={view.scope}
+          params={{ type, tag, person, mine }}
+          anchorName={view.anchorName}
+        />
         <form method="GET" className="ml-auto flex flex-wrap items-center gap-2">
           {mine && <input type="hidden" name="mine" value="1" />}
+          {view.scope === "all" && <input type="hidden" name="scope" value="all" />}
           <select name="type" defaultValue={type ?? ""} className={`${inputClass} w-auto`}>
             <option value="">All types</option>
             {MEDIA_TYPES.map((mediaType) => (

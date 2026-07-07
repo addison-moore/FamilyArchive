@@ -4,6 +4,8 @@ import Link from "next/link";
 
 import { buttonClass, Card, inputClass, subtleButtonClass } from "@/components/form";
 import { PersonAvatar, personLifespan, PersonSummary } from "@/components/person-summary";
+import { ScopeToggle } from "@/components/scope-toggle";
+import { resolveView } from "@/lib/branch";
 import { profilePhotoUrl } from "@/lib/media";
 import { getPerson, getRelationshipGraph, listPeople } from "@/lib/people";
 
@@ -12,13 +14,17 @@ export default async function PeoplePage({
   searchParams,
 }: {
   params: Promise<{ treeId: string }>;
-  searchParams: Promise<{ q?: string; selected?: string }>;
+  searchParams: Promise<{ q?: string; selected?: string; scope?: string }>;
 }) {
   const { treeId } = await params;
-  const { role } = await requireTreeRole(treeId, "viewer");
-  const { q, selected } = await searchParams;
+  const { user, role } = await requireTreeRole(treeId, "viewer");
+  const { q, selected, scope: scopeParam } = await searchParams;
 
-  const peopleList = await listPeople(treeId, q);
+  const view = await resolveView(user.id, treeId, scopeParam);
+  const allMatching = await listPeople(treeId, q);
+  const peopleList = view.branchIds
+    ? allMatching.filter((p) => view.branchIds!.has(p.id))
+    : allMatching;
   const selectedPerson = selected ? await getPerson(treeId, selected) : null;
   const [selectedGraph, selectedPhotoUrl] = selectedPerson
     ? await Promise.all([
@@ -34,7 +40,19 @@ export default async function PeoplePage({
       <div className="min-w-0 flex-1">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-semibold">People</h1>
+          <ScopeToggle
+            basePath={`/trees/${treeId}/people`}
+            scope={view.scope}
+            params={{ q, selected }}
+            anchorName={view.anchorName}
+          />
+          {view.branchIds && (
+            <span className="text-xs text-archive-700/70">
+              {peopleList.length} of {allMatching.length} people
+            </span>
+          )}
           <form method="GET" className="ml-auto flex items-center gap-2">
+            {view.scope === "all" && <input type="hidden" name="scope" value="all" />}
             <input
               name="q"
               defaultValue={q ?? ""}
@@ -69,6 +87,7 @@ export default async function PeoplePage({
                 <Link
                   href={`/trees/${treeId}/people?${new URLSearchParams({
                     ...(q ? { q } : {}),
+                    ...(view.scope === "all" ? { scope: "all" } : {}),
                     selected: person.id,
                   })}`}
                   className={`flex items-center gap-3 px-4 py-3 hover:bg-archive-50 ${

@@ -3,6 +3,7 @@ import { getDb, mediaPeople, mediaTags, people, tags, users } from "@familyarchi
 import {
   formatDateParts,
   isImageMime,
+  isOcrEligible,
   MEDIA_TYPE_LABELS,
   MEDIA_TYPES,
   treeRoleAtLeast,
@@ -20,16 +21,27 @@ import {
   inputClass,
   subtleButtonClass,
 } from "@/components/form";
+import { FaceTagger } from "@/components/face-tagger";
+import { listFaces } from "@/lib/faces";
 import { canEditMedia, derivativeUrl, getMediaItem, listDerivatives, mediaUrl } from "@/lib/media";
 import { getPlaceName, listPeople } from "@/lib/people";
 
+import { aiConfigured } from "@/lib/jobs";
+
 import {
+  addFaceBoxAction,
   addMediaPersonAction,
   addMediaTagAction,
+  aiCleanupAction,
+  assignFacePersonAction,
   deleteMediaAction,
+  detectFacesAction,
+  removeFaceAction,
   removeMediaPersonAction,
   removeMediaTagAction,
   reprocessMediaAction,
+  runOcrAction,
+  saveTranscriptionAction,
   setProfilePhotoAction,
   updateMediaAction,
 } from "./actions";
@@ -79,8 +91,16 @@ export default async function MediaDetailPage({
   ]);
   const derivatives = await listDerivatives(mediaId);
   const pdfPages = derivatives.filter((d) => d.kind === "pdf_page");
-  const processingError =
-    (media.metadata as { processing?: { error?: string | null } }).processing?.error ?? null;
+  const faces = isImageMime(media.mimeType) ? await listFaces(mediaId) : [];
+  const meta = media.metadata as {
+    processing?: { error?: string | null };
+    ocr?: { status?: string; error?: string | null; pages?: number };
+    ai?: { status?: string; error?: string | null; provider?: string };
+    faces?: { status?: string; error?: string | null; count?: number };
+  };
+  const processingError = meta.processing?.error ?? null;
+  const showText = isOcrEligible(media.mediaType);
+  const aiAvailable = aiConfigured();
 
   const canEdit = canEditMedia(user, role, media);
   const canTag = treeRoleAtLeast(role, "contributor");
@@ -101,11 +121,16 @@ export default async function MediaDetailPage({
       <Card>
         <div className="flex items-center justify-center bg-archive-100/40">
           {isImageMime(media.mimeType) ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={url}
+            <FaceTagger
+              imageUrl={url}
               alt={media.title ?? media.originalFilename}
-              className="max-h-[70vh] rounded"
+              faces={faces}
+              people={allPeople.map((p) => ({ id: p.id, fullName: p.fullName }))}
+              canTag={canTag}
+              assignAction={assignFacePersonAction}
+              removeAction={removeFaceAction}
+              addAction={addFaceBoxAction}
+              hiddenFields={{ treeId, mediaId }}
             />
           ) : media.mediaType === "video" ? (
             <video controls src={url} className="max-h-[70vh] w-full rounded" />
@@ -159,14 +184,119 @@ export default async function MediaDetailPage({
               {processingError}
             </p>
           )}
+          {media.mediaType === "photo" && meta.faces?.status && (
+            <p className="mt-2 text-sm text-archive-700">
+              Face detection: <strong>{meta.faces.status}</strong>
+              {meta.faces.status === "done" && ` · ${meta.faces.count ?? 0} face(s) found`}
+              {meta.faces.status === "failed" && meta.faces.error && (
+                <span className="text-red-700"> — {meta.faces.error}</span>
+              )}
+            </p>
+          )}
           {isEditor && (
-            <form action={reprocessMediaAction} className="mt-3">
+            <div className="mt-3 flex flex-wrap gap-2">
+              <form action={reprocessMediaAction}>
+                <input type="hidden" name="treeId" value={treeId} />
+                <input type="hidden" name="mediaId" value={mediaId} />
+                <button type="submit" className={subtleButtonClass}>
+                  {media.processingStatus === "failed" ? "Retry processing" : "Reprocess"}
+                </button>
+              </form>
+              {media.mediaType === "photo" && (
+                <form action={detectFacesAction}>
+                  <input type="hidden" name="treeId" value={treeId} />
+                  <input type="hidden" name="mediaId" value={mediaId} />
+                  <button type="submit" className={subtleButtonClass}>
+                    Detect faces
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {showText && (
+        <Card>
+          <h2 className="mb-1 text-lg font-semibold">Text</h2>
+          <p className="mb-3 text-xs text-archive-700/70">
+            OCR{meta.ocr?.status ? `: ${meta.ocr.status}` : " has not run yet"}
+            {meta.ocr?.pages ? ` · ${meta.ocr.pages} page(s)` : ""}
+            {meta.ai?.status ? ` · AI cleanup: ${meta.ai.status}` : ""}
+          </p>
+          {meta.ocr?.status === "failed" && meta.ocr.error && (
+            <p className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              OCR failed: {meta.ocr.error}
+            </p>
+          )}
+          {meta.ai?.status === "failed" && meta.ai.error && (
+            <p className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              AI cleanup failed: {meta.ai.error}
+            </p>
+          )}
+
+          {media.ocrText ? (
+            <details className="mb-4" open={!media.transcriptionText}>
+              <summary className="cursor-pointer text-sm font-medium">Extracted text (OCR)</summary>
+              <pre className="mt-2 max-h-96 overflow-auto rounded-md bg-archive-100/50 p-3 text-xs whitespace-pre-wrap text-archive-800">
+                {media.ocrText}
+              </pre>
+            </details>
+          ) : (
+            <p className="mb-4 text-sm text-archive-700/70">No text extracted yet.</p>
+          )}
+
+          {isEditor && (
+            <div className="mb-5 flex flex-wrap gap-2">
+              <form action={runOcrAction}>
+                <input type="hidden" name="treeId" value={treeId} />
+                <input type="hidden" name="mediaId" value={mediaId} />
+                <button type="submit" className={subtleButtonClass}>
+                  {media.ocrText ? "Re-run OCR" : "Run OCR"}
+                </button>
+              </form>
+              {aiAvailable ? (
+                <form action={aiCleanupAction}>
+                  <input type="hidden" name="treeId" value={treeId} />
+                  <input type="hidden" name="mediaId" value={mediaId} />
+                  <button
+                    type="submit"
+                    className={subtleButtonClass}
+                    title="Sends the OCR text to the configured AI provider and stores the cleaned version as the transcription"
+                  >
+                    Clean up OCR with AI
+                  </button>
+                </form>
+              ) : (
+                <p className="self-center text-xs text-archive-700/60">
+                  AI cleanup is off — no provider configured (see docs/self-hosting/ocr-ai.md).
+                </p>
+              )}
+            </div>
+          )}
+
+          <h3 className="mb-2 text-sm font-semibold">Transcription</h3>
+          {canEdit ? (
+            <form action={saveTranscriptionAction} className="space-y-2">
               <input type="hidden" name="treeId" value={treeId} />
               <input type="hidden" name="mediaId" value={mediaId} />
+              <textarea
+                name="transcription"
+                rows={8}
+                defaultValue={media.transcriptionText ?? ""}
+                placeholder="Type or correct the document's text here…"
+                className={inputClass}
+              />
               <button type="submit" className={subtleButtonClass}>
-                {media.processingStatus === "failed" ? "Retry processing" : "Reprocess"}
+                Save transcription
               </button>
             </form>
+          ) : media.transcriptionText ? (
+            <pre className="max-h-96 overflow-auto rounded-md bg-archive-100/50 p-3 text-xs whitespace-pre-wrap text-archive-800">
+              {media.transcriptionText}
+            </pre>
+          ) : (
+            <p className="text-sm text-archive-700/70">No transcription yet.</p>
           )}
         </Card>
       )}
@@ -257,9 +387,11 @@ export default async function MediaDetailPage({
             </button>
           </form>
         )}
-        <p className="mt-3 text-xs text-archive-700/60">
-          Face detection with clickable face boxes arrives in Milestone 9.
-        </p>
+        {isImageMime(media.mimeType) && (
+          <p className="mt-3 text-xs text-archive-700/60">
+            Tip: click a face box on the photo above to tag exactly who is who.
+          </p>
+        )}
       </Card>
 
       <Card>

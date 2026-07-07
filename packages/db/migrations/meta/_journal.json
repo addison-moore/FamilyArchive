@@ -43,6 +43,27 @@
       "when": 1783412438805,
       "tag": "0005_open_malcolm_colcord",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783445445928,
+      "tag": "0006_dashing_azazel",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783447787089,
+      "tag": "0007_dry_raza",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1783463065674,
+      "tag": "0008_lucky_psynapse",
+      "breakpoints": true
     }
   ]
 }

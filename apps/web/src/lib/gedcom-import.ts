@@ -5,14 +5,17 @@ import {
   personNames,
   places,
   relationships,
+  sources,
   treeMemberships,
   trees,
 } from "@familyarchive/db";
 import { parseGedcom, type GedcomEvent, type GedcomIndividual } from "@familyarchive/gedcom";
 import type { RelationshipType } from "@familyarchive/shared";
+import { and, eq } from "drizzle-orm";
 
 export interface GedcomImportResult {
   treeId: string;
+  sourceId: string;
   peopleCount: number;
   relationshipCount: number;
   warnings: string[];
@@ -41,69 +44,88 @@ function parentType(child: GedcomIndividual | undefined, famXref: string): Relat
 }
 
 /**
- * Import a GEDCOM file into a brand-new tree (PRD §14.3) with raw record
- * preservation (§14.6). Runs in one transaction; the caller has already been
- * checked for tree-creation permission.
+ * Import a GEDCOM file (PRD §14.3 as amended): either into an existing archive
+ * (`targetTreeId` set — the import becomes a provenance source, §10.4) or into
+ * a brand-new archive. Runs in one transaction; the caller has already checked
+ * permission (archive admin, or archive-creation rights respectively).
  */
 export async function importGedcom(
   user: SessionUser,
   fileName: string,
   text: string,
-  treeName: string | undefined,
+  options: { treeName?: string; targetTreeId?: string },
 ): Promise<GedcomImportResult> {
   const parsed = parseGedcom(text);
   if (parsed.individuals.length === 0) {
     throw new Error("No people found in this file — is it a GEDCOM export?");
   }
 
-  const name =
-    treeName?.trim() ||
-    fileName
-      .replace(/\.ged$/i, "")
-      .replace(/[_-]+/g, " ")
-      .trim() ||
-    "Imported tree";
-
   const individualsByXref = new Map(parsed.individuals.map((i) => [i.xref, i]));
   const db = getDb();
 
   let relationshipCount = 0;
-  const treeId = await db.transaction(async (tx) => {
-    const treeRows = await tx
-      .insert(trees)
-      .values({
-        name,
-        description: `Imported from ${fileName}`,
-        createdBy: user.id,
-        metadata: {
-          gedcom: {
-            sourceFileName: fileName,
-            importedAt: new Date().toISOString(),
-            header: parsed.header,
-            warnings: parsed.warnings,
-          },
-        },
-      })
-      .returning({ id: trees.id });
-    const tree = treeRows[0];
-    if (!tree) throw new Error("Failed to create tree");
-    await tx.insert(treeMemberships).values({ treeId: tree.id, userId: user.id, role: "admin" });
+  const result = await db.transaction(async (tx) => {
+    let treeId = options.targetTreeId;
+    if (!treeId) {
+      const name =
+        options.treeName?.trim() ||
+        fileName
+          .replace(/\.ged$/i, "")
+          .replace(/[_-]+/g, " ")
+          .trim() ||
+        "Imported archive";
+      const treeRows = await tx
+        .insert(trees)
+        .values({
+          name,
+          description: `Created from ${fileName}`,
+          createdBy: user.id,
+        })
+        .returning({ id: trees.id });
+      const tree = treeRows[0];
+      if (!tree) throw new Error("Failed to create archive");
+      treeId = tree.id;
+      await tx.insert(treeMemberships).values({ treeId, userId: user.id, role: "admin" });
+    }
 
-    // Places: one row per distinct PLAC value (PRD §20.2, raw value preserved).
+    // Provenance record (PRD §10.4) — both new-archive and into-archive imports.
+    const sourceRows = await tx
+      .insert(sources)
+      .values({
+        treeId,
+        kind: "gedcom",
+        fileName,
+        importedBy: user.id,
+        metadata: { header: parsed.header, warnings: parsed.warnings },
+      })
+      .returning({ id: sources.id });
+    const sourceId = sourceRows[0]?.id;
+    if (!sourceId) throw new Error("Failed to record import source");
+
+    // Places: find-or-create within the archive (PRD §20.2; shared across sources).
     const placeIdByName = new Map<string, string>();
-    const placeNames = new Set<string>();
-    for (const person of parsed.individuals) {
-      for (const place of [person.birth?.place, person.death?.place]) {
-        if (place?.trim()) placeNames.add(place.trim());
+    const resolvePlace = async (raw: string | null | undefined): Promise<string | null> => {
+      const displayName = raw?.trim();
+      if (!displayName) return null;
+      const cached = placeIdByName.get(displayName);
+      if (cached) return cached;
+      const existing = await tx
+        .select({ id: places.id })
+        .from(places)
+        .where(and(eq(places.treeId, treeId!), eq(places.displayName, displayName)))
+        .limit(1);
+      let id = existing[0]?.id;
+      if (!id) {
+        const inserted = await tx
+          .insert(places)
+          .values({ treeId: treeId!, displayName, rawImported: displayName })
+          .returning({ id: places.id });
+        id = inserted[0]?.id;
       }
-    }
-    for (const displayName of placeNames) {
-      const rows = await tx
-        .insert(places)
-        .values({ treeId: tree.id, displayName, rawImported: displayName })
-        .returning({ id: places.id });
-      if (rows[0]) placeIdByName.set(displayName, rows[0].id);
-    }
+      if (!id) throw new Error(`Failed to resolve place: ${displayName}`);
+      placeIdByName.set(displayName, id);
+      return id;
+    };
 
     // People, keyed back to their xref for relationship wiring.
     const personIdByXref = new Map<string, string>();
@@ -111,19 +133,16 @@ export async function importGedcom(
       const rows = await tx
         .insert(people)
         .values({
-          treeId: tree.id,
+          treeId,
           fullName: individual.fullName,
           gender: individual.gender,
           ...eventColumns(individual.birth, "birth"),
           ...eventColumns(individual.death, "death"),
-          birthPlaceId: individual.birth?.place
-            ? (placeIdByName.get(individual.birth.place.trim()) ?? null)
-            : null,
-          deathPlaceId: individual.death?.place
-            ? (placeIdByName.get(individual.death.place.trim()) ?? null)
-            : null,
+          birthPlaceId: await resolvePlace(individual.birth?.place),
+          deathPlaceId: await resolvePlace(individual.death?.place),
           notes: individual.notes.length > 0 ? individual.notes.join("\n\n") : null,
           createdBy: user.id,
+          sourceId,
           metadata: {
             gedcom: {
               xref: individual.xref,
@@ -167,10 +186,11 @@ export async function importGedcom(
           await tx
             .insert(relationships)
             .values({
-              treeId: tree.id,
+              treeId,
               fromPersonId: parentId,
               toPersonId: childId,
               type: parentType(individualsByXref.get(childXref), family.xref),
+              sourceId,
               metadata: { gedcom: { famXref: family.xref } },
             })
             .onConflictDoNothing();
@@ -182,10 +202,11 @@ export async function importGedcom(
         await tx
           .insert(relationships)
           .values({
-            treeId: tree.id,
+            treeId,
             fromPersonId: parentIds[0]!,
             toPersonId: parentIds[1]!,
             type: partnerType(family),
+            sourceId,
             metadata: { gedcom: { famXref: family.xref } },
           })
           .onConflictDoNothing();
@@ -193,11 +214,19 @@ export async function importGedcom(
       }
     }
 
-    return tree.id;
+    await tx
+      .update(sources)
+      .set({
+        stats: { people: parsed.individuals.length, relationships: relationshipCount },
+      })
+      .where(eq(sources.id, sourceId));
+
+    return { treeId, sourceId };
   });
 
   return {
-    treeId,
+    treeId: result.treeId,
+    sourceId: result.sourceId,
     peopleCount: parsed.individuals.length,
     relationshipCount,
     warnings: parsed.warnings,

@@ -1,14 +1,33 @@
 "use server";
 
 import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
-import { getDb, mediaItems, mediaPeople, mediaTags, people, tags } from "@familyarchive/db";
-import { isMediaType, validateDateParts } from "@familyarchive/shared";
+import {
+  getDb,
+  mediaFaces,
+  mediaItems,
+  mediaPeople,
+  mediaTags,
+  people,
+  tags,
+} from "@familyarchive/db";
+import {
+  isFaceDetectionEligible,
+  isMediaType,
+  isOcrEligible,
+  validateDateParts,
+} from "@familyarchive/shared";
 import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { enqueueMediaProcessing } from "@/lib/jobs";
+import {
+  aiConfigured,
+  enqueueAiCleanup,
+  enqueueFaceDetection,
+  enqueueMediaProcessing,
+  enqueueOcr,
+} from "@/lib/jobs";
 import { canEditMedia, getMediaItem } from "@/lib/media";
 import { getPerson, resolvePlaceId } from "@/lib/people";
 
@@ -178,6 +197,170 @@ export async function reprocessMediaAction(formData: FormData): Promise<void> {
     .set({ processingStatus: "pending", updatedAt: new Date() })
     .where(and(eq(mediaItems.id, mediaId), eq(mediaItems.treeId, treeId)));
   await enqueueMediaProcessing(treeId, mediaId);
+  revalidatePath(mediaPath(treeId, mediaId));
+}
+
+async function markTextJobQueued(mediaId: string, section: "ocr" | "ai" | "faces"): Promise<void> {
+  const rows = await getDb()
+    .select({ metadata: mediaItems.metadata })
+    .from(mediaItems)
+    .where(eq(mediaItems.id, mediaId))
+    .limit(1);
+  const metadata = { ...(rows[0]?.metadata as Record<string, unknown>) };
+  metadata[section] = {
+    ...(metadata[section] as Record<string, unknown> | undefined),
+    status: "queued",
+    error: null,
+    updatedAt: new Date().toISOString(),
+  };
+  await getDb().update(mediaItems).set({ metadata }).where(eq(mediaItems.id, mediaId));
+}
+
+/** Run/re-run OCR (editor+, PRD §18.2). */
+export async function runOcrAction(formData: FormData): Promise<void> {
+  const treeId = String(formData.get("treeId") ?? "");
+  const mediaId = String(formData.get("mediaId") ?? "");
+  await requireTreeRole(treeId, "editor");
+  const media = await getMediaItem(treeId, mediaId);
+  if (!media || !isOcrEligible(media.mediaType)) return;
+
+  await markTextJobQueued(mediaId, "ocr");
+  await enqueueOcr(treeId, mediaId);
+  revalidatePath(mediaPath(treeId, mediaId));
+}
+
+/** Manual transcription (PRD §18, M8): same permission as metadata editing. */
+export async function saveTranscriptionAction(formData: FormData): Promise<void> {
+  const treeId = String(formData.get("treeId") ?? "");
+  const mediaId = String(formData.get("mediaId") ?? "");
+  const transcription = String(formData.get("transcription") ?? "").slice(0, 200_000);
+  const { user, role } = await requireTreeRole(treeId, "contributor");
+  const media = await getMediaItem(treeId, mediaId);
+  if (!media) return;
+  if (!canEditMedia(user, role, media)) {
+    throw new AuthorizationError("You can only edit your own uploads");
+  }
+
+  await getDb()
+    .update(mediaItems)
+    .set({ transcriptionText: transcription.trim() || null, updatedAt: new Date() })
+    .where(and(eq(mediaItems.id, mediaId), eq(mediaItems.treeId, treeId)));
+  revalidatePath(mediaPath(treeId, mediaId));
+}
+
+/**
+ * Explicit AI OCR cleanup (editor+). Never implicit: requires the admin-set
+ * provider env (PRD §31.4) and an empty transcription (raw OCR is preserved;
+ * the cleaned text lands in transcription_text).
+ */
+export async function aiCleanupAction(formData: FormData): Promise<void> {
+  const treeId = String(formData.get("treeId") ?? "");
+  const mediaId = String(formData.get("mediaId") ?? "");
+  await requireTreeRole(treeId, "editor");
+  const media = await getMediaItem(treeId, mediaId);
+  if (!media) return;
+
+  const fail = (message: string) =>
+    redirect(`${mediaPath(treeId, mediaId)}?error=${encodeURIComponent(message)}`);
+  if (!aiConfigured()) return fail("No AI provider is configured on this instance");
+  if (!media.ocrText?.trim()) return fail("Run OCR first — there is no text to clean up");
+  if (media.transcriptionText?.trim()) {
+    return fail("A transcription already exists; clear it to use AI cleanup");
+  }
+
+  await markTextJobQueued(mediaId, "ai");
+  await enqueueAiCleanup(treeId, mediaId);
+  revalidatePath(mediaPath(treeId, mediaId));
+}
+
+/** Run/re-run face detection (editor+, PRD §17.2). */
+export async function detectFacesAction(formData: FormData): Promise<void> {
+  const treeId = String(formData.get("treeId") ?? "");
+  const mediaId = String(formData.get("mediaId") ?? "");
+  await requireTreeRole(treeId, "editor");
+  const media = await getMediaItem(treeId, mediaId);
+  if (!media || !isFaceDetectionEligible(media.mediaType, media.mimeType)) return;
+
+  await markTextJobQueued(mediaId, "faces");
+  await enqueueFaceDetection(treeId, mediaId);
+  revalidatePath(mediaPath(treeId, mediaId));
+}
+
+/** Verify a face box belongs to a media item in this tree before mutating it. */
+async function getFaceInTree(treeId: string, faceId: string) {
+  const rows = await getDb()
+    .select({ id: mediaFaces.id, mediaId: mediaFaces.mediaId })
+    .from(mediaFaces)
+    .innerJoin(mediaItems, eq(mediaFaces.mediaId, mediaItems.id))
+    .where(
+      and(eq(mediaFaces.id, faceId), eq(mediaItems.treeId, treeId), isNull(mediaItems.deletedAt)),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/** Assign or clear the person on a face box (contributor+, PRD §17.1/§8.4). */
+export async function assignFacePersonAction(formData: FormData): Promise<void> {
+  const treeId = String(formData.get("treeId") ?? "");
+  const faceId = String(formData.get("faceId") ?? "");
+  const personId = String(formData.get("personId") ?? "");
+  await requireTreeRole(treeId, "contributor");
+
+  const face = await getFaceInTree(treeId, faceId);
+  if (!face) return;
+  if (personId && !(await getPerson(treeId, personId))) return;
+
+  await getDb()
+    .update(mediaFaces)
+    .set({ personId: personId || null, updatedAt: new Date() })
+    .where(eq(mediaFaces.id, faceId));
+  revalidatePath(mediaPath(treeId, face.mediaId));
+}
+
+/** Remove an incorrect face box (contributor+, PRD §17.1). */
+export async function removeFaceAction(formData: FormData): Promise<void> {
+  const treeId = String(formData.get("treeId") ?? "");
+  const faceId = String(formData.get("faceId") ?? "");
+  await requireTreeRole(treeId, "contributor");
+
+  const face = await getFaceInTree(treeId, faceId);
+  if (!face) return;
+  await getDb().delete(mediaFaces).where(eq(mediaFaces.id, faceId));
+  revalidatePath(mediaPath(treeId, face.mediaId));
+}
+
+/** Add a manually drawn face box (contributor+, PRD §17.1 "add missing boxes"). */
+export async function addFaceBoxAction(formData: FormData): Promise<void> {
+  const treeId = String(formData.get("treeId") ?? "");
+  const mediaId = String(formData.get("mediaId") ?? "");
+  const personId = String(formData.get("personId") ?? "");
+  const { user } = await requireTreeRole(treeId, "contributor");
+  const media = await getMediaItem(treeId, mediaId);
+  if (!media || !media.mimeType.startsWith("image/")) return;
+
+  const part = (name: string) => Number(formData.get(name));
+  const box = { x: part("x"), y: part("y"), width: part("width"), height: part("height") };
+  const valid =
+    [box.x, box.y, box.width, box.height].every((v) => Number.isFinite(v) && v >= 0 && v <= 1) &&
+    box.width > 0.005 &&
+    box.height > 0.005 &&
+    box.x + box.width <= 1.001 &&
+    box.y + box.height <= 1.001;
+  if (!valid) return;
+  if (personId && !(await getPerson(treeId, personId))) return;
+
+  await getDb()
+    .insert(mediaFaces)
+    .values({
+      mediaId,
+      x: box.x,
+      y: box.y,
+      width: Math.min(box.width, 1 - box.x),
+      height: Math.min(box.height, 1 - box.y),
+      detectedBy: "manual",
+      personId: personId || null,
+      createdBy: user.id,
+    });
   revalidatePath(mediaPath(treeId, mediaId));
 }
 

@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
+import { sources } from "./sources";
 import { trees } from "./trees";
 
 /**
@@ -68,6 +69,8 @@ export const people = pgTable(
     notes: text("notes"),
     /** References media_items once that table lands in M6; plain column until then (PRD §12.5). */
     profileMediaId: text("profile_media_id"),
+    /** Import provenance (PRD §10.4); null for people created in the app. */
+    sourceId: text("source_id").references(() => sources.id, { onDelete: "set null" }),
     metadata: jsonb("metadata").notNull().default({}),
     createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
     deletedAt: timestamp("deleted_at", { mode: "date" }),
@@ -112,6 +115,8 @@ export const relationships = pgTable(
       .references(() => people.id, { onDelete: "cascade" }),
     type: text("type").$type<RelationshipType>().notNull(),
     notes: text("notes"),
+    /** Import provenance (PRD §10.4); null for relationships created in the app. */
+    sourceId: text("source_id").references(() => sources.id, { onDelete: "set null" }),
     metadata: jsonb("metadata").notNull().default({}),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),

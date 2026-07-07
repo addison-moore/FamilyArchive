@@ -35,7 +35,14 @@ Copy `.env.example` to `.env` and adjust. The schema lives in `packages/config`
 `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`. Without SMTP,
 invite links can still be created and shared manually.
 
+## OCR
+
+`OCR_LANGUAGES` (default `eng`) — Tesseract language codes, `+`-separated. See
+[ocr-ai.md](ocr-ai.md).
+
 ## External AI providers (disabled by default)
 
-`AI_PROVIDER` (`openai` | `anthropic`) and `AI_API_KEY`. FamilyArchive never sends
-family data to external services unless an admin explicitly configures these.
+`AI_PROVIDER` (`openai` | `anthropic`), `AI_API_KEY`, and optional `AI_MODEL`.
+FamilyArchive never sends family data to external services unless an admin
+explicitly configures these; AI cleanup only runs on explicit user action. See
+[ocr-ai.md](ocr-ai.md).

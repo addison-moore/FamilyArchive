@@ -76,7 +76,7 @@ export default async function TreeSettingsPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <h1 className="text-2xl font-semibold">Tree settings</h1>
+      <h1 className="text-2xl font-semibold">Archive settings</h1>
       <FormError message={error} />
 
       <Card>
@@ -236,7 +236,7 @@ export default async function TreeSettingsPage({
       <Card>
         <h2 className="mb-1 text-lg font-semibold">GEDCOM export</h2>
         <p className="mb-4 text-sm text-archive-700/80">
-          Download this tree as a GEDCOM 5.5.1 file — people, relationships, dates, places, and
+          Download this archive as a GEDCOM 5.5.1 file — people, relationships, dates, places, and
           notes. Media is not included (PRD v1).
         </p>
         <a
@@ -254,8 +254,8 @@ export default async function TreeSettingsPage({
             Danger zone
           </h2>
           <p className="mb-4 text-sm text-archive-700/80">
-            Deleting a tree permanently removes its memberships and invites. Type the tree name (
-            <strong>{tree.name}</strong>) to confirm.
+            Deleting an archive permanently removes its people, media records, memberships, and
+            invites. Type the archive name (<strong>{tree.name}</strong>) to confirm.
           </p>
           <form action={deleteTreeAction} className="flex flex-wrap items-center gap-3">
             <input type="hidden" name="treeId" value={treeId} />
@@ -266,7 +266,7 @@ export default async function TreeSettingsPage({
               className={`${inputClass} w-64`}
             />
             <button type="submit" className={dangerButtonClass}>
-              Delete tree
+              Delete archive
             </button>
           </form>
         </Card>

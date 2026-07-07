@@ -64,7 +64,7 @@ export default async function TreeLayout({
               href="/trees"
               className="block rounded border-t border-archive-100 px-3 py-2 text-sm text-archive-700/80 hover:bg-archive-50"
             >
-              All trees…
+              All archives…
             </Link>
           </div>
         </details>

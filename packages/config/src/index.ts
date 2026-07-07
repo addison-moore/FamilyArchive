@@ -35,9 +35,13 @@ const envSchema = z.object({
   SMTP_PASSWORD: z.string().optional(),
   SMTP_FROM: z.string().optional(),
 
-  // External AI providers (disabled by default, PRD §31.4; used from Milestone 8)
+  // OCR (PRD §18.3): Tesseract language codes, "+"-separated (e.g. "eng+deu").
+  OCR_LANGUAGES: z.string().default("eng"),
+
+  // External AI providers (disabled by default, PRD §31.4; explicit admin opt-in)
   AI_PROVIDER: z.enum(["openai", "anthropic"]).optional(),
   AI_API_KEY: z.string().optional(),
+  AI_MODEL: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

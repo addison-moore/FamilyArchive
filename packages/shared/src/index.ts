@@ -17,3 +17,5 @@ export * from "./people";
 export * from "./dates";
 export * from "./media";
 export * from "./processing";
+export * from "./ocr";
+export * from "./faces";

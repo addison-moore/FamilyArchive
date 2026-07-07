@@ -5,9 +5,15 @@ is never locked in (PRD §5.5).
 
 ## Import
 
-**Trees → Import GEDCOM** (requires tree-creation permission: the instance Owner
-or a tree admin). Importing always creates a **new tree** — importing into an
-existing tree is not supported in v1.
+**My archives → Import GEDCOM.** Choose the destination:
+
+- **An existing archive** (you must be an admin of it): the file's people and
+  relationships join the archive's shared graph, the import is recorded as a
+  [source](../concepts.md), and likely duplicates are flagged for
+  **Compare & merge** review — the recommended way to combine overlapping
+  research from several relatives.
+- **A new archive** (requires archive-creation permission): a separate, isolated
+  archive is created from the file.
 
 What is imported:
 

@@ -15,7 +15,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             Family<span className="text-accent-600">Archive</span>
           </Link>
           <Link href="/trees" className="text-sm text-archive-700 hover:text-archive-900">
-            My trees
+            My archives
           </Link>
           <details className="group relative ml-auto">
             <summary className="cursor-pointer list-none rounded-md border border-archive-100 px-3 py-1.5 text-sm text-archive-700 hover:bg-archive-50">

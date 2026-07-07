@@ -4,3 +4,5 @@ export * from "./people";
 export * from "./preferences";
 export * from "./media";
 export * from "./derivatives";
+export * from "./faces";
+export * from "./sources";

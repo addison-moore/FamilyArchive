@@ -1,0 +1,2 @@
+CREATE INDEX "media_items_ocr_search_idx" ON "media_items" USING gin (to_tsvector('english', coalesce("ocr_text", '')));--> statement-breakpoint
+CREATE INDEX "media_items_transcription_search_idx" ON "media_items" USING gin (to_tsvector('english', coalesce("transcription_text", '')));

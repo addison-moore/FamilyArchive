@@ -146,11 +146,11 @@ export default async function PersonProfilePage({
   searchParams,
 }: {
   params: Promise<{ treeId: string; personId: string }>;
-  searchParams: Promise<{ error?: string; dupWarning?: string }>;
+  searchParams: Promise<{ error?: string; dupWarning?: string; merged?: string }>;
 }) {
   const { treeId, personId } = await params;
   const { role } = await requireTreeRole(treeId, "viewer");
-  const { error, dupWarning } = await searchParams;
+  const { error, dupWarning, merged } = await searchParams;
 
   const person = await getPerson(treeId, personId);
   if (!person) notFound();
@@ -217,6 +217,12 @@ export default async function PersonProfilePage({
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <FormError message={error} />
+      {merged && (
+        <div className="rounded-md border border-accent-600/30 bg-archive-100/60 px-4 py-3 text-sm text-archive-800">
+          Merge complete — relationships, media tags, face tags, and names were consolidated here,
+          and both records&apos; provenance is preserved.
+        </div>
+      )}
       {dupPeople.length > 0 && (
         <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <strong>Possible duplicate:</strong> similar people already exist —{" "}
@@ -230,9 +236,20 @@ export default async function PersonProfilePage({
                 {dup.fullName}
                 {personLifespan(dup) ? ` (${personLifespan(dup)})` : ""}
               </Link>
+              {treeRoleAtLeast(role, "editor") && (
+                <>
+                  {" "}
+                  <Link
+                    href={`/trees/${treeId}/people/${personId}/merge/${dup.id}`}
+                    className="text-accent-600 hover:underline"
+                  >
+                    (compare &amp; merge)
+                  </Link>
+                </>
+              )}
             </span>
           ))}
-          . Review before adding details.
+          .
         </div>
       )}
 
