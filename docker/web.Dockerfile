@@ -19,7 +19,10 @@ RUN pnpm --filter @familyarchive/web build
 FROM node:22-alpine AS runner
 ENV NODE_ENV=production
 WORKDIR /app
-RUN addgroup -S app && adduser -S app -G app
+# Fixed uid/gid so the shared media volume (created with this ownership) stays
+# writable regardless of which service initializes it.
+RUN addgroup -S -g 1001 app && adduser -S -u 1001 app -G app \
+    && mkdir -p /data/media && chown -R app:app /data
 COPY --from=builder --chown=app:app /repo/apps/web/.next/standalone ./
 COPY --from=builder --chown=app:app /repo/apps/web/.next/static ./apps/web/.next/static
 USER app

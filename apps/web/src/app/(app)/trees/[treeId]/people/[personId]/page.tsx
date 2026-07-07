@@ -19,7 +19,9 @@ import {
   inputClass,
   subtleButtonClass,
 } from "@/components/form";
+import { MediaThumb } from "@/components/media-thumb";
 import { PersonAvatar, personLifespan } from "@/components/person-summary";
+import { listMediaForPerson, profilePhotoUrl, thumbUrls } from "@/lib/media";
 import {
   getPerson,
   getPersonNames,
@@ -165,13 +167,20 @@ export default async function PersonProfilePage({
       ).filter((p): p is NonNullable<typeof p> => p !== null)
     : [];
 
-  const [graph, names, birthPlace, deathPlace, allPeople] = await Promise.all([
-    getRelationshipGraph(treeId, personId),
-    getPersonNames(personId),
-    getPlaceName(person.birthPlaceId),
-    getPlaceName(person.deathPlaceId),
-    listPeople(treeId),
-  ]);
+  const [graph, names, birthPlace, deathPlace, allPeople, taggedMedia, photoUrl] =
+    await Promise.all([
+      getRelationshipGraph(treeId, personId),
+      getPersonNames(personId),
+      getPlaceName(person.birthPlaceId),
+      getPlaceName(person.deathPlaceId),
+      listPeople(treeId),
+      listMediaForPerson(treeId, personId),
+      profilePhotoUrl(treeId, person.profileMediaId),
+    ]);
+  const personThumbs = await thumbUrls(
+    treeId,
+    taggedMedia.slice(0, 10).map((m) => m.id),
+  );
   const candidates = allPeople.filter((p) => p.id !== personId);
   const canEdit = treeRoleAtLeast(role, "editor");
 
@@ -229,7 +238,7 @@ export default async function PersonProfilePage({
 
       <Card>
         <div className="flex flex-wrap items-center gap-5">
-          <PersonAvatar name={person.fullName} size="lg" />
+          <PersonAvatar name={person.fullName} size="lg" photoUrl={photoUrl} />
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl font-semibold">{person.fullName}</h1>
             {names.length > 0 && (
@@ -265,10 +274,37 @@ export default async function PersonProfilePage({
       </Card>
 
       <Card>
-        <h2 className="mb-2 text-lg font-semibold">Media</h2>
-        <p className="rounded-md bg-archive-100/50 px-3 py-2 text-sm text-archive-700/70">
-          Photos, documents, and tagged media arrive with the media library (Milestone 6).
-        </p>
+        <h2 className="mb-3 text-lg font-semibold">Media</h2>
+        {taggedMedia.length > 0 ? (
+          <>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+              {taggedMedia.slice(0, 10).map((media) => (
+                <MediaThumb
+                  key={media.id}
+                  treeId={treeId}
+                  media={media}
+                  thumbUrl={personThumbs.get(media.id)}
+                />
+              ))}
+            </div>
+            <p className="mt-3 text-xs">
+              <Link
+                href={`/trees/${treeId}/media?person=${personId}`}
+                className="text-accent-600 hover:underline"
+              >
+                All media with {person.fullName} ({taggedMedia.length}) →
+              </Link>
+            </p>
+          </>
+        ) : (
+          <p className="text-sm text-archive-700/70">
+            No media tagged with {person.fullName} yet.{" "}
+            <Link href={`/trees/${treeId}/media`} className="text-accent-600 hover:underline">
+              Go to the media library
+            </Link>{" "}
+            to upload and tag.
+          </p>
+        )}
       </Card>
 
       {person.biography && (

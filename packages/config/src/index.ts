@@ -17,9 +17,10 @@ const envSchema = z.object({
   APP_URL: z.string().url().default("http://localhost:3000"),
   REDIS_URL: z.string().min(1).default("redis://localhost:6379"),
 
-  // Storage (used from Milestone 6; local driver is the default, PRD §24)
+  // Storage (local driver is the default, PRD §24)
   MEDIA_STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
   MEDIA_LOCAL_PATH: z.string().default("/data/media"),
+  MEDIA_MAX_UPLOAD_MB: z.coerce.number().int().positive().default(500),
   S3_ENDPOINT: z.string().optional(),
   S3_BUCKET: z.string().optional(),
   S3_ACCESS_KEY_ID: z.string().optional(),

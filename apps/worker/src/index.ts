@@ -4,6 +4,7 @@ import { Queue, Worker } from "bullmq";
 import pino from "pino";
 
 import { startEmailWorker } from "./email";
+import { startMediaWorker } from "./media";
 
 /**
  * FamilyArchive job worker. Current consumers: heartbeat (M1 plumbing check) and
@@ -30,15 +31,21 @@ heartbeatWorker.on("failed", (job, error) => {
 });
 
 const emailWorker = startEmailWorker(connection, logger);
+const mediaWorker = startMediaWorker(connection, logger);
 
 async function main() {
   await heartbeatQueue.upsertJobScheduler("heartbeat-every-minute", { every: 60_000 });
-  logger.info({ queues: [HEARTBEAT_QUEUE, "email"] }, "worker started");
+  logger.info({ queues: [HEARTBEAT_QUEUE, "email", "media"] }, "worker started");
 }
 
 async function shutdown(signal: string) {
   logger.info({ signal }, "shutting down");
-  await Promise.all([heartbeatWorker.close(), emailWorker.close(), heartbeatQueue.close()]);
+  await Promise.all([
+    heartbeatWorker.close(),
+    emailWorker.close(),
+    mediaWorker.close(),
+    heartbeatQueue.close(),
+  ]);
   process.exit(0);
 }
 

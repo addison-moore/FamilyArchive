@@ -11,10 +11,10 @@ import { getAccessibleTrees } from "@/lib/trees";
 const ACTIVE_NAV = [
   { label: "Tree", path: "" },
   { label: "People", path: "people" },
+  { label: "Media", path: "media" },
 ] as const;
 
 const PLACEHOLDER_NAV = [
-  { label: "Media", milestone: 6 },
   { label: "Collections", milestone: 10 },
   { label: "Search", milestone: 10 },
   { label: "Suggestions", milestone: 11 },

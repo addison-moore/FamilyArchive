@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { buttonClass, Card, inputClass, subtleButtonClass } from "@/components/form";
 import { PersonAvatar, personLifespan, PersonSummary } from "@/components/person-summary";
+import { profilePhotoUrl } from "@/lib/media";
 import { getPerson, getRelationshipGraph, listPeople } from "@/lib/people";
 
 export default async function PeoplePage({
@@ -19,9 +20,12 @@ export default async function PeoplePage({
 
   const peopleList = await listPeople(treeId, q);
   const selectedPerson = selected ? await getPerson(treeId, selected) : null;
-  const selectedGraph = selectedPerson
-    ? await getRelationshipGraph(treeId, selectedPerson.id)
-    : null;
+  const [selectedGraph, selectedPhotoUrl] = selectedPerson
+    ? await Promise.all([
+        getRelationshipGraph(treeId, selectedPerson.id),
+        profilePhotoUrl(treeId, selectedPerson.profileMediaId),
+      ])
+    : [null, null];
 
   const canEdit = treeRoleAtLeast(role, "editor");
 
@@ -92,6 +96,7 @@ export default async function PeoplePage({
             person={selectedPerson}
             graph={selectedGraph}
             role={role}
+            photoUrl={selectedPhotoUrl}
           />
         ) : (
           <div className="rounded-xl border border-dashed border-archive-100 p-5 text-sm text-archive-700/60">

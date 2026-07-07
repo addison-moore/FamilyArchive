@@ -6,6 +6,7 @@ import { buttonClass, Card, FormError } from "@/components/form";
 import { PersonSummary } from "@/components/person-summary";
 import { TreeCanvas } from "@/components/tree-canvas";
 import { TreeNodeActions } from "@/components/tree-node-actions";
+import { profilePhotoUrl } from "@/lib/media";
 import { getPerson, getRelationshipGraph } from "@/lib/people";
 import {
   buildTreeGraph,
@@ -70,7 +71,10 @@ export default async function TreePage({
   const canvas = layoutTreeGraph(graph, startPerson.id);
 
   const selectedPerson = (selected ? await getPerson(treeId, selected) : null) ?? startPerson;
-  const selectedGraph = await getRelationshipGraph(treeId, selectedPerson.id);
+  const [selectedGraph, selectedPhotoUrl] = await Promise.all([
+    getRelationshipGraph(treeId, selectedPerson.id),
+    profilePhotoUrl(treeId, selectedPerson.profileMediaId),
+  ]);
 
   const modeQuery = (m: TreeViewMode) => {
     const params = new URLSearchParams();
@@ -129,6 +133,7 @@ export default async function TreePage({
             person={selectedPerson}
             graph={selectedGraph}
             role={role}
+            photoUrl={selectedPhotoUrl}
           />
           <TreeNodeActions
             treeId={treeId}

@@ -21,12 +21,13 @@ Copy `.env.example` to `.env` and adjust. The schema lives in `packages/config`
 | `POSTGRES_PASSWORD` | `familyarchive`          | Change this for any non-local deployment  |
 | `POSTGRES_DB`       | `familyarchive`          | Compose-managed database name             |
 
-## Storage (used from Milestone 6)
+## Storage (see [storage.md](storage.md))
 
 | Variable               | Default       | Description                               |
 | ---------------------- | ------------- | ----------------------------------------- |
 | `MEDIA_STORAGE_DRIVER` | `local`       | `local` or `s3`                           |
 | `MEDIA_LOCAL_PATH`     | `/data/media` | Media path for the local driver           |
+| `MEDIA_MAX_UPLOAD_MB`  | `500`         | Per-file upload cap                       |
 | `S3_*`                 | —             | S3-compatible storage; see `.env.example` |
 
 ## SMTP (used from Milestone 2, optional)

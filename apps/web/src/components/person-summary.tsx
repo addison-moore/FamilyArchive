@@ -5,14 +5,33 @@ import Link from "next/link";
 import { buttonClass, subtleButtonClass } from "@/components/form";
 import type { PersonRow, RelationshipGraph } from "@/lib/people";
 
-export function PersonAvatar({ name, size = "md" }: { name: string; size?: "md" | "lg" }) {
+export function PersonAvatar({
+  name,
+  size = "md",
+  photoUrl,
+}: {
+  name: string;
+  size?: "md" | "lg";
+  photoUrl?: string | null;
+}) {
+  const sizeClass = size === "lg" ? "h-20 w-20 text-2xl" : "h-12 w-12 text-base";
+  if (photoUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={photoUrl}
+        alt=""
+        aria-hidden="true"
+        className={`${sizeClass} shrink-0 rounded-full object-cover`}
+      />
+    );
+  }
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("");
-  const sizeClass = size === "lg" ? "h-20 w-20 text-2xl" : "h-12 w-12 text-base";
   return (
     <div
       aria-hidden="true"
@@ -50,11 +69,13 @@ export function PersonSummary({
   person,
   graph,
   role,
+  photoUrl,
 }: {
   treeId: string;
   person: PersonRow;
   graph: RelationshipGraph;
   role: TreeRole;
+  photoUrl?: string | null;
 }) {
   const profileHref = `/trees/${treeId}/people/${person.id}`;
   const bioPreview =
@@ -87,7 +108,7 @@ export function PersonSummary({
   return (
     <aside className="rounded-xl border border-archive-100 bg-white p-5 shadow-sm">
       <div className="flex items-center gap-4">
-        <PersonAvatar name={person.fullName} size="lg" />
+        <PersonAvatar name={person.fullName} size="lg" photoUrl={photoUrl} />
         <div className="min-w-0">
           <h2 className="truncate text-lg font-semibold">{person.fullName}</h2>
           {personLifespan(person) && (
@@ -109,8 +130,13 @@ export function PersonSummary({
 
       {bioPreview && <p className="mt-4 text-sm leading-relaxed text-archive-700">{bioPreview}</p>}
 
-      <div className="mt-5 rounded-md bg-archive-100/50 px-3 py-2 text-xs text-archive-700/70">
-        Photos and tagged media arrive with the media library (Milestone 6).
+      <div className="mt-5 text-xs">
+        <Link
+          href={`/trees/${treeId}/media?person=${person.id}`}
+          className="text-accent-600 hover:underline"
+        >
+          View tagged media →
+        </Link>
       </div>
 
       <div className="mt-5 flex gap-2">
