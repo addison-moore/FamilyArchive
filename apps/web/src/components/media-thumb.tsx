@@ -57,7 +57,7 @@ export function MediaThumb({
                 : "bg-archive-100 text-archive-700"
             }`}
           >
-            {media.processingStatus}
+            {media.processingStatus === "failed" ? "Failed" : "Preparing…"}
           </span>
         )}
       </div>

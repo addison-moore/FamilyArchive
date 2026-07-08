@@ -84,7 +84,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       </header>
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
       <footer className="border-t border-archive-100 py-4 text-center text-xs text-archive-700/60">
-        FamilyArchive — free, open-source, self-hosted family history (AGPL-3.0-or-later)
+        FamilyArchive — free, open-source, self-hosted family history
       </footer>
     </div>
   );

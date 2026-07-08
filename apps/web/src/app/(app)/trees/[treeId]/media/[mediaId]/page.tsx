@@ -171,84 +171,101 @@ export default async function MediaDetailPage({
           <p className="mt-2 text-xs text-archive-700/70">
             {MEDIA_TYPE_LABELS[media.mediaType]}
             {dateText ? ` · ${dateText}` : ""}
-            {placeName ? ` · ${placeName}` : ""} · {formatBytes(media.fileSize)} · {media.mimeType}{" "}
-            · uploaded by {uploaderRows[0]?.name ?? uploaderRows[0]?.email ?? "unknown"} on{" "}
+            {placeName ? ` · ${placeName}` : ""} · {formatBytes(media.fileSize)} · uploaded by{" "}
+            {uploaderRows[0]?.name ?? uploaderRows[0]?.email ?? "unknown"} on{" "}
             {media.createdAt.toLocaleDateString("en-US", { dateStyle: "medium" })}
             {media.processingStatus !== "processed" && (
-              <span className="ml-2 rounded bg-archive-100 px-1.5 py-0.5">
-                {media.processingStatus}
+              <span
+                className={`ml-2 rounded px-1.5 py-0.5 ${
+                  media.processingStatus === "failed"
+                    ? "bg-danger-soft text-danger"
+                    : "bg-archive-100"
+                }`}
+              >
+                {media.processingStatus === "failed" ? "Failed" : "Preparing…"}
               </span>
             )}
           </p>
         </div>
       </Card>
 
-      {(media.processingStatus !== "processed" || isEditor) && (
+      {media.processingStatus !== "processed" && media.processingStatus !== "failed" && (
         <Card>
-          <h2 className="mb-2 text-lg font-semibold">Processing</h2>
           <p className="text-sm text-archive-700">
-            Status: <strong>{media.processingStatus}</strong>
-            {derivatives.length > 0 && ` · ${derivatives.length} derivative(s)`}
+            We&apos;re preparing this file — previews and text appear here automatically in a
+            moment.
           </p>
-          {media.processingStatus === "failed" && processingError && (
-            <p className="mt-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              {processingError}
-            </p>
-          )}
-          {media.mediaType === "photo" && meta.faces?.status && (
-            <p className="mt-2 text-sm text-archive-700">
-              Face detection: <strong>{meta.faces.status}</strong>
-              {meta.faces.status === "done" && ` · ${meta.faces.count ?? 0} face(s) found`}
-              {meta.faces.status === "failed" && meta.faces.error && (
-                <span className="text-danger"> — {meta.faces.error}</span>
-              )}
-            </p>
+        </Card>
+      )}
+      {media.processingStatus === "failed" && (
+        <Card>
+          <p className="text-sm text-archive-700">
+            Something went wrong while preparing this file.
+          </p>
+          {processingError && (
+            <details className="mt-2">
+              <summary className="cursor-pointer text-xs text-archive-700/60">
+                Technical details
+              </summary>
+              <p className="mt-1 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-xs text-danger">
+                {processingError}
+              </p>
+            </details>
           )}
           {isEditor && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              <form action={reprocessMediaAction}>
-                <input type="hidden" name="treeId" value={treeId} />
-                <input type="hidden" name="mediaId" value={mediaId} />
-                <button type="submit" className={subtleButtonClass}>
-                  {media.processingStatus === "failed" ? "Retry processing" : "Reprocess"}
-                </button>
-              </form>
-              {media.mediaType === "photo" && (
-                <form action={detectFacesAction}>
-                  <input type="hidden" name="treeId" value={treeId} />
-                  <input type="hidden" name="mediaId" value={mediaId} />
-                  <button type="submit" className={subtleButtonClass}>
-                    Detect faces
-                  </button>
-                </form>
-              )}
-            </div>
+            <form action={reprocessMediaAction} className="mt-3">
+              <input type="hidden" name="treeId" value={treeId} />
+              <input type="hidden" name="mediaId" value={mediaId} />
+              <button
+                type="submit"
+                title="Prepares the file again from the original"
+                className={subtleButtonClass}
+              >
+                Try again
+              </button>
+            </form>
+          )}
+        </Card>
+      )}
+      {media.mediaType === "photo" && meta.faces?.status === "failed" && (
+        <Card>
+          <p className="text-sm text-archive-700">We couldn&apos;t look for faces in this photo.</p>
+          {isEditor && (
+            <form action={detectFacesAction} className="mt-3">
+              <input type="hidden" name="treeId" value={treeId} />
+              <input type="hidden" name="mediaId" value={mediaId} />
+              <button
+                type="submit"
+                title="Looks for faces in the photo again"
+                className={subtleButtonClass}
+              >
+                Try again
+              </button>
+            </form>
           )}
         </Card>
       )}
 
       {showText && (
         <Card>
-          <h2 className="mb-1 text-lg font-semibold">Text</h2>
-          <p className="mb-3 text-xs text-archive-700/70">
-            OCR{meta.ocr?.status ? `: ${meta.ocr.status}` : " has not run yet"}
-            {meta.ocr?.pages ? ` · ${meta.ocr.pages} page(s)` : ""}
-            {meta.ai?.status ? ` · AI cleanup: ${meta.ai.status}` : ""}
-          </p>
-          {meta.ocr?.status === "failed" && meta.ocr.error && (
+          <h2 className="mb-3 text-lg font-semibold">Text</h2>
+          {(meta.ocr?.status === "queued" || meta.ocr?.status === "running") && (
+            <p className="mb-3 text-sm text-archive-700/70">Reading the text in this document…</p>
+          )}
+          {meta.ocr?.status === "failed" && (
             <p className="mb-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              OCR failed: {meta.ocr.error}
+              We couldn&apos;t read the text in this document automatically.
             </p>
           )}
-          {meta.ai?.status === "failed" && meta.ai.error && (
+          {meta.ai?.status === "failed" && (
             <p className="mb-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
-              AI cleanup failed: {meta.ai.error}
+              The AI tidy-up didn&apos;t work — you can try again.
             </p>
           )}
 
           {media.ocrText ? (
             <details className="mb-4" open={!media.transcriptionText}>
-              <summary className="cursor-pointer text-sm font-medium">Extracted text (OCR)</summary>
+              <summary className="cursor-pointer text-sm font-medium">Extracted text</summary>
               <pre className="mt-2 max-h-96 overflow-auto rounded-md bg-archive-100/50 p-3 text-xs whitespace-pre-wrap text-archive-800">
                 {media.ocrText}
               </pre>
@@ -262,26 +279,26 @@ export default async function MediaDetailPage({
               <form action={runOcrAction}>
                 <input type="hidden" name="treeId" value={treeId} />
                 <input type="hidden" name="mediaId" value={mediaId} />
-                <button type="submit" className={subtleButtonClass}>
-                  {media.ocrText ? "Re-run OCR" : "Run OCR"}
+                <button
+                  type="submit"
+                  title="Reads the document with text recognition (OCR)"
+                  className={subtleButtonClass}
+                >
+                  {media.ocrText ? "Extract text again" : "Extract text"}
                 </button>
               </form>
-              {aiAvailable ? (
+              {aiAvailable && (
                 <form action={aiCleanupAction}>
                   <input type="hidden" name="treeId" value={treeId} />
                   <input type="hidden" name="mediaId" value={mediaId} />
                   <button
                     type="submit"
                     className={subtleButtonClass}
-                    title="Sends the OCR text to the configured AI provider and stores the cleaned version as the transcription"
+                    title="Sends the extracted text to your AI provider and saves the tidied version as the transcription"
                   >
-                    Clean up OCR with AI
+                    Tidy up with AI
                   </button>
                 </form>
-              ) : (
-                <p className="self-center text-xs text-archive-700/60">
-                  AI cleanup is off — no provider configured (see docs/self-hosting/ocr-ai.md).
-                </p>
               )}
             </div>
           )}
@@ -609,8 +626,7 @@ export default async function MediaDetailPage({
         <Card>
           <h2 className="mb-1 text-lg font-semibold text-danger">Delete media</h2>
           <p className="mb-4 text-sm text-archive-700/80">
-            Hides this item from the library (soft delete). The original file is preserved in
-            storage.
+            Removes this item from the library. The original file stays safely on the server.
           </p>
           <form action={deleteMediaAction}>
             <input type="hidden" name="treeId" value={treeId} />

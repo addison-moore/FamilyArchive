@@ -9,9 +9,10 @@ import {
   type Edge,
   type Node,
   type NodeProps,
+  type ReactFlowInstance,
 } from "@xyflow/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { CanvasEdge, CanvasNode } from "@/lib/tree-layout";
 
@@ -34,7 +35,7 @@ function PersonNode({ data }: NodeProps<PersonFlowNode>) {
     .join("");
   return (
     <div
-      className={`flex w-[190px] items-center gap-2.5 rounded-lg border bg-surface px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md ${
+      className={`flex w-[190px] items-center gap-2.5 rounded-lg border bg-surface-raised px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md ${
         data.isSelected
           ? "border-accent-600 ring-2 ring-accent-600/30"
           : data.isStart
@@ -105,6 +106,22 @@ export function TreeCanvas({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [maximized, setMaximized] = useState(false);
+  const flowRef = useRef<ReactFlowInstance<PersonFlowNode, Edge> | null>(null);
+
+  // Re-fit after the container changes size, and let Escape exit full screen.
+  const toggleMaximized = () => {
+    setMaximized((current) => !current);
+    setTimeout(() => flowRef.current?.fitView({ padding: 0.2, maxZoom: 1 }), 60);
+  };
+  useEffect(() => {
+    if (!maximized) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") toggleMaximized();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [maximized]);
 
   const flowNodes = useMemo<PersonFlowNode[]>(
     () =>
@@ -164,8 +181,52 @@ export function TreeCanvas({
   }, [edges, nodes]);
 
   return (
-    <div className="h-[70vh] min-h-[420px] rounded-xl border border-archive-100 bg-surface shadow-sm">
+    <div
+      className={
+        maximized
+          ? "fixed inset-0 z-50 bg-surface"
+          : "relative h-[70vh] min-h-[420px] rounded-xl border border-archive-100 bg-surface shadow-sm"
+      }
+    >
+      <button
+        type="button"
+        onClick={toggleMaximized}
+        title={maximized ? "Exit full screen (Esc)" : "Full screen"}
+        aria-label={maximized ? "Exit full screen" : "Full screen"}
+        className="absolute top-3 right-3 z-10 rounded-md border border-archive-100 bg-surface-raised p-2 text-archive-700 shadow-sm hover:bg-archive-100"
+      >
+        {maximized ? (
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3" />
+          </svg>
+        ) : (
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3" />
+          </svg>
+        )}
+      </button>
       <ReactFlow
+        onInit={(instance) => {
+          flowRef.current = instance;
+        }}
         nodes={flowNodes}
         edges={flowEdges}
         nodeTypes={nodeTypes}

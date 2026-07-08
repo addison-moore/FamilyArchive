@@ -16,6 +16,9 @@
 
   /* Card/panel background (white in light mode — never use bg-white directly). */
   --color-surface: #ffffff;
+  /* Elements sitting ON a surface (tree nodes); identical in light mode,
+     one step lighter in dark so they read against the canvas. */
+  --color-surface-raised: #ffffff;
 
   /* Status families — always use these over raw red/amber/green utilities. */
   --color-danger: #b91c1c;
@@ -39,6 +42,7 @@
   --color-accent-600: #e08b2d;
 
   --color-surface: #241f19;
+  --color-surface-raised: #362e24;
 
   --color-danger: #f0837b;
   --color-danger-soft: #3a1715;
@@ -64,4 +68,11 @@
 }
 .react-flow__controls button svg {
   fill: var(--color-archive-700);
+}
+
+/* Edge-anchor handles are not interactive (nodes aren't connectable) — hide
+   the dots so person cards stay clean. */
+.react-flow__handle {
+  opacity: 0;
+  pointer-events: none;
 }

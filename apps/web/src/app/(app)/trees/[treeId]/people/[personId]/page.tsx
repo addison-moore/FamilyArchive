@@ -360,9 +360,7 @@ export default async function PersonProfilePage({
           />
           {graph.siblings.length > 0 && (
             <div>
-              <h3 className="mb-2 text-sm font-semibold text-archive-700/80">
-                Siblings (inferred from shared parents)
-              </h3>
+              <h3 className="mb-2 text-sm font-semibold text-archive-700/80">Siblings</h3>
               <ul className="space-y-2">
                 {graph.siblings.map((sibling) => (
                   <li key={sibling.id} className="flex items-center gap-3">

@@ -89,7 +89,11 @@ export function TreeNodeActions({
           <input type="hidden" name="treeId" value={treeId} />
           <input type="hidden" name="personId" value={personId} />
           <input type="hidden" name="mode" value={mode} />
-          <button type="submit" className={`${subtleButtonClass} w-full text-left`}>
+          <button
+            type="submit"
+            title="The tree will open from this person"
+            className={`${subtleButtonClass} w-full text-left`}
+          >
             Set as my starting person
           </button>
         </form>
@@ -120,10 +124,6 @@ export function TreeNodeActions({
             label="Add child"
             types={PARENT_RELATIONSHIP_TYPES}
           />
-          <p className="text-xs text-archive-700/60">
-            Adding media arrives with Milestone 6. To link two people who already exist, use the
-            profile page.
-          </p>
         </>
       )}
     </div>

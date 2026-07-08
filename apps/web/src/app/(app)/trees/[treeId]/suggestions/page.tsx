@@ -146,7 +146,7 @@ export default async function SuggestionsPage({
         <h1 className="text-2xl font-semibold">Suggestions</h1>
         <p className="mt-1 text-sm text-archive-700/80">
           {isAdmin
-            ? "Review corrections proposed by family members. Accepting records the decision — apply the edit itself through normal editing."
+            ? "Review corrections proposed by family members."
             : "Propose corrections for admins to review."}
         </p>
       </div>

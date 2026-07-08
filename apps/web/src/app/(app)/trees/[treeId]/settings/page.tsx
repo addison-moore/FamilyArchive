@@ -151,7 +151,7 @@ export default async function TreeSettingsPage({
           Invites
         </h2>
         <p className="mb-4 text-sm text-archive-700/80">
-          Invite links are tree- and role-scoped and expire automatically.
+          Invite links expire automatically and grant only the role you choose.
           {!smtpConfigured() &&
             " SMTP is not configured — create a link and share it yourself (email delivery is disabled)."}
         </p>
@@ -238,8 +238,8 @@ export default async function TreeSettingsPage({
       <Card>
         <h2 className="mb-1 text-lg font-semibold">Public access</h2>
         <p className="mb-4 text-sm text-archive-700/80">
-          Archives are private by default. Public mode makes the <strong>entire archive</strong> —
-          tree, people, and all media — viewable read-only by anyone with the link (PRD §23).
+          Archives are private by default. Public mode lets anyone with the link view the
+          <strong> entire archive</strong> — tree, people, and all media — without an account.
         </p>
         <form action={setPublicModeAction} className="space-y-3">
           <input type="hidden" name="treeId" value={treeId} />
@@ -265,7 +265,7 @@ export default async function TreeSettingsPage({
       <Card>
         <h2 className="mb-1 text-lg font-semibold">Audit log</h2>
         <p className="mb-3 text-sm text-archive-700/80">
-          Destructive and modifying actions are recorded for admins (PRD §22).
+          A record of important changes, visible to admins only.
         </p>
         <Link
           href={`/trees/${treeId}/settings/audit`}
@@ -278,8 +278,8 @@ export default async function TreeSettingsPage({
       <Card>
         <h2 className="mb-1 text-lg font-semibold">GEDCOM export</h2>
         <p className="mb-4 text-sm text-archive-700/80">
-          Download this archive as a GEDCOM 5.5.1 file — people, relationships, dates, places, and
-          notes. Media is not included (PRD v1).
+          Download this archive as a GEDCOM file — the standard format other family-tree apps can
+          open. Photos and files are not included.
         </p>
         <a
           href={`/api/trees/${treeId}/gedcom`}

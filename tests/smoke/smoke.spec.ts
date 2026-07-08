@@ -129,12 +129,13 @@ test("media upload succeeds", async () => {
 test("thumbnail job completes", async () => {
   const portrait = await fetchPortrait();
   portraitMediaId = await uploadMedia("smoke-portrait.jpg", "image/jpeg", portrait);
-  await pollFor(`/trees/${treeId}/media/${portraitMediaId}`, async () => {
-    await expect(page.getByText("Status: processed")).toBeVisible({ timeout: 2_000 });
+  // The grid switching to a generated thumbnail is the user-visible signal
+  // that background processing finished.
+  await pollFor(`/trees/${treeId}/media?scope=all`, async () => {
+    await expect(page.locator('img[src*="/derivatives/"]').first()).toBeVisible({
+      timeout: 2_000,
+    });
   });
-  // Grid serves the generated derivative thumbnail.
-  await page.goto(`/trees/${treeId}/media?scope=all`);
-  await expect(page.locator('img[src*="/derivatives/"]').first()).toBeVisible();
 });
 
 test("OCR job completes on a sample PDF", async () => {
@@ -147,14 +148,14 @@ test("OCR job completes on a sample PDF", async () => {
   await pollFor(
     `/trees/${treeId}/media/${pdfMediaId}`,
     async () => {
-      await expect(page.getByText("OCR: done")).toBeVisible({ timeout: 2_000 });
+      await expect(page.getByText("Extracted text")).toBeVisible({ timeout: 2_000 });
     },
     150_000,
   );
   // The OCR details element is open by default when there is no transcription;
   // force it open regardless so the assertion never toggles it shut.
   await page
-    .locator("details", { hasText: "Extracted text (OCR)" })
+    .locator("details", { hasText: "Extracted text" })
     .first()
     .evaluate((el) => el.setAttribute("open", ""));
   await expect(page.getByText(/quicksilver notary/)).toBeVisible();
@@ -162,14 +163,16 @@ test("OCR job completes on a sample PDF", async () => {
 
 test("face detection creates face boxes", async () => {
   test.setTimeout(240_000);
+  // The face box appearing on the photo is the user-visible signal.
   await pollFor(
     `/trees/${treeId}/media/${portraitMediaId}`,
     async () => {
-      await expect(page.getByText(/Face detection: done/)).toBeVisible({ timeout: 2_000 });
+      await expect(page.locator('button[title*="Unidentified"]').first()).toBeVisible({
+        timeout: 2_000,
+      });
     },
     150_000,
   );
-  await expect(page.locator('button[title*="Unidentified"]').first()).toBeVisible();
 });
 
 test("search returns expected person and media", async () => {

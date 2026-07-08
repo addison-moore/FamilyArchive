@@ -116,8 +116,8 @@ export default async function EditPersonPage({
       <Card>
         <h2 className="mb-1 text-lg font-semibold text-danger">Delete person</h2>
         <p className="mb-4 text-sm text-archive-700/80">
-          {person.fullName} will be hidden from the tree and lists. The record is kept (soft delete)
-          and relationships to them stop being shown.
+          {person.fullName} will disappear from the tree, lists, and search. Their record and photos
+          are kept on the server.
         </p>
         <form action={deletePersonAction}>
           <input type="hidden" name="treeId" value={treeId} />
