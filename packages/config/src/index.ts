@@ -38,6 +38,9 @@ const envSchema = z.object({
   // OCR (PRD §18.3): Tesseract language codes, "+"-separated (e.g. "eng+deu").
   OCR_LANGUAGES: z.string().default("eng"),
 
+  // Audit log retention in days (PRD §22.3); 0/unset keeps entries forever.
+  AUDIT_RETENTION_DAYS: z.coerce.number().int().min(0).default(0),
+
   // External AI providers (disabled by default, PRD §31.4; explicit admin opt-in)
   AI_PROVIDER: z.enum(["openai", "anthropic"]).optional(),
   AI_API_KEY: z.string().optional(),

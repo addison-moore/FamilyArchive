@@ -6,8 +6,9 @@ Maintain interactive family trees, upload and organize photos, videos, audio, an
 scanned documents, tag people in media, OCR old letters and records, and search
 across your family's history — all on your own server.
 
-> **Status:** early development (Milestone 1 of 12 — project foundation). Not yet
-> ready for real use. See `_plans/` for the roadmap.
+> **Status:** feature-complete for v1 (0.1.0), undergoing user acceptance
+> testing before the first public release. See `CHANGELOG.md` for what's
+> included and `_plans/` for the milestone history.
 
 ## Quickstart
 
@@ -18,9 +19,17 @@ docker compose up -d
 
 Full guide: [docs/self-hosting/quickstart.md](docs/self-hosting/quickstart.md)
 
+## Documentation
+
+- [Self-hosting quickstart](docs/self-hosting/quickstart.md) · [Environment reference](docs/self-hosting/environment.md)
+- [Storage](docs/self-hosting/storage.md) · [Backup & restore](docs/self-hosting/backup-restore.md)
+- [GEDCOM import/export](docs/self-hosting/gedcom.md) · [OCR & AI](docs/self-hosting/ocr-ai.md)
+- [Concepts: archives, sources, branches](docs/concepts.md)
+
 ## Development
 
-See [docs/development/setup.md](docs/development/setup.md).
+See [docs/development/setup.md](docs/development/setup.md) and
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

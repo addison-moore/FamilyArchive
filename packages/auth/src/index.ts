@@ -6,6 +6,8 @@ export {
   canCreateTrees,
   getSessionUser,
   getTreeRole,
+  isTreePublic,
+  requireMemberRole,
   requireOwner,
   requireTreeRole,
   requireUser,

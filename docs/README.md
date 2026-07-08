@@ -14,8 +14,9 @@ and media archive application.
 - [GEDCOM import/export](self-hosting/gedcom.md)
 - [Storage configuration](self-hosting/storage.md)
 - [OCR and AI assistance](self-hosting/ocr-ai.md)
-- Backup and restore — _coming with Milestone 12_
+- [Backup and restore](self-hosting/backup-restore.md)
 
 ## For contributors
 
 - [Development setup](development/setup.md)
+- [Contributing guide](../CONTRIBUTING.md)

@@ -1,6 +1,6 @@
 "use server";
 
-import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
+import { AuthorizationError, requireMemberRole } from "@familyarchive/auth";
 import {
   getDb,
   mediaFaces,
@@ -21,6 +21,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { recordAudit } from "@/lib/audit";
 import {
   aiConfigured,
   enqueueAiCleanup,
@@ -45,7 +46,7 @@ const metadataSchema = z.object({
 export async function updateMediaAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
-  const { user, role } = await requireTreeRole(treeId, "contributor");
+  const { user, role } = await requireMemberRole(treeId, "contributor");
   const media = await getMediaItem(treeId, mediaId);
   if (!media) redirect(`/trees/${treeId}/media`);
   if (!canEditMedia(user, role, media)) {
@@ -101,14 +102,25 @@ export async function updateMediaAction(formData: FormData): Promise<void> {
 export async function deleteMediaAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
-  const { user } = await requireTreeRole(treeId, "editor");
+  const { user } = await requireMemberRole(treeId, "editor");
 
-  await getDb()
+  const deleted = await getDb()
     .update(mediaItems)
     .set({ deletedAt: new Date(), deletedBy: user.id })
     .where(
       and(eq(mediaItems.id, mediaId), eq(mediaItems.treeId, treeId), isNull(mediaItems.deletedAt)),
-    );
+    )
+    .returning({ originalFilename: mediaItems.originalFilename, title: mediaItems.title });
+  if (deleted[0]) {
+    await recordAudit({
+      treeId,
+      actorId: user.id,
+      action: "media.deleted",
+      targetType: "media",
+      targetId: mediaId,
+      summary: `Deleted media ${deleted[0].title || deleted[0].originalFilename}`,
+    });
+  }
   redirect(`/trees/${treeId}/media`);
 }
 
@@ -120,7 +132,7 @@ export async function addMediaTagAction(formData: FormData): Promise<void> {
     .trim()
     .toLowerCase()
     .slice(0, 100);
-  await requireTreeRole(treeId, "contributor");
+  await requireMemberRole(treeId, "contributor");
   if (!name || !(await getMediaItem(treeId, mediaId))) return;
 
   const db = getDb();
@@ -148,7 +160,7 @@ export async function removeMediaTagAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
   const tagId = String(formData.get("tagId") ?? "");
-  await requireTreeRole(treeId, "contributor");
+  await requireMemberRole(treeId, "contributor");
   if (!(await getMediaItem(treeId, mediaId))) return;
 
   await getDb()
@@ -162,13 +174,22 @@ export async function addMediaPersonAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
   const personId = String(formData.get("personId") ?? "");
-  const { user } = await requireTreeRole(treeId, "contributor");
+  const { user } = await requireMemberRole(treeId, "contributor");
   if (!(await getMediaItem(treeId, mediaId)) || !(await getPerson(treeId, personId))) return;
 
   await getDb()
     .insert(mediaPeople)
     .values({ mediaId, personId, createdBy: user.id })
     .onConflictDoNothing();
+  await recordAudit({
+    treeId,
+    actorId: user.id,
+    action: "media.tagged",
+    targetType: "media",
+    targetId: mediaId,
+    summary: "Tagged a person in media",
+    metadata: { personId },
+  });
   revalidatePath(mediaPath(treeId, mediaId));
 }
 
@@ -176,7 +197,7 @@ export async function removeMediaPersonAction(formData: FormData): Promise<void>
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
   const tagRowId = String(formData.get("tagRowId") ?? "");
-  await requireTreeRole(treeId, "contributor");
+  await requireMemberRole(treeId, "contributor");
   if (!(await getMediaItem(treeId, mediaId))) return;
 
   await getDb()
@@ -189,7 +210,7 @@ export async function removeMediaPersonAction(formData: FormData): Promise<void>
 export async function reprocessMediaAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
-  await requireTreeRole(treeId, "editor");
+  await requireMemberRole(treeId, "editor");
   if (!(await getMediaItem(treeId, mediaId))) return;
 
   await getDb()
@@ -220,7 +241,7 @@ async function markTextJobQueued(mediaId: string, section: "ocr" | "ai" | "faces
 export async function runOcrAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
-  await requireTreeRole(treeId, "editor");
+  await requireMemberRole(treeId, "editor");
   const media = await getMediaItem(treeId, mediaId);
   if (!media || !isOcrEligible(media.mediaType)) return;
 
@@ -234,7 +255,7 @@ export async function saveTranscriptionAction(formData: FormData): Promise<void>
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
   const transcription = String(formData.get("transcription") ?? "").slice(0, 200_000);
-  const { user, role } = await requireTreeRole(treeId, "contributor");
+  const { user, role } = await requireMemberRole(treeId, "contributor");
   const media = await getMediaItem(treeId, mediaId);
   if (!media) return;
   if (!canEditMedia(user, role, media)) {
@@ -256,7 +277,7 @@ export async function saveTranscriptionAction(formData: FormData): Promise<void>
 export async function aiCleanupAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
-  await requireTreeRole(treeId, "editor");
+  await requireMemberRole(treeId, "editor");
   const media = await getMediaItem(treeId, mediaId);
   if (!media) return;
 
@@ -277,7 +298,7 @@ export async function aiCleanupAction(formData: FormData): Promise<void> {
 export async function detectFacesAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
-  await requireTreeRole(treeId, "editor");
+  await requireMemberRole(treeId, "editor");
   const media = await getMediaItem(treeId, mediaId);
   if (!media || !isFaceDetectionEligible(media.mediaType, media.mimeType)) return;
 
@@ -304,7 +325,7 @@ export async function assignFacePersonAction(formData: FormData): Promise<void> 
   const treeId = String(formData.get("treeId") ?? "");
   const faceId = String(formData.get("faceId") ?? "");
   const personId = String(formData.get("personId") ?? "");
-  await requireTreeRole(treeId, "contributor");
+  const { user } = await requireMemberRole(treeId, "contributor");
 
   const face = await getFaceInTree(treeId, faceId);
   if (!face) return;
@@ -314,6 +335,17 @@ export async function assignFacePersonAction(formData: FormData): Promise<void> 
     .update(mediaFaces)
     .set({ personId: personId || null, updatedAt: new Date() })
     .where(eq(mediaFaces.id, faceId));
+  if (personId) {
+    await recordAudit({
+      treeId,
+      actorId: user.id,
+      action: "media.tagged",
+      targetType: "media",
+      targetId: face.mediaId,
+      summary: "Assigned a face to a person",
+      metadata: { personId, faceId },
+    });
+  }
   revalidatePath(mediaPath(treeId, face.mediaId));
 }
 
@@ -321,7 +353,7 @@ export async function assignFacePersonAction(formData: FormData): Promise<void> 
 export async function removeFaceAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const faceId = String(formData.get("faceId") ?? "");
-  await requireTreeRole(treeId, "contributor");
+  await requireMemberRole(treeId, "contributor");
 
   const face = await getFaceInTree(treeId, faceId);
   if (!face) return;
@@ -334,7 +366,7 @@ export async function addFaceBoxAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
   const personId = String(formData.get("personId") ?? "");
-  const { user } = await requireTreeRole(treeId, "contributor");
+  const { user } = await requireMemberRole(treeId, "contributor");
   const media = await getMediaItem(treeId, mediaId);
   if (!media || !media.mimeType.startsWith("image/")) return;
 
@@ -369,7 +401,7 @@ export async function setProfilePhotoAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
   const personId = String(formData.get("personId") ?? "");
-  await requireTreeRole(treeId, "editor");
+  await requireMemberRole(treeId, "editor");
   const media = await getMediaItem(treeId, mediaId);
   if (!media || !media.mimeType.startsWith("image/") || !(await getPerson(treeId, personId))) {
     return;

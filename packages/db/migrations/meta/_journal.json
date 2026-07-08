@@ -64,6 +64,20 @@
       "when": 1783463065674,
       "tag": "0008_lucky_psynapse",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1783465633262,
+      "tag": "0009_noisy_ben_grimm",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1783467264365,
+      "tag": "0010_empty_microchip",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,7 @@ import { HEARTBEAT_QUEUE, redisConnectionOptions } from "@familyarchive/shared";
 import { Queue, Worker } from "bullmq";
 import pino from "pino";
 
+import { startAuditCleanup } from "./audit-cleanup";
 import { startEmailWorker } from "./email";
 import { startFacesWorker } from "./faces";
 import { startMediaWorker } from "./media";
@@ -36,6 +37,7 @@ const emailWorker = startEmailWorker(connection, logger);
 const mediaWorker = startMediaWorker(connection, logger);
 const textWorkers = startTextWorkers(connection, logger);
 const facesWorker = startFacesWorker(connection, logger);
+const auditWorker = startAuditCleanup(connection, logger);
 
 async function main() {
   await heartbeatQueue.upsertJobScheduler("heartbeat-every-minute", { every: 60_000 });
@@ -53,6 +55,7 @@ async function shutdown(signal: string) {
     mediaWorker.close(),
     ...textWorkers.map((w) => w.close()),
     facesWorker.close(),
+    auditWorker.close(),
     heartbeatQueue.close(),
   ]);
   process.exit(0);

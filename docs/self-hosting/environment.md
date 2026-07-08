@@ -35,6 +35,12 @@ Copy `.env.example` to `.env` and adjust. The schema lives in `packages/config`
 `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`. Without SMTP,
 invite links can still be created and shared manually.
 
+## Audit log
+
+`AUDIT_RETENTION_DAYS` (default `0` = keep forever) — the worker purges older
+audit entries daily. The audit view lives under each archive's settings
+(admins only).
+
 ## OCR
 
 `OCR_LANGUAGES` (default `eng`) — Tesseract language codes, `+`-separated. See

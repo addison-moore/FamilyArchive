@@ -50,6 +50,25 @@ docker compose down          # keep data
 docker compose down -v       # delete data (Postgres, Valkey, media volumes)
 ```
 
+## Try it with sample data
+
+`sample-data/ashford-family.ged` is a fictional nine-person family. After
+creating your owner account: **My archives → Import GEDCOM → New archive** and
+pick the file. You'll get a browsable tree, a flagged duplicate to try the
+merge tool on, and data to search.
+
+## Verifying an install (smoke tests)
+
+Against a **fresh** instance (the suite registers the first account):
+
+```bash
+corepack enable && pnpm install
+pnpm --filter @familyarchive/smoke-tests exec playwright install chromium
+pnpm test:smoke        # BASE_URL=http://host:port to target a non-default address
+```
+
+Thirteen checks cover registration through public mode (PRD §32.2).
+
 ## Configuration
 
 See the [environment variables reference](environment.md). Defaults are chosen so

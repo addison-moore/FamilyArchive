@@ -3,7 +3,7 @@
 import {
   AuthorizationError,
   canCreateTrees,
-  requireTreeRole,
+  requireMemberRole,
   requireUser,
 } from "@familyarchive/auth";
 import { redirect } from "next/navigation";
@@ -23,7 +23,7 @@ export async function importGedcomAction(formData: FormData): Promise<void> {
       throw new AuthorizationError("Creating an archive requires owner or admin access");
     }
   } else {
-    await requireTreeRole(target, "admin");
+    await requireMemberRole(target, "admin");
   }
 
   const fail = (message: string) => redirect(`/trees/import?error=${encodeURIComponent(message)}`);

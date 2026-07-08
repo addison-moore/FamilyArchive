@@ -1,5 +1,5 @@
 import type { TreeRole } from "@familyarchive/shared";
-import { jsonb, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
+import { boolean, jsonb, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
 
@@ -15,6 +15,10 @@ export const trees = pgTable("trees", {
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   description: text("description"),
+  /** Public read-only mode (PRD §23) — explicit admin opt-in; private by default. */
+  isPublic: boolean("is_public").notNull().default(false),
+  /** Search-engine indexing opt-in for public archives (PRD §23.3). */
+  allowIndexing: boolean("allow_indexing").notNull().default(false),
   createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
   metadata: jsonb("metadata").notNull().default({}),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),

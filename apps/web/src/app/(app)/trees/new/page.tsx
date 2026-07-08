@@ -1,4 +1,4 @@
-import { canCreateTrees, requireUser } from "@familyarchive/auth";
+import { canCreateTrees, getSessionUser } from "@familyarchive/auth";
 import { redirect } from "next/navigation";
 
 import { buttonClass, Card, Field, FormError, inputClass } from "@/components/form";
@@ -10,7 +10,8 @@ export default async function NewTreePage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
-  const user = await requireUser();
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
   if (!(await canCreateTrees(user))) redirect("/trees");
   const { error } = await searchParams;
 

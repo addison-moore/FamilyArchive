@@ -55,3 +55,6 @@ storage/
 .claude/
 
 _scratch/
+# Playwright
+apps/web/test-results/
+apps/web/playwright-report/

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "FamilyArchive",
+  title: { default: "FamilyArchive", template: "%s · FamilyArchive" },
   description: "Self-hosted family history and media archive",
 };
 

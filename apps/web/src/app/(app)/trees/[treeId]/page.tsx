@@ -43,7 +43,7 @@ export default async function TreePage({
   const { selected, mode: modeRaw, error, imported, people, rels } = await searchParams;
   const mode: TreeViewMode = isTreeViewMode(modeRaw) ? modeRaw : "both";
 
-  const startPerson = await resolveStartingPerson(user.id, treeId);
+  const startPerson = await resolveStartingPerson(user?.id ?? null, treeId);
 
   if (!startPerson) {
     return (
@@ -135,13 +135,15 @@ export default async function TreePage({
             role={role}
             photoUrl={selectedPhotoUrl}
           />
-          <TreeNodeActions
-            treeId={treeId}
-            personId={selectedPerson.id}
-            isStart={selectedPerson.id === startPerson.id}
-            mode={mode}
-            role={role}
-          />
+          {user && (
+            <TreeNodeActions
+              treeId={treeId}
+              personId={selectedPerson.id}
+              isStart={selectedPerson.id === startPerson.id}
+              mode={mode}
+              role={role}
+            />
+          )}
         </div>
       </div>
     </div>

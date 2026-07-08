@@ -66,7 +66,12 @@ export const mediaItems = pgTable(
   (table) => [
     index("media_items_tree_idx").on(table.treeId, table.deletedAt),
     index("media_items_hash_idx").on(table.treeId, table.hash),
-    // Full-text indexes for M10 search over document text (PRD §19.2).
+    // Full-text search over media text (PRD §19.2); expression must match lib/search.ts.
+    index("media_items_text_search_idx").using(
+      "gin",
+      sql`to_tsvector('english', coalesce(${table.title}, '') || ' ' || coalesce(${table.description}, ''))`,
+    ),
+    // Full-text indexes for search over document text (PRD §19.2).
     index("media_items_ocr_search_idx").using(
       "gin",
       sql`to_tsvector('english', coalesce(${table.ocrText}, ''))`,

@@ -1,8 +1,9 @@
 "use server";
 
-import { requireTreeRole } from "@familyarchive/auth";
+import { requireMemberRole } from "@familyarchive/auth";
 import { redirect } from "next/navigation";
 
+import { recordAudit } from "@/lib/audit";
 import { mergePeople, type MergeFieldChoices } from "@/lib/merge";
 import { getPerson } from "@/lib/people";
 
@@ -22,7 +23,7 @@ export async function mergePeopleAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const survivorId = String(formData.get("survivorId") ?? "");
   const otherId = String(formData.get("otherId") ?? "");
-  const { user } = await requireTreeRole(treeId, "editor");
+  const { user } = await requireMemberRole(treeId, "editor");
 
   const path = `/trees/${treeId}/people/${survivorId}/merge/${otherId}`;
   const fail = (message: string) => redirect(`${path}?error=${encodeURIComponent(message)}`);
@@ -55,5 +56,14 @@ export async function mergePeopleAction(formData: FormData): Promise<void> {
     if (error instanceof Error && "digest" in error) throw error;
     return fail(error instanceof Error ? error.message : "Merge failed");
   }
+  await recordAudit({
+    treeId,
+    actorId: user.id,
+    action: "person.merged",
+    targetType: "person",
+    targetId: survivorId,
+    summary: `Merged ${other.fullName} into ${survivor.fullName}`,
+    metadata: { mergedPersonId: otherId },
+  });
   redirect(`/trees/${treeId}/people/${survivorId}?merged=1`);
 }

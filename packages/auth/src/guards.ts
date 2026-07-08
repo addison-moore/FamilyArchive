@@ -1,4 +1,4 @@
-import { getDb, treeMemberships, users } from "@familyarchive/db";
+import { getDb, treeMemberships, trees, users } from "@familyarchive/db";
 import { treeRoleAtLeast, type TreeRole } from "@familyarchive/shared";
 import { and, eq } from "drizzle-orm";
 
@@ -56,7 +56,42 @@ export async function getTreeRole(user: SessionUser, treeId: string): Promise<Tr
   return rows[0]?.role ?? null;
 }
 
+/** True when the archive is in explicit public read-only mode (PRD §23). */
+export async function isTreePublic(treeId: string): Promise<boolean> {
+  const rows = await getDb()
+    .select({ isPublic: trees.isPublic })
+    .from(trees)
+    .where(eq(trees.id, treeId))
+    .limit(1);
+  return rows[0]?.isPublic ?? false;
+}
+
+/**
+ * Tree access guard (PRD §31.2, §23). Authenticated users get their real role.
+ * Anonymous visitors get the pseudo-role "viewer" — with `user: null` — iff
+ * the archive is public AND only viewer access is required; anything above
+ * viewer always demands a signed-in member, so all mutations stay locked.
+ */
 export async function requireTreeRole(
+  treeId: string,
+  minimum: TreeRole,
+): Promise<{ user: SessionUser | null; role: TreeRole }> {
+  const user = await getSessionUser();
+  if (!user) {
+    if (minimum === "viewer" && (await isTreePublic(treeId))) {
+      return { user: null, role: "viewer" };
+    }
+    throw new AuthorizationError("Sign in required");
+  }
+  const role = await getTreeRole(user, treeId);
+  if (!role || !treeRoleAtLeast(role, minimum)) {
+    throw new AuthorizationError(`Requires ${minimum} access to this tree`);
+  }
+  return { user, role };
+}
+
+/** Like requireTreeRole but never grants anonymous access — for mutations that need a user row. */
+export async function requireMemberRole(
   treeId: string,
   minimum: TreeRole,
 ): Promise<{ user: SessionUser; role: TreeRole }> {

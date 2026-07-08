@@ -49,7 +49,8 @@ export function getStorageDriver(): StorageDriver {
 }
 
 /** Metadata editing: editors and up, or contributors for their own uploads (PRD §8.4). */
-export function canEditMedia(user: SessionUser, role: TreeRole, media: MediaRow): boolean {
+export function canEditMedia(user: SessionUser | null, role: TreeRole, media: MediaRow): boolean {
+  if (!user) return false;
   return (
     treeRoleAtLeast(role, "editor") || (role === "contributor" && media.uploaderId === user.id)
   );
@@ -71,6 +72,7 @@ export interface MediaFilters {
   tagId?: string;
   personId?: string;
   uploaderId?: string;
+  collectionId?: string;
 }
 
 /** Tree-scoped, soft-delete-aware media listing with M6 filters (PRD §15.3). */
@@ -93,6 +95,11 @@ export async function listMedia(treeId: string, filters: MediaFilters): Promise<
     conditions.push(
       sql`(exists (select 1 from media_people mp where mp.media_id = ${mediaItems.id} and mp.person_id = ${filters.personId})
         or exists (select 1 from media_faces mf where mf.media_id = ${mediaItems.id} and mf.person_id = ${filters.personId}))`,
+    );
+  }
+  if (filters.collectionId) {
+    conditions.push(
+      sql`exists (select 1 from collection_media cm where cm.media_id = ${mediaItems.id} and cm.collection_id = ${filters.collectionId})`,
     );
   }
   const rows = await query.where(and(...conditions)).orderBy(desc(mediaItems.createdAt));

@@ -160,15 +160,17 @@ export async function buildTreeGraph(
  * still points at a living row, else the earliest-created person, else null.
  */
 export async function resolveStartingPerson(
-  userId: string,
+  userId: string | null,
   treeId: string,
 ): Promise<PersonRow | null> {
   const db = getDb();
-  const prefRows = await db
-    .select({ startingPersonId: userTreePreferences.startingPersonId })
-    .from(userTreePreferences)
-    .where(and(eq(userTreePreferences.userId, userId), eq(userTreePreferences.treeId, treeId)))
-    .limit(1);
+  const prefRows = userId
+    ? await db
+        .select({ startingPersonId: userTreePreferences.startingPersonId })
+        .from(userTreePreferences)
+        .where(and(eq(userTreePreferences.userId, userId), eq(userTreePreferences.treeId, treeId)))
+        .limit(1)
+    : [];
   const preferredId = prefRows[0]?.startingPersonId;
   if (preferredId) {
     const rows = await db

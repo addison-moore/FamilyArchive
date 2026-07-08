@@ -40,3 +40,20 @@ those people — without ever wandering into an in-law's unrelated branch.
 Switch to "Everyone" any time. Branch views are a browsing convenience only:
 **every member of an archive can always see the entire archive.** If you need
 real separation, use separate archives.
+
+## Public archives
+
+Archives are private by default. An admin can flip an archive to **public
+read-only mode**: the entire archive — tree, people, and all media — becomes
+viewable by anyone with the link, with no account. Public visitors cannot
+edit, upload, tag, or suggest. Search-engine indexing is a separate opt-in;
+without it the pages carry a `noindex` tag.
+
+## Suggestions and the audit log
+
+Members who can't edit directly (viewers and contributors) can **suggest
+corrections** on people, media, or the archive itself; admins get an email (if
+SMTP is configured) and review suggestions in one queue. Separately, an
+admin-only **audit log** records destructive and modifying actions — person
+and media changes, merges, membership and invite changes, and public-mode
+toggles — with configurable retention.

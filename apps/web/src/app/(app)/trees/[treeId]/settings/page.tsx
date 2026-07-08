@@ -1,4 +1,4 @@
-import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
+import { AuthorizationError, requireMemberRole, type SessionUser } from "@familyarchive/auth";
 import { getEnv } from "@familyarchive/config";
 import { notFound } from "next/navigation";
 import { getDb, invites, treeMemberships, trees, users } from "@familyarchive/db";
@@ -22,8 +22,10 @@ import {
   deleteTreeAction,
   removeMemberAction,
   revokeInviteAction,
+  setPublicModeAction,
   updateTreeAction,
 } from "./actions";
+import Link from "next/link";
 
 export default async function TreeSettingsPage({
   params,
@@ -33,9 +35,9 @@ export default async function TreeSettingsPage({
   searchParams: Promise<{ error?: string; invite?: string; emailed?: string; smtp?: string }>;
 }) {
   const { treeId } = await params;
-  let user;
+  let user: SessionUser;
   try {
-    ({ user } = await requireTreeRole(treeId, "admin"));
+    ({ user } = await requireMemberRole(treeId, "admin"));
   } catch (error) {
     if (error instanceof AuthorizationError) notFound();
     throw error;
@@ -231,6 +233,46 @@ export default async function TreeSettingsPage({
             ))}
           </ul>
         )}
+      </Card>
+
+      <Card>
+        <h2 className="mb-1 text-lg font-semibold">Public access</h2>
+        <p className="mb-4 text-sm text-archive-700/80">
+          Archives are private by default. Public mode makes the <strong>entire archive</strong> —
+          tree, people, and all media — viewable read-only by anyone with the link (PRD §23).
+        </p>
+        <form action={setPublicModeAction} className="space-y-3">
+          <input type="hidden" name="treeId" value={treeId} />
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="isPublic" defaultChecked={tree.isPublic} />
+            Make this archive publicly viewable
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="allowIndexing" defaultChecked={tree.allowIndexing} />
+            Allow search engines to index it (otherwise noindex is sent)
+          </label>
+          <button type="submit" className={buttonClass}>
+            Save public access
+          </button>
+        </form>
+        {tree.isPublic && (
+          <p className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            This archive is currently public.
+          </p>
+        )}
+      </Card>
+
+      <Card>
+        <h2 className="mb-1 text-lg font-semibold">Audit log</h2>
+        <p className="mb-3 text-sm text-archive-700/80">
+          Destructive and modifying actions are recorded for admins (PRD §22).
+        </p>
+        <Link
+          href={`/trees/${treeId}/settings/audit`}
+          className={`${subtleButtonClass} inline-block no-underline`}
+        >
+          View audit log
+        </Link>
       </Card>
 
       <Card>

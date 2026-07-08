@@ -99,10 +99,12 @@ export interface ResolvedView {
  * anything, otherwise it degrades to "all".
  */
 export async function resolveView(
-  userId: string,
+  userId: string | null,
   treeId: string,
   scopeParam: string | undefined,
 ): Promise<ResolvedView> {
+  // Anonymous public visitors have no anchor or preference — Everyone scope.
+  if (!userId) return { scope: "all", branchIds: null, anchorName: null };
   const prefRows = await getDb()
     .select({ viewScope: userTreePreferences.viewScope })
     .from(userTreePreferences)

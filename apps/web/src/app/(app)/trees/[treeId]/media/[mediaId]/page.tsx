@@ -22,6 +22,12 @@ import {
   subtleButtonClass,
 } from "@/components/form";
 import { FaceTagger } from "@/components/face-tagger";
+import { SuggestForm } from "@/components/suggest-form";
+import {
+  addMediaToCollectionAction,
+  removeMediaFromCollectionAction,
+} from "@/app/(app)/trees/[treeId]/collections/actions";
+import { collectionsForMedia, listCollections } from "@/lib/collections";
 import { listFaces } from "@/lib/faces";
 import { canEditMedia, derivativeUrl, getMediaItem, listDerivatives, mediaUrl } from "@/lib/media";
 import { getPlaceName, listPeople } from "@/lib/people";
@@ -91,6 +97,11 @@ export default async function MediaDetailPage({
   ]);
   const derivatives = await listDerivatives(mediaId);
   const pdfPages = derivatives.filter((d) => d.kind === "pdf_page");
+  const [memberOf, allCollections] = await Promise.all([
+    collectionsForMedia(treeId, mediaId),
+    listCollections(treeId),
+  ]);
+  const joinableCollections = allCollections.filter((c) => !memberOf.some((m) => m.id === c.id));
   const faces = isImageMime(media.mimeType) ? await listFaces(mediaId) : [];
   const meta = media.metadata as {
     processing?: { error?: string | null };
@@ -395,6 +406,62 @@ export default async function MediaDetailPage({
       </Card>
 
       <Card>
+        <h2 className="mb-3 text-lg font-semibold">Collections</h2>
+        {memberOf.length > 0 ? (
+          <ul className="mb-4 flex flex-wrap gap-2">
+            {memberOf.map((collection) => (
+              <li
+                key={collection.id}
+                className="flex items-center gap-1.5 rounded-full bg-archive-100 py-1 pr-2 pl-3 text-sm"
+              >
+                <Link
+                  href={`/trees/${treeId}/collections/${collection.id}`}
+                  className="hover:text-accent-600"
+                >
+                  {collection.name}
+                </Link>
+                {canTag && (
+                  <form action={removeMediaFromCollectionAction}>
+                    <input type="hidden" name="treeId" value={treeId} />
+                    <input type="hidden" name="collectionId" value={collection.id} />
+                    <input type="hidden" name="mediaId" value={mediaId} />
+                    <button
+                      type="submit"
+                      className="text-archive-700/50 hover:text-red-700"
+                      title="Remove from collection"
+                    >
+                      ×
+                    </button>
+                  </form>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mb-4 text-sm text-archive-700/70">Not in any collection yet.</p>
+        )}
+        {canTag && joinableCollections.length > 0 && (
+          <form action={addMediaToCollectionAction} className="flex items-end gap-2">
+            <input type="hidden" name="treeId" value={treeId} />
+            <input type="hidden" name="mediaId" value={mediaId} />
+            <Field label="Add to collection">
+              <select name="collectionId" required className={`${inputClass} w-56`}>
+                <option value="">Select…</option>
+                {joinableCollections.map((collection) => (
+                  <option key={collection.id} value={collection.id}>
+                    {collection.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <button type="submit" className={subtleButtonClass}>
+              Add
+            </button>
+          </form>
+        )}
+      </Card>
+
+      <Card>
         <h2 className="mb-3 text-lg font-semibold">Tags</h2>
         {itemTags.length > 0 && (
           <ul className="mb-4 flex flex-wrap gap-2">
@@ -526,6 +593,16 @@ export default async function MediaDetailPage({
             </button>
           </form>
         </Card>
+      )}
+
+      {user && !isEditor && (
+        <SuggestForm
+          treeId={treeId}
+          targetType="media"
+          targetId={mediaId}
+          targetLabel={media.title || media.originalFilename}
+          returnTo={`/trees/${treeId}/media/${mediaId}`}
+        />
       )}
 
       {isEditor && (

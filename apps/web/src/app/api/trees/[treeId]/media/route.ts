@@ -1,13 +1,14 @@
 import { createHash } from "node:crypto";
 import { Readable, Transform } from "node:stream";
 
-import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
+import { AuthorizationError, requireMemberRole } from "@familyarchive/auth";
 import { getEnv } from "@familyarchive/config";
 import { getDb, mediaItems } from "@familyarchive/db";
 import { originalKey, uploadTempKey } from "@familyarchive/media";
 import { UPLOAD_MIME_TYPES } from "@familyarchive/shared";
 import { and, eq, isNull, ne } from "drizzle-orm";
 
+import { recordAudit } from "@/lib/audit";
 import { enqueueMediaProcessing } from "@/lib/jobs";
 import { getStorageDriver } from "@/lib/media";
 
@@ -24,7 +25,7 @@ export async function POST(
   const { treeId } = await params;
   let user;
   try {
-    ({ user } = await requireTreeRole(treeId, "contributor"));
+    ({ user } = await requireMemberRole(treeId, "contributor"));
   } catch (error) {
     if (error instanceof AuthorizationError) {
       return Response.json({ error: "Not authorized" }, { status: 403 });
@@ -152,6 +153,14 @@ export async function POST(
     .where(eq(mediaItems.id, mediaId));
 
   await enqueueMediaProcessing(treeId, mediaId);
+  await recordAudit({
+    treeId,
+    actorId: user.id,
+    action: "media.uploaded",
+    targetType: "media",
+    targetId: mediaId,
+    summary: `Uploaded ${originalFilename}`,
+  });
 
   return Response.json({ mediaId }, { status: 201 });
 }

@@ -29,19 +29,21 @@ export default async function MediaPage({
     person?: string;
     mine?: string;
     scope?: string;
+    collection?: string;
   }>;
 }) {
   const { treeId } = await params;
   const { user, role } = await requireTreeRole(treeId, "viewer");
-  const { type, tag, person, mine, scope: scopeParam } = await searchParams;
+  const { type, tag, person, mine, scope: scopeParam, collection } = await searchParams;
 
   const [view, allMedia, treeTags, peopleList] = await Promise.all([
-    resolveView(user.id, treeId, scopeParam),
+    resolveView(user?.id ?? null, treeId, scopeParam),
     listMedia(treeId, {
       type,
       tagId: tag,
       personId: person,
-      uploaderId: mine ? user.id : undefined,
+      uploaderId: mine && user ? user.id : undefined,
+      collectionId: collection,
     }),
     getDb().select().from(tags).where(eq(tags.treeId, treeId)).orderBy(asc(tags.name)),
     listPeople(treeId),
@@ -95,12 +97,14 @@ export default async function MediaPage({
             My uploads
           </Link>
         </div>
-        <ScopeToggle
-          basePath={`/trees/${treeId}/media`}
-          scope={view.scope}
-          params={{ type, tag, person, mine }}
-          anchorName={view.anchorName}
-        />
+        {user && (
+          <ScopeToggle
+            basePath={`/trees/${treeId}/media`}
+            scope={view.scope}
+            params={{ type, tag, person, mine }}
+            anchorName={view.anchorName}
+          />
+        )}
         <form method="GET" className="ml-auto flex flex-wrap items-center gap-2">
           {mine && <input type="hidden" name="mine" value="1" />}
           {view.scope === "all" && <input type="hidden" name="scope" value="all" />}

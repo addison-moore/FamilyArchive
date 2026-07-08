@@ -1,6 +1,6 @@
 "use server";
 
-import { requireTreeRole } from "@familyarchive/auth";
+import { requireMemberRole } from "@familyarchive/auth";
 import { getDb, people, relationships, userTreePreferences } from "@familyarchive/db";
 import {
   isParentRelationshipType,
@@ -24,7 +24,7 @@ export async function setStartingPersonAction(formData: FormData): Promise<void>
   const treeId = String(formData.get("treeId") ?? "");
   const personId = String(formData.get("personId") ?? "");
   const mode = String(formData.get("mode") ?? "both");
-  const { user } = await requireTreeRole(treeId, "viewer");
+  const { user } = await requireMemberRole(treeId, "viewer");
   if (!(await getPerson(treeId, personId))) redirect(treePath(treeId));
 
   await getDb()
@@ -57,7 +57,7 @@ export async function quickAddRelativeAction(formData: FormData): Promise<void> 
   const direction = String(formData.get("direction") ?? "");
   const type = String(formData.get("type") ?? "");
   const mode = String(formData.get("mode") ?? "both");
-  const { user } = await requireTreeRole(treeId, "editor");
+  const { user } = await requireMemberRole(treeId, "editor");
 
   const backParams: Record<string, string> = {
     selected: anchorId,

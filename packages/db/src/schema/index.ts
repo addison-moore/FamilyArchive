@@ -6,3 +6,5 @@ export * from "./media";
 export * from "./derivatives";
 export * from "./faces";
 export * from "./sources";
+export * from "./collections";
+export * from "./suggestions";

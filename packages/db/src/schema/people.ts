@@ -1,4 +1,5 @@
 import type { Gender, PersonNameKind, RelationshipType } from "@familyarchive/shared";
+import { sql } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -78,7 +79,14 @@ export const people = pgTable(
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),
   },
-  (table) => [index("people_tree_idx").on(table.treeId, table.deletedAt)],
+  (table) => [
+    index("people_tree_idx").on(table.treeId, table.deletedAt),
+    // Full-text search over person text (PRD §19.2); expression must match lib/search.ts.
+    index("people_text_search_idx").using(
+      "gin",
+      sql`to_tsvector('english', coalesce(${table.fullName}, '') || ' ' || coalesce(${table.biography}, '') || ' ' || coalesce(${table.notes}, ''))`,
+    ),
+  ],
 );
 
 export const personNames = pgTable(

@@ -1,24 +1,39 @@
 import { getSessionUser, getTreeRole } from "@familyarchive/auth";
 import { getDb, trees } from "@familyarchive/db";
 import { eq } from "drizzle-orm";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { getAccessibleTrees } from "@/lib/trees";
 
-/** Tree-level navigation (PRD §7.3). Feature pages activate as milestones land. */
+/** Tree-level navigation (PRD §7.3). */
 const ACTIVE_NAV = [
   { label: "Tree", path: "" },
   { label: "People", path: "people" },
   { label: "Media", path: "media" },
+  { label: "Collections", path: "collections" },
+  { label: "Search", path: "search" },
+  { label: "Suggestions", path: "suggestions" },
 ] as const;
 
-const PLACEHOLDER_NAV = [
-  { label: "Collections", milestone: 10 },
-  { label: "Search", milestone: 10 },
-  { label: "Suggestions", milestone: 11 },
-] as const;
+/** Search-engine indexing is opt-in even for public archives (PRD §23.3). */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ treeId: string }>;
+}): Promise<Metadata> {
+  const { treeId } = await params;
+  const rows = await getDb()
+    .select({ isPublic: trees.isPublic, allowIndexing: trees.allowIndexing })
+    .from(trees)
+    .where(eq(trees.id, treeId))
+    .limit(1);
+  const tree = rows[0];
+  const indexable = Boolean(tree?.isPublic && tree.allowIndexing);
+  return { robots: indexable ? { index: true, follow: true } : { index: false, follow: false } };
+}
 
 export default async function TreeLayout({
   children,
@@ -29,17 +44,25 @@ export default async function TreeLayout({
 }) {
   const { treeId } = await params;
   const user = await getSessionUser();
-  if (!user) redirect("/login");
 
-  const role = await getTreeRole(user, treeId);
-  if (!role) notFound();
-
-  const [treeRows, accessibleTrees] = await Promise.all([
-    getDb().select().from(trees).where(eq(trees.id, treeId)).limit(1),
-    getAccessibleTrees(user),
-  ]);
+  const treeRows = await getDb().select().from(trees).where(eq(trees.id, treeId)).limit(1);
   const tree = treeRows[0];
   if (!tree) notFound();
+
+  // Members get their role; anonymous visitors get read-only access to public
+  // archives (PRD §23) and a login redirect everywhere else.
+  let role: string;
+  let accessibleTrees: { id: string; name: string }[];
+  if (user) {
+    const memberRole = await getTreeRole(user, treeId);
+    if (!memberRole) notFound();
+    role = memberRole;
+    accessibleTrees = await getAccessibleTrees(user);
+  } else {
+    if (!tree.isPublic) redirect("/login");
+    role = "viewer";
+    accessibleTrees = [{ id: tree.id, name: tree.name }];
+  }
 
   return (
     <div>
@@ -60,12 +83,14 @@ export default async function TreeLayout({
                 {item.name}
               </Link>
             ))}
-            <Link
-              href="/trees"
-              className="block rounded border-t border-archive-100 px-3 py-2 text-sm text-archive-700/80 hover:bg-archive-50"
-            >
-              All archives…
-            </Link>
+            {user && (
+              <Link
+                href="/trees"
+                className="block rounded border-t border-archive-100 px-3 py-2 text-sm text-archive-700/80 hover:bg-archive-50"
+              >
+                All archives…
+              </Link>
+            )}
           </div>
         </details>
         <nav aria-label="Tree navigation" className="flex flex-wrap items-center gap-1">
@@ -78,16 +103,6 @@ export default async function TreeLayout({
               {item.label}
             </Link>
           ))}
-          {PLACEHOLDER_NAV.map((item) => (
-            <span
-              key={item.label}
-              aria-disabled="true"
-              title={`Coming in Milestone ${item.milestone}`}
-              className="cursor-not-allowed rounded-md px-3 py-1.5 text-sm text-archive-700/50"
-            >
-              {item.label}
-            </span>
-          ))}
           {role === "admin" && (
             <Link
               href={`/trees/${treeId}/settings`}
@@ -98,7 +113,7 @@ export default async function TreeLayout({
           )}
         </nav>
         <span className="ml-auto rounded bg-archive-100 px-2 py-0.5 text-xs text-archive-700">
-          your role: {role}
+          {user ? `your role: ${role}` : "public archive — read-only"}
         </span>
       </div>
       {children}

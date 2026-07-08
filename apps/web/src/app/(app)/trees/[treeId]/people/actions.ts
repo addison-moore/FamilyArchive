@@ -1,6 +1,6 @@
 "use server";
 
-import { requireTreeRole } from "@familyarchive/auth";
+import { requireMemberRole } from "@familyarchive/auth";
 import { getDb, people, personNames, relationships } from "@familyarchive/db";
 import {
   isGender,
@@ -16,6 +16,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { recordAudit } from "@/lib/audit";
 import { findSimilarPeople } from "@/lib/duplicates";
 import { getPerson, resolvePlaceId } from "@/lib/people";
 
@@ -98,7 +99,7 @@ function personValues(form: ParsedPersonForm) {
 
 export async function createPersonAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
-  const { user } = await requireTreeRole(treeId, "editor");
+  const { user } = await requireMemberRole(treeId, "editor");
 
   const form = parsePersonForm(formData);
   if (typeof form === "string") {
@@ -121,6 +122,16 @@ export async function createPersonAction(formData: FormData): Promise<void> {
     })
     .returning({ id: people.id });
   const newId = rows[0]?.id;
+  if (newId) {
+    await recordAudit({
+      treeId,
+      actorId: user.id,
+      action: "person.created",
+      targetType: "person",
+      targetId: newId,
+      summary: `Created person ${form.fields.fullName}`,
+    });
+  }
 
   // Non-blocking duplicate warning (PRD §14.7): the person is created either way.
   const similar = newId
@@ -133,7 +144,7 @@ export async function createPersonAction(formData: FormData): Promise<void> {
 export async function updatePersonAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const personId = String(formData.get("personId") ?? "");
-  await requireTreeRole(treeId, "editor");
+  const { user } = await requireMemberRole(treeId, "editor");
   if (!(await getPerson(treeId, personId))) redirect(peoplePath(treeId));
 
   const form = parsePersonForm(formData);
@@ -150,6 +161,14 @@ export async function updatePersonAction(formData: FormData): Promise<void> {
     .update(people)
     .set({ ...personValues(form), birthPlaceId, deathPlaceId, updatedAt: new Date() })
     .where(and(eq(people.id, personId), eq(people.treeId, treeId), isNull(people.deletedAt)));
+  await recordAudit({
+    treeId,
+    actorId: user.id,
+    action: "person.updated",
+    targetType: "person",
+    targetId: personId,
+    summary: `Edited person ${form.fields.fullName}`,
+  });
   redirect(`${peoplePath(treeId)}/${personId}`);
 }
 
@@ -157,12 +176,23 @@ export async function updatePersonAction(formData: FormData): Promise<void> {
 export async function deletePersonAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const personId = String(formData.get("personId") ?? "");
-  const { user } = await requireTreeRole(treeId, "editor");
+  const { user } = await requireMemberRole(treeId, "editor");
 
-  await getDb()
+  const deleted = await getDb()
     .update(people)
     .set({ deletedAt: new Date(), deletedBy: user.id })
-    .where(and(eq(people.id, personId), eq(people.treeId, treeId), isNull(people.deletedAt)));
+    .where(and(eq(people.id, personId), eq(people.treeId, treeId), isNull(people.deletedAt)))
+    .returning({ fullName: people.fullName });
+  if (deleted[0]) {
+    await recordAudit({
+      treeId,
+      actorId: user.id,
+      action: "person.deleted",
+      targetType: "person",
+      targetId: personId,
+      summary: `Deleted person ${deleted[0].fullName}`,
+    });
+  }
   redirect(peoplePath(treeId));
 }
 
@@ -171,7 +201,7 @@ export async function addPersonNameAction(formData: FormData): Promise<void> {
   const personId = String(formData.get("personId") ?? "");
   const name = String(formData.get("name") ?? "").trim();
   const kindRaw = String(formData.get("kind") ?? "");
-  await requireTreeRole(treeId, "editor");
+  await requireMemberRole(treeId, "editor");
   if (!name || name.length > 300 || !(await getPerson(treeId, personId))) return;
 
   await getDb()
@@ -184,7 +214,7 @@ export async function removePersonNameAction(formData: FormData): Promise<void> 
   const treeId = String(formData.get("treeId") ?? "");
   const personId = String(formData.get("personId") ?? "");
   const nameId = String(formData.get("nameId") ?? "");
-  await requireTreeRole(treeId, "editor");
+  await requireMemberRole(treeId, "editor");
   if (!(await getPerson(treeId, personId))) return;
 
   await getDb()
@@ -204,7 +234,7 @@ export async function addRelationshipAction(formData: FormData): Promise<void> {
   const direction = String(formData.get("direction") ?? "");
   const type = String(formData.get("type") ?? "");
   const notes = String(formData.get("notes") ?? "").trim() || null;
-  await requireTreeRole(treeId, "editor");
+  await requireMemberRole(treeId, "editor");
 
   const profilePath = `${peoplePath(treeId)}/${personId}`;
   const fail = (message: string): never =>
@@ -255,7 +285,7 @@ export async function removeRelationshipAction(formData: FormData): Promise<void
   const treeId = String(formData.get("treeId") ?? "");
   const personId = String(formData.get("personId") ?? "");
   const relationshipId = String(formData.get("relationshipId") ?? "");
-  await requireTreeRole(treeId, "editor");
+  await requireMemberRole(treeId, "editor");
 
   await getDb()
     .delete(relationships)

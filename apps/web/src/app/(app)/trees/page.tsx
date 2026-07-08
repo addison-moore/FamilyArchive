@@ -1,5 +1,6 @@
-import { canCreateTrees, requireUser } from "@familyarchive/auth";
+import { canCreateTrees, getSessionUser } from "@familyarchive/auth";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { buttonClass, Card, subtleButtonClass } from "@/components/form";
 import { getAccessibleTrees } from "@/lib/trees";
@@ -7,7 +8,8 @@ import { getAccessibleTrees } from "@/lib/trees";
 import { setDefaultTreeAction } from "./actions";
 
 export default async function TreesPage() {
-  const user = await requireUser();
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
   const [treesList, showCreate] = await Promise.all([
     getAccessibleTrees(user),
     canCreateTrees(user),

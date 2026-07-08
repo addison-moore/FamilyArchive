@@ -20,6 +20,7 @@ import {
   subtleButtonClass,
 } from "@/components/form";
 import { MediaThumb } from "@/components/media-thumb";
+import { SuggestForm } from "@/components/suggest-form";
 import { PersonAvatar, personLifespan } from "@/components/person-summary";
 import { listMediaForPerson, profilePhotoUrl, thumbUrls } from "@/lib/media";
 import {
@@ -149,7 +150,7 @@ export default async function PersonProfilePage({
   searchParams: Promise<{ error?: string; dupWarning?: string; merged?: string }>;
 }) {
   const { treeId, personId } = await params;
-  const { role } = await requireTreeRole(treeId, "viewer");
+  const { user, role } = await requireTreeRole(treeId, "viewer");
   const { error, dupWarning, merged } = await searchParams;
 
   const person = await getPerson(treeId, personId);
@@ -417,6 +418,16 @@ export default async function PersonProfilePage({
           </div>
         )}
       </Card>
+
+      {user && !canEdit && (
+        <SuggestForm
+          treeId={treeId}
+          targetType="person"
+          targetId={personId}
+          targetLabel={person.fullName}
+          returnTo={`/trees/${treeId}/people/${personId}`}
+        />
+      )}
 
       {person.notes && (
         <Card>

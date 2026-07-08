@@ -1,6 +1,6 @@
 "use server";
 
-import { requireOwner, requireTreeRole } from "@familyarchive/auth";
+import { requireOwner, requireMemberRole } from "@familyarchive/auth";
 import { getDb, invites, treeMemberships, trees } from "@familyarchive/db";
 import { isTreeRole } from "@familyarchive/shared";
 import { and, eq } from "drizzle-orm";
@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { recordAudit } from "@/lib/audit";
 import { enqueueEmail, smtpConfigured } from "@/lib/email";
 import { DEFAULT_INVITE_EXPIRY_DAYS, generateInviteToken } from "@/lib/invites";
 import { getEnv } from "@familyarchive/config";
@@ -23,7 +24,7 @@ const updateTreeSchema = z.object({
 
 export async function updateTreeAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
-  await requireTreeRole(treeId, "admin");
+  await requireMemberRole(treeId, "admin");
 
   const parsed = updateTreeSchema.safeParse({
     name: formData.get("name"),
@@ -49,7 +50,7 @@ export async function changeMemberRoleAction(formData: FormData): Promise<void> 
   const treeId = String(formData.get("treeId") ?? "");
   const membershipId = String(formData.get("membershipId") ?? "");
   const role = String(formData.get("role") ?? "");
-  await requireTreeRole(treeId, "admin");
+  const { user } = await requireMemberRole(treeId, "admin");
   if (!isTreeRole(role)) return;
 
   // treeId in the filter keeps the mutation tree-scoped (PRD §31.2).
@@ -57,17 +58,33 @@ export async function changeMemberRoleAction(formData: FormData): Promise<void> 
     .update(treeMemberships)
     .set({ role, updatedAt: new Date() })
     .where(and(eq(treeMemberships.id, membershipId), eq(treeMemberships.treeId, treeId)));
+  await recordAudit({
+    treeId,
+    actorId: user.id,
+    action: "membership.role_changed",
+    targetType: "membership",
+    targetId: membershipId,
+    summary: `Changed a member's role to ${role}`,
+  });
   revalidatePath(settingsPath(treeId));
 }
 
 export async function removeMemberAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const membershipId = String(formData.get("membershipId") ?? "");
-  await requireTreeRole(treeId, "admin");
+  const { user } = await requireMemberRole(treeId, "admin");
 
   await getDb()
     .delete(treeMemberships)
     .where(and(eq(treeMemberships.id, membershipId), eq(treeMemberships.treeId, treeId)));
+  await recordAudit({
+    treeId,
+    actorId: user.id,
+    action: "membership.removed",
+    targetType: "membership",
+    targetId: membershipId,
+    summary: "Removed a member from the archive",
+  });
   revalidatePath(settingsPath(treeId));
 }
 
@@ -79,7 +96,7 @@ const createInviteSchema = z.object({
 
 export async function createInviteAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
-  const { user } = await requireTreeRole(treeId, "admin");
+  const { user } = await requireMemberRole(treeId, "admin");
 
   const parsed = createInviteSchema.safeParse({
     role: formData.get("role"),
@@ -130,18 +147,57 @@ export async function createInviteAction(formData: FormData): Promise<void> {
     }
   }
 
+  await recordAudit({
+    treeId,
+    actorId: user.id,
+    action: "invite.created",
+    targetType: "invite",
+    summary: `Created a ${parsed.data.role} invite${email ? ` for ${email}` : ""}`,
+  });
   redirect(`${settingsPath(treeId)}?invite=${encodeURIComponent(token)}${emailStatus}#invites`);
 }
 
 export async function revokeInviteAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const inviteId = String(formData.get("inviteId") ?? "");
-  await requireTreeRole(treeId, "admin");
+  const { user } = await requireMemberRole(treeId, "admin");
 
   await getDb()
     .update(invites)
     .set({ revokedAt: new Date() })
     .where(and(eq(invites.id, inviteId), eq(invites.treeId, treeId)));
+  await recordAudit({
+    treeId,
+    actorId: user.id,
+    action: "invite.revoked",
+    targetType: "invite",
+    targetId: inviteId,
+    summary: "Revoked an invite",
+  });
+  revalidatePath(settingsPath(treeId));
+}
+
+/** Public read-only mode + indexing toggles (admin, PRD §23, §31.3). Audited. */
+export async function setPublicModeAction(formData: FormData): Promise<void> {
+  const treeId = String(formData.get("treeId") ?? "");
+  const { user } = await requireMemberRole(treeId, "admin");
+  const isPublic = formData.get("isPublic") === "on";
+  const allowIndexing = isPublic && formData.get("allowIndexing") === "on";
+
+  await getDb()
+    .update(trees)
+    .set({ isPublic, allowIndexing, updatedAt: new Date() })
+    .where(eq(trees.id, treeId));
+  await recordAudit({
+    treeId,
+    actorId: user.id,
+    action: "tree.public_mode_changed",
+    targetType: "tree",
+    targetId: treeId,
+    summary: isPublic
+      ? `Made the archive public (indexing ${allowIndexing ? "allowed" : "disallowed"})`
+      : "Made the archive private",
+  });
   revalidatePath(settingsPath(treeId));
 }
 

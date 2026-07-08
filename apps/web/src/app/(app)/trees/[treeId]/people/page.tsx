@@ -20,7 +20,7 @@ export default async function PeoplePage({
   const { user, role } = await requireTreeRole(treeId, "viewer");
   const { q, selected, scope: scopeParam } = await searchParams;
 
-  const view = await resolveView(user.id, treeId, scopeParam);
+  const view = await resolveView(user?.id ?? null, treeId, scopeParam);
   const allMatching = await listPeople(treeId, q);
   const peopleList = view.branchIds
     ? allMatching.filter((p) => view.branchIds!.has(p.id))
@@ -40,12 +40,14 @@ export default async function PeoplePage({
       <div className="min-w-0 flex-1">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-semibold">People</h1>
-          <ScopeToggle
-            basePath={`/trees/${treeId}/people`}
-            scope={view.scope}
-            params={{ q, selected }}
-            anchorName={view.anchorName}
-          />
+          {user && (
+            <ScopeToggle
+              basePath={`/trees/${treeId}/people`}
+              scope={view.scope}
+              params={{ q, selected }}
+              anchorName={view.anchorName}
+            />
+          )}
           {view.branchIds && (
             <span className="text-xs text-archive-700/70">
               {peopleList.length} of {allMatching.length} people

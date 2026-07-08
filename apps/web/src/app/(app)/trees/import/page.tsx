@@ -1,4 +1,4 @@
-import { canCreateTrees, requireUser } from "@familyarchive/auth";
+import { canCreateTrees, getSessionUser } from "@familyarchive/auth";
 import { redirect } from "next/navigation";
 
 import { buttonClass, Card, Field, FormError, inputClass } from "@/components/form";
@@ -11,7 +11,8 @@ export default async function ImportGedcomPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
-  const user = await requireUser();
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
   const [accessible, mayCreate] = await Promise.all([
     getAccessibleTrees(user),
     canCreateTrees(user),

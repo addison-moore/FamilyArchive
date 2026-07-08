@@ -124,7 +124,9 @@ Requires Node 22 (`.nvmrc`) and pnpm 10 (`corepack enable`).
 - Build: `pnpm build`
 - Lint: `pnpm lint` · Format: `pnpm format` (check: `pnpm format:check`)
 - Typecheck: `pnpm typecheck`
-- Tests: none yet (smoke tests land in Milestone 12)
+- Tests: `pnpm test:smoke` — Playwright smoke suite (tests/smoke) against a FRESH
+  stack (`docker compose down -v && docker compose up -d --build` first);
+  one-time `pnpm --filter @familyarchive/smoke-tests exec playwright install chromium`
 - DB: `pnpm db:generate` (create migration from schema), `pnpm db:migrate` (apply)
 - Full stack: `docker compose up -d` (root `compose.yaml` includes
   `docker/docker-compose.yml`; one-shot `migrate` service runs before app/worker)
