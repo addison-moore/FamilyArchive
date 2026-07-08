@@ -67,6 +67,38 @@ export async function getMediaItem(treeId: string, mediaId: string): Promise<Med
   return rows[0] ?? null;
 }
 
+/**
+ * Neighbors of an item in the library's grid order (created_at desc, id as
+ * tie-break): "previous" is the newer item, "next" the older one. Powers the
+ * lightbox arrows; deliberately ignores grid filters (v1 decision).
+ */
+export async function adjacentMedia(
+  treeId: string,
+  media: MediaRow,
+): Promise<{ prevId: string | null; nextId: string | null }> {
+  const db = getDb();
+  const scope = and(eq(mediaItems.treeId, treeId), isNull(mediaItems.deletedAt));
+  // Compare against the row's own stored (created_at, id) via a subquery —
+  // JS Dates lose Postgres's microsecond precision, so passing them as
+  // parameters would make an item its own neighbor.
+  const anchor = sql`(select m.created_at, m.id from media_items m where m.id = ${media.id})`;
+  const [prev, next] = await Promise.all([
+    db
+      .select({ id: mediaItems.id })
+      .from(mediaItems)
+      .where(and(scope, sql`(${mediaItems.createdAt}, ${mediaItems.id}) > ${anchor}`))
+      .orderBy(asc(mediaItems.createdAt), asc(mediaItems.id))
+      .limit(1),
+    db
+      .select({ id: mediaItems.id })
+      .from(mediaItems)
+      .where(and(scope, sql`(${mediaItems.createdAt}, ${mediaItems.id}) < ${anchor}`))
+      .orderBy(desc(mediaItems.createdAt), desc(mediaItems.id))
+      .limit(1),
+  ]);
+  return { prevId: prev[0]?.id ?? null, nextId: next[0]?.id ?? null };
+}
+
 export interface MediaFilters {
   type?: string;
   tagId?: string;

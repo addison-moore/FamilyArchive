@@ -22,6 +22,7 @@ import {
   subtleButtonClass,
 } from "@/components/form";
 import { FaceTagger } from "@/components/face-tagger";
+import { MediaNav } from "@/components/media-nav";
 import { SuggestForm } from "@/components/suggest-form";
 import {
   addMediaToCollectionAction,
@@ -29,7 +30,14 @@ import {
 } from "@/app/(app)/trees/[treeId]/collections/actions";
 import { collectionsForMedia, listCollections } from "@/lib/collections";
 import { listFaces } from "@/lib/faces";
-import { canEditMedia, derivativeUrl, getMediaItem, listDerivatives, mediaUrl } from "@/lib/media";
+import {
+  adjacentMedia,
+  canEditMedia,
+  derivativeUrl,
+  getMediaItem,
+  listDerivatives,
+  mediaUrl,
+} from "@/lib/media";
 import { getPlaceName, listPeople } from "@/lib/people";
 
 import { aiConfigured } from "@/lib/jobs";
@@ -51,6 +59,10 @@ import {
   setProfilePhotoAction,
   updateMediaAction,
 } from "./actions";
+
+const iconButtonClass =
+  "flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border " +
+  "border-archive-100 bg-surface text-archive-700 hover:bg-archive-100";
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
@@ -96,6 +108,7 @@ export default async function MediaDetailPage({
     listPeople(treeId),
   ]);
   const derivatives = await listDerivatives(mediaId);
+  const { prevId, nextId } = await adjacentMedia(treeId, media);
   const pdfPages = derivatives.filter((d) => d.kind === "pdf_page");
   const [memberOf, allCollections] = await Promise.all([
     collectionsForMedia(treeId, mediaId),
@@ -126,11 +139,13 @@ export default async function MediaDetailPage({
   });
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-5">
       <FormError message={error} />
+      {media.title ? null : <h1 className="sr-only">{media.originalFilename}</h1>}
 
-      <Card>
-        <div className="flex items-center justify-center bg-archive-100/40">
+      {/* Stage: the media is the page. Chevrons + arrow keys navigate the library. */}
+      <div className="relative overflow-hidden rounded-xl bg-archive-100/40">
+        <div className="flex items-center justify-center">
           {isImageMime(media.mimeType) ? (
             <FaceTagger
               imageUrl={url}
@@ -144,11 +159,13 @@ export default async function MediaDetailPage({
               hiddenFields={{ treeId, mediaId }}
             />
           ) : media.mediaType === "video" ? (
-            <video controls src={url} className="max-h-[70vh] w-full rounded" />
+            <video controls src={url} className="max-h-[70vh] w-full" />
           ) : media.mediaType === "audio" ? (
-            <audio controls src={url} className="w-full" />
+            <div className="w-full px-6 py-10">
+              <audio controls src={url} className="w-full" />
+            </div>
           ) : (
-            <div className="py-10 text-center">
+            <div className="py-14 text-center">
               <div className="text-5xl">📄</div>
               <a
                 href={url}
@@ -161,33 +178,430 @@ export default async function MediaDetailPage({
             </div>
           )}
         </div>
-        <div className="mt-4">
-          <h1 className="text-xl font-semibold">{media.title || media.originalFilename}</h1>
+        <MediaNav
+          prevUrl={prevId ? `/trees/${treeId}/media/${prevId}` : null}
+          nextUrl={nextId ? `/trees/${treeId}/media/${nextId}` : null}
+        />
+      </div>
+
+      {/* Caption zone: only what a person wrote — plus the discoverability rail. */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 space-y-1">
+          {media.title && <h1 className="text-xl font-semibold">{media.title}</h1>}
           {media.description && (
-            <p className="mt-1 text-sm leading-relaxed whitespace-pre-line text-archive-700">
+            <p className="text-sm leading-relaxed whitespace-pre-line text-archive-700">
               {media.description}
             </p>
           )}
-          <p className="mt-2 text-xs text-archive-700/70">
-            {MEDIA_TYPE_LABELS[media.mediaType]}
-            {dateText ? ` · ${dateText}` : ""}
-            {placeName ? ` · ${placeName}` : ""} · {formatBytes(media.fileSize)} · uploaded by{" "}
-            {uploaderRows[0]?.name ?? uploaderRows[0]?.email ?? "unknown"} on{" "}
-            {media.createdAt.toLocaleDateString("en-US", { dateStyle: "medium" })}
-            {media.processingStatus !== "processed" && (
+          {(dateText || placeName) && (
+            <p className="text-sm text-archive-700/80">
+              {[dateText, placeName].filter(Boolean).join(" · ")}
+            </p>
+          )}
+          {media.processingStatus !== "processed" && (
+            <p>
               <span
-                className={`ml-2 rounded px-1.5 py-0.5 ${
+                className={`inline-block rounded px-1.5 py-0.5 text-xs ${
                   media.processingStatus === "failed"
                     ? "bg-danger-soft text-danger"
-                    : "bg-archive-100"
+                    : "bg-archive-100 text-archive-700"
                 }`}
               >
                 {media.processingStatus === "failed" ? "Failed" : "Preparing…"}
               </span>
-            )}
-          </p>
+            </p>
+          )}
         </div>
-      </Card>
+
+        <div className="flex shrink-0 items-center gap-1.5">
+          <details className="relative">
+            <summary className={`${iconButtonClass} list-none`} title="Info" aria-label="Info">
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-5M12 8h.01" />
+              </svg>
+            </summary>
+            <div className="absolute right-0 z-20 mt-2 w-[min(92vw,26rem)] rounded-xl border border-archive-100 bg-surface p-5 shadow-lg">
+              <dl className="space-y-1.5 text-sm">
+                <div>
+                  <dt className="inline font-medium">Type: </dt>
+                  <dd className="inline text-archive-700">{MEDIA_TYPE_LABELS[media.mediaType]}</dd>
+                </div>
+                {dateText && (
+                  <div>
+                    <dt className="inline font-medium">Date: </dt>
+                    <dd className="inline text-archive-700">{dateText}</dd>
+                  </div>
+                )}
+                {placeName && (
+                  <div>
+                    <dt className="inline font-medium">Place: </dt>
+                    <dd className="inline text-archive-700">{placeName}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="inline font-medium">Added: </dt>
+                  <dd className="inline text-archive-700">
+                    by {uploaderRows[0]?.name ?? uploaderRows[0]?.email ?? "unknown"} on{" "}
+                    {media.createdAt.toLocaleDateString("en-US", { dateStyle: "medium" })}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="inline font-medium">File: </dt>
+                  <dd className="inline text-archive-700">
+                    {media.originalFilename} · {formatBytes(media.fileSize)}
+                  </dd>
+                </div>
+              </dl>
+
+              <h3 className="mt-4 mb-2 text-sm font-semibold">Collections</h3>
+              {memberOf.length > 0 ? (
+                <ul className="mb-2 flex flex-wrap gap-2">
+                  {memberOf.map((collection) => (
+                    <li
+                      key={collection.id}
+                      className="flex items-center gap-1.5 rounded-full bg-archive-100 py-1 pr-2 pl-3 text-sm"
+                    >
+                      <Link
+                        href={`/trees/${treeId}/collections/${collection.id}`}
+                        className="hover:text-accent-600"
+                      >
+                        {collection.name}
+                      </Link>
+                      {canTag && (
+                        <form action={removeMediaFromCollectionAction}>
+                          <input type="hidden" name="treeId" value={treeId} />
+                          <input type="hidden" name="collectionId" value={collection.id} />
+                          <input type="hidden" name="mediaId" value={mediaId} />
+                          <button
+                            type="submit"
+                            className="text-archive-700/50 hover:text-danger"
+                            title="Remove from collection"
+                          >
+                            ×
+                          </button>
+                        </form>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mb-2 text-sm text-archive-700/70">Not in any collection.</p>
+              )}
+              {canTag && joinableCollections.length > 0 && (
+                <form action={addMediaToCollectionAction} className="flex items-center gap-2">
+                  <input type="hidden" name="treeId" value={treeId} />
+                  <input type="hidden" name="mediaId" value={mediaId} />
+                  <select name="collectionId" required className={`${inputClass} w-auto flex-1`}>
+                    <option value="">Add to collection…</option>
+                    {joinableCollections.map((collection) => (
+                      <option key={collection.id} value={collection.id}>
+                        {collection.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="submit" className={subtleButtonClass}>
+                    Add
+                  </button>
+                </form>
+              )}
+
+              <h3 className="mt-4 mb-2 text-sm font-semibold">Tags</h3>
+              {itemTags.length > 0 && (
+                <ul className="mb-2 flex flex-wrap gap-2">
+                  {itemTags.map((tag) => (
+                    <li
+                      key={tag.id}
+                      className="flex items-center gap-1.5 rounded-full bg-archive-100 py-1 pr-2 pl-3 text-sm"
+                    >
+                      <Link
+                        href={`/trees/${treeId}/media?tag=${tag.id}`}
+                        className="hover:text-accent-600"
+                      >
+                        {tag.name}
+                      </Link>
+                      {canTag && (
+                        <form action={removeMediaTagAction}>
+                          <input type="hidden" name="treeId" value={treeId} />
+                          <input type="hidden" name="mediaId" value={mediaId} />
+                          <input type="hidden" name="tagId" value={tag.id} />
+                          <button
+                            type="submit"
+                            className="text-archive-700/50 hover:text-danger"
+                            title="Remove"
+                          >
+                            ×
+                          </button>
+                        </form>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {canTag ? (
+                <form action={addMediaTagAction} className="flex items-center gap-2">
+                  <input type="hidden" name="treeId" value={treeId} />
+                  <input type="hidden" name="mediaId" value={mediaId} />
+                  <input
+                    name="name"
+                    required
+                    maxLength={100}
+                    placeholder="Add a tag…"
+                    className={`${inputClass} w-auto flex-1`}
+                  />
+                  <button type="submit" className={subtleButtonClass}>
+                    Add
+                  </button>
+                </form>
+              ) : (
+                itemTags.length === 0 && <p className="text-sm text-archive-700/70">No tags yet.</p>
+              )}
+            </div>
+          </details>
+
+          {canEdit && (
+            <details className="relative">
+              <summary
+                className={`${iconButtonClass} list-none`}
+                title="Edit details"
+                aria-label="Edit details"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                </svg>
+              </summary>
+              <div className="absolute right-0 z-20 mt-2 w-[min(92vw,28rem)] rounded-xl border border-archive-100 bg-surface p-5 shadow-lg">
+                <form action={updateMediaAction} className="space-y-4">
+                  <input type="hidden" name="treeId" value={treeId} />
+                  <input type="hidden" name="mediaId" value={mediaId} />
+                  <Field label="Title">
+                    <input
+                      name="title"
+                      maxLength={300}
+                      defaultValue={media.title ?? ""}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label="Description / caption">
+                    <textarea
+                      name="description"
+                      rows={3}
+                      maxLength={10000}
+                      defaultValue={media.description ?? ""}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <div className="flex flex-wrap items-end gap-3">
+                    <Field label="Type">
+                      <select
+                        name="mediaType"
+                        defaultValue={media.mediaType}
+                        className={`${inputClass} w-auto`}
+                      >
+                        {MEDIA_TYPES.map((mediaType) => (
+                          <option key={mediaType} value={mediaType}>
+                            {MEDIA_TYPE_LABELS[mediaType]}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Year">
+                      <input
+                        name="dateYear"
+                        type="number"
+                        min={1}
+                        max={9999}
+                        defaultValue={media.dateYear ?? ""}
+                        className={`${inputClass} w-24`}
+                      />
+                    </Field>
+                    <Field label="Month">
+                      <input
+                        name="dateMonth"
+                        type="number"
+                        min={1}
+                        max={12}
+                        defaultValue={media.dateMonth ?? ""}
+                        className={`${inputClass} w-20`}
+                      />
+                    </Field>
+                    <Field label="Day">
+                      <input
+                        name="dateDay"
+                        type="number"
+                        min={1}
+                        max={31}
+                        defaultValue={media.dateDay ?? ""}
+                        className={`${inputClass} w-20`}
+                      />
+                    </Field>
+                    <label className="flex items-center gap-1.5 pb-2 text-sm">
+                      <input type="checkbox" name="dateApprox" defaultChecked={media.dateApprox} />
+                      approximate
+                    </label>
+                  </div>
+                  <Field label="Place">
+                    <input
+                      name="place"
+                      maxLength={300}
+                      defaultValue={placeName ?? ""}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <button type="submit" className={buttonClass}>
+                    Save
+                  </button>
+                </form>
+              </div>
+            </details>
+          )}
+
+          <details className="relative">
+            <summary
+              className={`${iconButtonClass} list-none`}
+              title="More options"
+              aria-label="More options"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="12" r="1.8" />
+                <circle cx="12" cy="12" r="1.8" />
+                <circle cx="19" cy="12" r="1.8" />
+              </svg>
+            </summary>
+            <div className="absolute right-0 z-20 mt-2 w-60 rounded-md border border-archive-100 bg-surface p-1 shadow-lg">
+              <a
+                href={url}
+                download={media.originalFilename}
+                className="block rounded px-3 py-2 text-sm no-underline hover:bg-archive-50"
+              >
+                Download original
+              </a>
+              {isEditor && isImageMime(media.mimeType) && taggedPeople.length > 0 && (
+                <details>
+                  <summary className="cursor-pointer rounded px-3 py-2 text-sm hover:bg-archive-50">
+                    Use as profile photo
+                  </summary>
+                  <div className="pl-3">
+                    {taggedPeople.map((tagged) => (
+                      <form key={tagged.rowId} action={setProfilePhotoAction}>
+                        <input type="hidden" name="treeId" value={treeId} />
+                        <input type="hidden" name="mediaId" value={mediaId} />
+                        <input type="hidden" name="personId" value={tagged.personId} />
+                        <button
+                          type="submit"
+                          className="w-full rounded px-3 py-1.5 text-left text-sm text-archive-700 hover:bg-archive-50"
+                        >
+                          {tagged.fullName}
+                        </button>
+                      </form>
+                    ))}
+                  </div>
+                </details>
+              )}
+              {isEditor && (
+                <details>
+                  <summary className="cursor-pointer rounded px-3 py-2 text-sm text-danger hover:bg-danger-soft">
+                    Delete…
+                  </summary>
+                  <div className="space-y-2 px-3 py-2">
+                    <p className="text-xs text-archive-700/80">
+                      Removes this item from the library. The original file stays safely on the
+                      server.
+                    </p>
+                    <form action={deleteMediaAction}>
+                      <input type="hidden" name="treeId" value={treeId} />
+                      <input type="hidden" name="mediaId" value={mediaId} />
+                      <button type="submit" className={`${dangerButtonClass} w-full`}>
+                        Delete permanently from library
+                      </button>
+                    </form>
+                  </div>
+                </details>
+              )}
+            </div>
+          </details>
+        </div>
+      </div>
+
+      {/* People are content — chips stay visible; adding collapses into "+ Add". */}
+      <div className="flex flex-wrap items-center gap-2">
+        {taggedPeople.map((tagged) => (
+          <span
+            key={tagged.rowId}
+            className="flex items-center gap-2 rounded-full border border-archive-100 bg-surface py-1 pr-2 pl-3 text-sm"
+          >
+            <Link
+              href={`/trees/${treeId}/people/${tagged.personId}`}
+              className="hover:text-accent-600"
+            >
+              {tagged.fullName}
+            </Link>
+            {canTag && (
+              <form action={removeMediaPersonAction}>
+                <input type="hidden" name="treeId" value={treeId} />
+                <input type="hidden" name="mediaId" value={mediaId} />
+                <input type="hidden" name="tagRowId" value={tagged.rowId} />
+                <button
+                  type="submit"
+                  className="text-archive-700/50 hover:text-danger"
+                  title="Remove tag"
+                >
+                  ×
+                </button>
+              </form>
+            )}
+          </span>
+        ))}
+        {canTag && untaggedPeople.length > 0 && (
+          <details className="relative">
+            <summary
+              className="cursor-pointer list-none rounded-full border border-dashed border-archive-100 px-3 py-1 text-sm text-archive-700 hover:bg-archive-50"
+              title={
+                isImageMime(media.mimeType)
+                  ? "Tag someone — or click their face in the photo"
+                  : "Tag someone in this item"
+              }
+            >
+              + Tag someone
+            </summary>
+            <form
+              action={addMediaPersonAction}
+              className="absolute left-0 z-20 mt-2 flex w-72 items-center gap-2 rounded-md border border-archive-100 bg-surface p-2 shadow-lg"
+            >
+              <input type="hidden" name="treeId" value={treeId} />
+              <input type="hidden" name="mediaId" value={mediaId} />
+              <select name="personId" required className={`${inputClass} flex-1`}>
+                <option value="">Select a person…</option>
+                {untaggedPeople.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.fullName}
+                  </option>
+                ))}
+              </select>
+              <button type="submit" className={subtleButtonClass}>
+                Tag
+              </button>
+            </form>
+          </details>
+        )}
+      </div>
 
       {media.processingStatus !== "processed" && media.processingStatus !== "failed" && (
         <Card>
@@ -347,271 +761,6 @@ export default async function MediaDetailPage({
         </Card>
       )}
 
-      <Card>
-        <h2 className="mb-3 text-lg font-semibold">People in this media</h2>
-        {taggedPeople.length > 0 ? (
-          <ul className="mb-4 flex flex-wrap gap-2">
-            {taggedPeople.map((tagged) => (
-              <li
-                key={tagged.rowId}
-                className="flex items-center gap-2 rounded-full border border-archive-100 bg-archive-50 py-1 pr-2 pl-3 text-sm"
-              >
-                <Link
-                  href={`/trees/${treeId}/people/${tagged.personId}`}
-                  className="hover:text-accent-600"
-                >
-                  {tagged.fullName}
-                </Link>
-                {isEditor && isImageMime(media.mimeType) && (
-                  <form action={setProfilePhotoAction}>
-                    <input type="hidden" name="treeId" value={treeId} />
-                    <input type="hidden" name="mediaId" value={mediaId} />
-                    <input type="hidden" name="personId" value={tagged.personId} />
-                    <button
-                      type="submit"
-                      title={`Use as ${tagged.fullName}'s profile photo`}
-                      className="text-xs text-archive-700/60 hover:text-accent-600"
-                    >
-                      set profile photo
-                    </button>
-                  </form>
-                )}
-                {canTag && (
-                  <form action={removeMediaPersonAction}>
-                    <input type="hidden" name="treeId" value={treeId} />
-                    <input type="hidden" name="mediaId" value={mediaId} />
-                    <input type="hidden" name="tagRowId" value={tagged.rowId} />
-                    <button
-                      type="submit"
-                      className="text-archive-700/50 hover:text-danger"
-                      title="Remove tag"
-                    >
-                      ×
-                    </button>
-                  </form>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mb-4 text-sm text-archive-700/70">No people tagged yet.</p>
-        )}
-        {canTag && untaggedPeople.length > 0 && (
-          <form action={addMediaPersonAction} className="flex items-end gap-2">
-            <input type="hidden" name="treeId" value={treeId} />
-            <input type="hidden" name="mediaId" value={mediaId} />
-            <Field label="Tag a person">
-              <select name="personId" required className={`${inputClass} w-56`}>
-                <option value="">Select…</option>
-                {untaggedPeople.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.fullName}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <button type="submit" className={subtleButtonClass}>
-              Tag
-            </button>
-          </form>
-        )}
-        {isImageMime(media.mimeType) && (
-          <p className="mt-3 text-xs text-archive-700/60">
-            Tip: hover over the photo above and click a face to tag exactly who is who.
-          </p>
-        )}
-      </Card>
-
-      <Card>
-        <h2 className="mb-3 text-lg font-semibold">Collections</h2>
-        {memberOf.length > 0 ? (
-          <ul className="mb-4 flex flex-wrap gap-2">
-            {memberOf.map((collection) => (
-              <li
-                key={collection.id}
-                className="flex items-center gap-1.5 rounded-full bg-archive-100 py-1 pr-2 pl-3 text-sm"
-              >
-                <Link
-                  href={`/trees/${treeId}/collections/${collection.id}`}
-                  className="hover:text-accent-600"
-                >
-                  {collection.name}
-                </Link>
-                {canTag && (
-                  <form action={removeMediaFromCollectionAction}>
-                    <input type="hidden" name="treeId" value={treeId} />
-                    <input type="hidden" name="collectionId" value={collection.id} />
-                    <input type="hidden" name="mediaId" value={mediaId} />
-                    <button
-                      type="submit"
-                      className="text-archive-700/50 hover:text-danger"
-                      title="Remove from collection"
-                    >
-                      ×
-                    </button>
-                  </form>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mb-4 text-sm text-archive-700/70">Not in any collection yet.</p>
-        )}
-        {canTag && joinableCollections.length > 0 && (
-          <form action={addMediaToCollectionAction} className="flex items-end gap-2">
-            <input type="hidden" name="treeId" value={treeId} />
-            <input type="hidden" name="mediaId" value={mediaId} />
-            <Field label="Add to collection">
-              <select name="collectionId" required className={`${inputClass} w-56`}>
-                <option value="">Select…</option>
-                {joinableCollections.map((collection) => (
-                  <option key={collection.id} value={collection.id}>
-                    {collection.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <button type="submit" className={subtleButtonClass}>
-              Add
-            </button>
-          </form>
-        )}
-      </Card>
-
-      <Card>
-        <h2 className="mb-3 text-lg font-semibold">Tags</h2>
-        {itemTags.length > 0 && (
-          <ul className="mb-4 flex flex-wrap gap-2">
-            {itemTags.map((tag) => (
-              <li
-                key={tag.id}
-                className="flex items-center gap-1.5 rounded-full bg-archive-100 py-1 pr-2 pl-3 text-sm"
-              >
-                <Link
-                  href={`/trees/${treeId}/media?tag=${tag.id}`}
-                  className="hover:text-accent-600"
-                >
-                  {tag.name}
-                </Link>
-                {canTag && (
-                  <form action={removeMediaTagAction}>
-                    <input type="hidden" name="treeId" value={treeId} />
-                    <input type="hidden" name="mediaId" value={mediaId} />
-                    <input type="hidden" name="tagId" value={tag.id} />
-                    <button
-                      type="submit"
-                      className="text-archive-700/50 hover:text-danger"
-                      title="Remove"
-                    >
-                      ×
-                    </button>
-                  </form>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-        {canTag && (
-          <form action={addMediaTagAction} className="flex items-end gap-2">
-            <input type="hidden" name="treeId" value={treeId} />
-            <input type="hidden" name="mediaId" value={mediaId} />
-            <Field label="Add tag">
-              <input name="name" required maxLength={100} className={`${inputClass} w-56`} />
-            </Field>
-            <button type="submit" className={subtleButtonClass}>
-              Add
-            </button>
-          </form>
-        )}
-      </Card>
-
-      {canEdit && (
-        <Card>
-          <h2 className="mb-3 text-lg font-semibold">Edit details</h2>
-          <form action={updateMediaAction} className="space-y-4">
-            <input type="hidden" name="treeId" value={treeId} />
-            <input type="hidden" name="mediaId" value={mediaId} />
-            <Field label="Title">
-              <input
-                name="title"
-                maxLength={300}
-                defaultValue={media.title ?? ""}
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Description / caption">
-              <textarea
-                name="description"
-                rows={3}
-                maxLength={10000}
-                defaultValue={media.description ?? ""}
-                className={inputClass}
-              />
-            </Field>
-            <div className="flex flex-wrap items-end gap-3">
-              <Field label="Type">
-                <select
-                  name="mediaType"
-                  defaultValue={media.mediaType}
-                  className={`${inputClass} w-auto`}
-                >
-                  {MEDIA_TYPES.map((mediaType) => (
-                    <option key={mediaType} value={mediaType}>
-                      {MEDIA_TYPE_LABELS[mediaType]}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Year">
-                <input
-                  name="dateYear"
-                  type="number"
-                  min={1}
-                  max={9999}
-                  defaultValue={media.dateYear ?? ""}
-                  className={`${inputClass} w-24`}
-                />
-              </Field>
-              <Field label="Month">
-                <input
-                  name="dateMonth"
-                  type="number"
-                  min={1}
-                  max={12}
-                  defaultValue={media.dateMonth ?? ""}
-                  className={`${inputClass} w-20`}
-                />
-              </Field>
-              <Field label="Day">
-                <input
-                  name="dateDay"
-                  type="number"
-                  min={1}
-                  max={31}
-                  defaultValue={media.dateDay ?? ""}
-                  className={`${inputClass} w-20`}
-                />
-              </Field>
-              <label className="flex items-center gap-1.5 pb-2 text-sm">
-                <input type="checkbox" name="dateApprox" defaultChecked={media.dateApprox} />
-                approximate
-              </label>
-            </div>
-            <Field label="Place">
-              <input
-                name="place"
-                maxLength={300}
-                defaultValue={placeName ?? ""}
-                className={inputClass}
-              />
-            </Field>
-            <button type="submit" className={buttonClass}>
-              Save
-            </button>
-          </form>
-        </Card>
-      )}
-
       {user && !isEditor && (
         <SuggestForm
           treeId={treeId}
@@ -620,22 +769,6 @@ export default async function MediaDetailPage({
           targetLabel={media.title || media.originalFilename}
           returnTo={`/trees/${treeId}/media/${mediaId}`}
         />
-      )}
-
-      {isEditor && (
-        <Card>
-          <h2 className="mb-1 text-lg font-semibold text-danger">Delete media</h2>
-          <p className="mb-4 text-sm text-archive-700/80">
-            Removes this item from the library. The original file stays safely on the server.
-          </p>
-          <form action={deleteMediaAction}>
-            <input type="hidden" name="treeId" value={treeId} />
-            <input type="hidden" name="mediaId" value={mediaId} />
-            <button type="submit" className={dangerButtonClass}>
-              Delete {media.title || media.originalFilename}
-            </button>
-          </form>
-        </Card>
       )}
     </div>
   );

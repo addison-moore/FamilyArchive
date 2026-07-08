@@ -244,12 +244,6 @@ export function FaceTagger({
               </button>
             </div>
           )}
-
-          {!selected && !draft && (
-            <p className="text-xs text-archive-700/60">
-              Hover over the photo to see who&apos;s tagged — click a face to tag someone.
-            </p>
-          )}
         </div>
       )}
     </div>
