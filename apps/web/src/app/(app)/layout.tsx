@@ -20,11 +20,6 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           <Link href="/" className="text-lg font-semibold tracking-tight no-underline">
             Family<span className="text-accent-600">Archive</span>
           </Link>
-          {user && (
-            <Link href="/trees" className="text-sm text-archive-700 hover:text-archive-900">
-              My archives
-            </Link>
-          )}
           {user ? (
             <details className="group relative ml-auto">
               <summary className="cursor-pointer list-none rounded-md border border-archive-100 px-3 py-1.5 text-sm text-archive-700 hover:bg-archive-50">
@@ -35,6 +30,12 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               </summary>
               <div className="absolute right-0 z-10 mt-1 w-48 rounded-md border border-archive-100 bg-surface p-1 shadow-md">
                 <div className="px-3 py-2 text-xs text-archive-700/70">{user.email}</div>
+                <Link
+                  href="/trees"
+                  className="block rounded px-3 py-2 text-sm no-underline hover:bg-archive-50"
+                >
+                  My archives
+                </Link>
                 <form
                   action={async () => {
                     "use server";
