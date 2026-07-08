@@ -400,7 +400,7 @@ export default async function MediaDetailPage({
         )}
         {isImageMime(media.mimeType) && (
           <p className="mt-3 text-xs text-archive-700/60">
-            Tip: click a face box on the photo above to tag exactly who is who.
+            Tip: hover over the photo above and click a face to tag exactly who is who.
           </p>
         )}
       </Card>

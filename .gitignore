@@ -56,5 +56,5 @@ storage/
 
 _scratch/
 # Playwright
-apps/web/test-results/
-apps/web/playwright-report/
+tests/smoke/test-results/
+tests/smoke/playwright-report/

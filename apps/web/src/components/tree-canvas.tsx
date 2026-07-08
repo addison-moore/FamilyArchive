@@ -42,7 +42,25 @@ function PersonNode({ data }: NodeProps<PersonFlowNode>) {
             : "border-archive-100"
       }`}
     >
-      <Handle type="target" position={Position.Top} className="!bg-archive-700/40" />
+      {/* Explicit handle ids matter: edges pin themselves to a handle by id, and
+          React Flow otherwise falls back to the FIRST handle of that type in DOM
+          order — which would route parent-child edges out of a side handle.
+          Top/bottom = parent-child; left/right = partner edges only. */}
+      <Handle type="target" position={Position.Top} id="top" className="!bg-archive-700/40" />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left-target"
+        className="!bg-archive-700/40"
+        style={{ top: "50%" }}
+      />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="left-source"
+        className="!bg-archive-700/40"
+        style={{ top: "50%" }}
+      />
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-archive-100 text-sm font-semibold text-archive-700">
         {initials || "?"}
       </div>
@@ -53,7 +71,21 @@ function PersonNode({ data }: NodeProps<PersonFlowNode>) {
         )}
         {data.isStart && <div className="text-[10px] text-accent-600">starting person</div>}
       </div>
-      <Handle type="source" position={Position.Bottom} className="!bg-archive-700/40" />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="right-target"
+        className="!bg-archive-700/40"
+        style={{ top: "50%" }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right-source"
+        className="!bg-archive-700/40"
+        style={{ top: "50%" }}
+      />
+      <Handle type="source" position={Position.Bottom} id="bottom" className="!bg-archive-700/40" />
     </div>
   );
 }
@@ -90,20 +122,46 @@ export function TreeCanvas({
     [nodes, selectedId],
   );
 
-  const flowEdges = useMemo<Edge[]>(
-    () =>
-      edges.map((edge) => ({
+  const flowEdges = useMemo<Edge[]>(() => {
+    const nodeById = new Map(nodes.map((node) => [node.id, node]));
+    return edges.map((edge) => {
+      if (edge.kind !== "partner") {
+        // Parent → child: always out the bottom of the parent, into the top of
+        // the child (pinned by handle id — see PersonNode).
+        return {
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          sourceHandle: "bottom",
+          targetHandle: "top",
+          type: "smoothstep",
+          style: { stroke: "#6b5d4a", strokeWidth: 1.5 },
+        };
+      }
+      // Partner edges connect side-to-side. Whichever node sits further left
+      // sends the line out of its right handle into the other node's left
+      // handle, regardless of which end is "source" in the data. Partners on
+      // the same row get a clean straight line; a cross-row pair (a partner
+      // ranked into a different generation by their own parents) gets a
+      // stepped route instead of a long diagonal slash.
+      const sourceNode = nodeById.get(edge.source);
+      const targetNode = nodeById.get(edge.target);
+      const [left, right] =
+        (sourceNode?.x ?? 0) <= (targetNode?.x ?? 0)
+          ? [sourceNode, targetNode]
+          : [targetNode, sourceNode];
+      const sameRow = Math.abs((left?.y ?? 0) - (right?.y ?? 0)) < 8;
+      return {
         id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        type: edge.kind === "partner" ? "straight" : "smoothstep",
-        style:
-          edge.kind === "partner"
-            ? { stroke: "#b45309", strokeDasharray: "6 4", strokeWidth: 1.5 }
-            : { stroke: "#6b5d4a", strokeWidth: 1.5 },
-      })),
-    [edges],
-  );
+        source: left?.id ?? edge.source,
+        target: right?.id ?? edge.target,
+        sourceHandle: "right-source",
+        targetHandle: "left-target",
+        type: sameRow ? "straight" : "smoothstep",
+        style: { stroke: "#b45309", strokeDasharray: "6 4", strokeWidth: 1.5 },
+      };
+    });
+  }, [edges, nodes]);
 
   return (
     <div className="h-[70vh] min-h-[420px] rounded-xl border border-archive-100 bg-white shadow-sm">

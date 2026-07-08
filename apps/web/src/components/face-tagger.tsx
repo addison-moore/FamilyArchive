@@ -16,10 +16,14 @@ interface DraftBox {
   height: number;
 }
 
+/** New tag boxes are this fraction of the image's smaller edge, Facebook-sized. */
+const CLICK_BOX_FRACTION = 0.22;
+
 /**
- * Facebook-style photo tagging (PRD §17.1): face boxes overlaid on the photo;
- * click a box to assign a person or remove it; "Add face box" lets
- * contributors drag to draw a missing one. Read-only for viewers.
+ * Facebook-style photo tagging (PRD §17.1). Face boxes stay invisible until
+ * the photo is hovered; clicking a detected box assigns a person; clicking
+ * directly on an untagged face creates a new box there — no modes, no
+ * drawing. Read-only for viewers.
  */
 export function FaceTagger({
   imageUrl,
@@ -44,8 +48,6 @@ export function FaceTagger({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [drawMode, setDrawMode] = useState(false);
-  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
   const [draft, setDraft] = useState<DraftBox | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -59,52 +61,38 @@ export function FaceTagger({
     return data;
   };
 
-  const relativePoint = (event: React.PointerEvent): { x: number; y: number } | null => {
+  /** Create a face box centered on the clicked spot ("click a face to tag"). */
+  const onPhotoClick = (event: React.MouseEvent) => {
+    if (!canTag) return;
     const rect = containerRef.current?.getBoundingClientRect();
-    if (!rect) return null;
-    return {
-      x: Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
-      y: Math.min(1, Math.max(0, (event.clientY - rect.top) / rect.height)),
-    };
-  };
-
-  const onPointerDown = (event: React.PointerEvent) => {
-    if (!drawMode) return;
-    const point = relativePoint(event);
-    if (!point) return;
-    event.preventDefault();
-    setDragStart(point);
-    setDraft({ x: point.x, y: point.y, width: 0, height: 0 });
-  };
-
-  const onPointerMove = (event: React.PointerEvent) => {
-    if (!drawMode || !dragStart) return;
-    const point = relativePoint(event);
-    if (!point) return;
+    if (!rect) return;
+    const clickX = (event.clientX - rect.left) / rect.width;
+    const clickY = (event.clientY - rect.top) / rect.height;
+    const sidePx = CLICK_BOX_FRACTION * Math.min(rect.width, rect.height);
+    const width = sidePx / rect.width;
+    const height = sidePx / rect.height;
+    setSelectedId(null);
     setDraft({
-      x: Math.min(dragStart.x, point.x),
-      y: Math.min(dragStart.y, point.y),
-      width: Math.abs(point.x - dragStart.x),
-      height: Math.abs(point.y - dragStart.y),
+      x: Math.min(Math.max(clickX - width / 2, 0), 1 - width),
+      y: Math.min(Math.max(clickY - height / 2, 0), 1 - height),
+      width,
+      height,
     });
   };
 
-  const onPointerUp = () => {
-    if (!drawMode || !draft) return;
-    setDragStart(null);
-    if (draft.width < 0.01 || draft.height < 0.01) setDraft(null);
-  };
-
   const pct = (value: number) => `${value * 100}%`;
+
+  // Boxes are hidden until the photo is hovered (Facebook behavior); a
+  // selected box and any in-progress draft stay visible regardless.
+  const boxVisibility = (visible: boolean) =>
+    visible ? "opacity-100" : "opacity-0 group-hover/photo:opacity-100";
 
   return (
     <div>
       <div
         ref={containerRef}
-        className={`relative inline-block max-w-full ${drawMode ? "cursor-crosshair" : ""}`}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
+        className={`group/photo relative inline-block max-w-full ${canTag ? "cursor-crosshair" : ""}`}
+        onClick={onPhotoClick}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -118,10 +106,14 @@ export function FaceTagger({
             key={face.id}
             type="button"
             title={face.personName ?? "Unidentified — click to tag"}
-            onClick={() => {
-              if (!drawMode) setSelectedId(face.id === selectedId ? null : face.id);
+            onClick={(event) => {
+              event.stopPropagation();
+              setDraft(null);
+              setSelectedId(face.id === selectedId ? null : face.id);
             }}
-            className={`absolute rounded-sm border-2 ${
+            className={`absolute rounded-sm border-2 transition-opacity ${boxVisibility(
+              face.id === selectedId,
+            )} ${
               face.id === selectedId
                 ? "border-accent-600 bg-accent-600/10"
                 : face.personId
@@ -157,7 +149,7 @@ export function FaceTagger({
 
       {canTag && (
         <div className="mt-3 space-y-3">
-          {selected && !drawMode && (
+          {selected && (
             <div className="flex flex-wrap items-center gap-2 rounded-md border border-archive-100 bg-archive-50 p-3">
               <span className="text-sm">
                 {selected.personName ? (
@@ -203,66 +195,61 @@ export function FaceTagger({
             </div>
           )}
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setDrawMode(!drawMode);
-                setDraft(null);
-                setSelectedId(null);
-              }}
-              className="rounded-md border border-archive-100 bg-white px-3 py-1.5 text-sm text-archive-700 hover:bg-archive-50"
-            >
-              {drawMode ? "Cancel drawing" : "Add face box"}
-            </button>
-            {drawMode && !draft && (
-              <span className="text-xs text-archive-700/70">
-                Drag on the photo to draw a box around a face.
-              </span>
-            )}
-            {drawMode && draft && (
-              <>
-                <select
-                  id="face-draft-person"
-                  className="rounded-md border border-archive-100 bg-white px-2 py-1.5 text-sm"
-                  defaultValue=""
-                >
-                  <option value="">— tag later —</option>
-                  {people.map((person) => (
-                    <option key={person.id} value={person.id}>
-                      {person.fullName}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  disabled={isPending}
-                  onClick={() => {
-                    const personId =
-                      (document.getElementById("face-draft-person") as HTMLSelectElement | null)
-                        ?.value ?? "";
-                    const box = draft;
-                    startTransition(async () => {
-                      await addAction(
-                        withHidden({
-                          x: String(box.x),
-                          y: String(box.y),
-                          width: String(box.width),
-                          height: String(box.height),
-                          personId,
-                        }),
-                      );
-                      setDraft(null);
-                      setDrawMode(false);
-                    });
-                  }}
-                  className="rounded-md bg-accent-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-600/90"
-                >
-                  Save box
-                </button>
-              </>
-            )}
-          </div>
+          {draft && (
+            <div className="flex flex-wrap items-center gap-2 rounded-md border border-archive-100 bg-archive-50 p-3">
+              <span className="text-sm">Who is this?</span>
+              <select
+                id="face-draft-person"
+                className="rounded-md border border-archive-100 bg-white px-2 py-1.5 text-sm"
+                defaultValue=""
+              >
+                <option value="">— tag later —</option>
+                {people.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.fullName}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={() => {
+                  const personId =
+                    (document.getElementById("face-draft-person") as HTMLSelectElement | null)
+                      ?.value ?? "";
+                  const box = draft;
+                  startTransition(async () => {
+                    await addAction(
+                      withHidden({
+                        x: String(box.x),
+                        y: String(box.y),
+                        width: String(box.width),
+                        height: String(box.height),
+                        personId,
+                      }),
+                    );
+                    setDraft(null);
+                  });
+                }}
+                className="rounded-md bg-accent-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-600/90"
+              >
+                Save tag
+              </button>
+              <button
+                type="button"
+                onClick={() => setDraft(null)}
+                className="rounded-md border border-archive-100 bg-white px-2.5 py-1.5 text-sm text-archive-700 hover:bg-archive-50"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+
+          {!selected && !draft && (
+            <p className="text-xs text-archive-700/60">
+              Hover over the photo to see who&apos;s tagged — click a face to tag someone.
+            </p>
+          )}
         </div>
       )}
     </div>
