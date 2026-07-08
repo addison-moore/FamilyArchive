@@ -55,7 +55,7 @@ export default async function DuplicatesPage({ params }: { params: Promise<{ tre
                   </div>
                   <Link
                     href={`/trees/${treeId}/people/${pair.a.id}/merge/${pair.b.id}`}
-                    className="rounded-md border border-archive-100 bg-white px-3 py-1.5 text-sm text-archive-700 no-underline hover:bg-archive-50"
+                    className="rounded-md border border-archive-100 bg-surface px-3 py-1.5 text-sm text-archive-700 no-underline hover:bg-archive-50"
                   >
                     Compare &amp; merge
                   </Link>

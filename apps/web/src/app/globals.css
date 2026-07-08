@@ -1,10 +1,67 @@
 @import "tailwindcss";
 
+/* User-toggled dark mode (class strategy): the root layout puts `.dark` on
+   <html> from the signed-in user's stored preference. Light by default. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  /* Warm family-archive palette (PRD §29.1) — refine as the design matures. */
-  --color-archive-50: #faf7f2;
-  --color-archive-100: #f3ede2;
-  --color-archive-700: #6b5d4a;
-  --color-archive-900: #3d3427;
-  --color-accent-600: #b45309;
+  /* Warm family-archive palette (PRD §29.1). These compile to CSS variables,
+     so the .dark block below re-themes every utility without component edits. */
+  --color-archive-50: #faf7f2; /* page background */
+  --color-archive-100: #f3ede2; /* borders, subtle fills */
+  --color-archive-700: #6b5d4a; /* muted text */
+  --color-archive-800: #4e4335; /* body text on tinted banners */
+  --color-archive-900: #3d3427; /* headings, primary text */
+  --color-accent-600: #b45309; /* brand accent: links, primary buttons */
+
+  /* Card/panel background (white in light mode — never use bg-white directly). */
+  --color-surface: #ffffff;
+
+  /* Status families — always use these over raw red/amber/green utilities. */
+  --color-danger: #b91c1c;
+  --color-danger-soft: #fef2f2;
+  --color-danger-line: #fecaca;
+  --color-warn: #92400e;
+  --color-warn-soft: #fffbeb;
+  --color-warn-line: #fcd34d;
+  --color-success: #15803d;
+  --color-success-soft: #dcfce7;
+  --color-success-strong: #166534;
+}
+
+/* Dark theme: same semantic roles, warm dark values. */
+.dark {
+  --color-archive-50: #191512;
+  --color-archive-100: #322a21;
+  --color-archive-700: #b3a493;
+  --color-archive-800: #cfc3b4;
+  --color-archive-900: #ece5da;
+  --color-accent-600: #e08b2d;
+
+  --color-surface: #241f19;
+
+  --color-danger: #f0837b;
+  --color-danger-soft: #3a1715;
+  --color-danger-line: #6b2420;
+  --color-warn: #e5b467;
+  --color-warn-soft: #33270f;
+  --color-warn-line: #6d5420;
+  --color-success: #6fc287;
+  --color-success-soft: #14301c;
+  --color-success-strong: #2f9e53;
+}
+
+/* React Flow chrome (zoom controls, selection) follows the theme. */
+.react-flow__controls {
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
+}
+.react-flow__controls button {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-archive-100);
+}
+.react-flow__controls button:hover {
+  background: var(--color-archive-100);
+}
+.react-flow__controls button svg {
+  fill: var(--color-archive-700);
 }

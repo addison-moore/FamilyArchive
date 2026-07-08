@@ -27,7 +27,7 @@ export function ScopeToggle({
   };
   return (
     <div className="flex items-center gap-2">
-      <div className="flex rounded-md border border-archive-100 bg-white p-0.5 text-sm">
+      <div className="flex rounded-md border border-archive-100 bg-surface p-0.5 text-sm">
         <Link
           href={href("branch")}
           title={

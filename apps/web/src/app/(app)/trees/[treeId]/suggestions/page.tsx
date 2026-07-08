@@ -10,9 +10,9 @@ import { SuggestForm } from "@/components/suggest-form";
 import { resolveSuggestionAction } from "./actions";
 
 const STATUS_BADGE: Record<string, string> = {
-  open: "bg-amber-100 text-amber-800",
-  accepted: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-700",
+  open: "bg-warn-soft text-warn",
+  accepted: "bg-success-soft text-success-strong",
+  rejected: "bg-danger-soft text-danger",
 };
 
 /** Suggestions (PRD §21): review queue for admins, own submissions for others. */
@@ -122,7 +122,7 @@ export default async function SuggestionsPage({
               type="submit"
               name="decision"
               value="accepted"
-              className="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700/90"
+              className="rounded-md bg-success px-3 py-1.5 text-sm font-medium text-white hover:bg-success/90"
             >
               Accept
             </button>
@@ -130,7 +130,7 @@ export default async function SuggestionsPage({
               type="submit"
               name="decision"
               value="rejected"
-              className="rounded-md border border-red-200 bg-white px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
+              className="rounded-md border border-danger-line bg-surface px-3 py-1.5 text-sm text-danger hover:bg-danger-soft"
             >
               Reject
             </button>

@@ -19,6 +19,8 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash"),
   /** Instance-level role; the first registered user becomes "owner" (PRD §8.1, §30.4). */
   role: text("role").$type<GlobalRole>().notNull().default("user"),
+  /** UI theme preference ("light" | "dark"); light by default. */
+  theme: text("theme").notNull().default("light"),
   /**
    * Preferred landing tree (PRD §7.2). Plain column, no FK: a circular
    * users↔trees reference isn't worth it — access is re-checked on every

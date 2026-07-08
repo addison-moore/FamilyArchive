@@ -170,7 +170,7 @@ export function FaceTagger({
                   });
                 }}
                 disabled={isPending}
-                className="rounded-md border border-archive-100 bg-white px-2 py-1.5 text-sm"
+                className="rounded-md border border-archive-100 bg-surface px-2 py-1.5 text-sm"
               >
                 <option value="">— unassigned —</option>
                 {people.map((person) => (
@@ -188,7 +188,7 @@ export function FaceTagger({
                     setSelectedId(null);
                   })
                 }
-                className="rounded-md border border-red-200 bg-white px-2.5 py-1.5 text-sm text-red-700 hover:bg-red-50"
+                className="rounded-md border border-danger-line bg-surface px-2.5 py-1.5 text-sm text-danger hover:bg-danger-soft"
               >
                 Remove box
               </button>
@@ -200,7 +200,7 @@ export function FaceTagger({
               <span className="text-sm">Who is this?</span>
               <select
                 id="face-draft-person"
-                className="rounded-md border border-archive-100 bg-white px-2 py-1.5 text-sm"
+                className="rounded-md border border-archive-100 bg-surface px-2 py-1.5 text-sm"
                 defaultValue=""
               >
                 <option value="">— tag later —</option>
@@ -238,7 +238,7 @@ export function FaceTagger({
               <button
                 type="button"
                 onClick={() => setDraft(null)}
-                className="rounded-md border border-archive-100 bg-white px-2.5 py-1.5 text-sm text-archive-700 hover:bg-archive-50"
+                className="rounded-md border border-archive-100 bg-surface px-2.5 py-1.5 text-sm text-archive-700 hover:bg-archive-50"
               >
                 Cancel
               </button>

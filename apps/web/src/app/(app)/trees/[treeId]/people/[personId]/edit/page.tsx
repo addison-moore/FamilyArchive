@@ -114,7 +114,7 @@ export default async function EditPersonPage({
       </Card>
 
       <Card>
-        <h2 className="mb-1 text-lg font-semibold text-red-700">Delete person</h2>
+        <h2 className="mb-1 text-lg font-semibold text-danger">Delete person</h2>
         <p className="mb-4 text-sm text-archive-700/80">
           {person.fullName} will be hidden from the tree and lists. The record is kept (soft delete)
           and relationships to them stop being shown.

@@ -75,7 +75,7 @@ function RelationGroup({
                 <input type="hidden" name="relationshipId" value={item.relationshipId} />
                 <button
                   type="submit"
-                  className="text-xs text-archive-700/50 hover:text-red-700"
+                  className="text-xs text-archive-700/50 hover:text-danger"
                   title="Remove relationship"
                 >
                   remove
@@ -225,7 +225,7 @@ export default async function PersonProfilePage({
         </div>
       )}
       {dupPeople.length > 0 && (
-        <div className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="rounded-md border border-warn-line bg-warn-soft px-4 py-3 text-sm text-warn">
           <strong>Possible duplicate:</strong> similar people already exist —{" "}
           {dupPeople.map((dup, index) => (
             <span key={dup.id}>

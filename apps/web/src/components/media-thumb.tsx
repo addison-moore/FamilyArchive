@@ -30,7 +30,7 @@ export function MediaThumb({
   return (
     <Link
       href={`/trees/${treeId}/media/${media.id}`}
-      className="group block overflow-hidden rounded-lg border border-archive-100 bg-white shadow-sm hover:shadow-md"
+      className="group block overflow-hidden rounded-lg border border-archive-100 bg-surface shadow-sm hover:shadow-md"
     >
       <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-archive-100/50">
         {imageSrc ? (
@@ -53,7 +53,7 @@ export function MediaThumb({
           <span
             className={`absolute right-1.5 bottom-1.5 rounded px-1.5 py-0.5 text-[10px] font-medium ${
               media.processingStatus === "failed"
-                ? "bg-red-100 text-red-800"
+                ? "bg-danger-soft text-danger"
                 : "bg-archive-100 text-archive-700"
             }`}
           >

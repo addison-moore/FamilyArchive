@@ -31,6 +31,7 @@ export function startEmailWorker(connection: ConnectionOptions, logger: pino.Log
         to: job.data.to,
         subject: job.data.subject,
         text: job.data.text,
+        html: job.data.html,
       });
       logger.info({ jobId: job.id, to: job.data.to }, "email sent");
     },

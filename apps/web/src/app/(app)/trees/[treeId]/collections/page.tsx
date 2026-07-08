@@ -49,7 +49,7 @@ export default async function CollectionsPage({ params }: { params: Promise<{ tr
               <Link
                 key={collection.id}
                 href={`/trees/${treeId}/collections/${collection.id}`}
-                className="group block overflow-hidden rounded-xl border border-archive-100 bg-white shadow-sm hover:shadow-md"
+                className="group block overflow-hidden rounded-xl border border-archive-100 bg-surface shadow-sm hover:shadow-md"
               >
                 <div className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-archive-100/50">
                   {cover ? (

@@ -168,7 +168,7 @@ export default async function SearchPage({
           {results.people.length > 0 && (
             <section>
               <h2 className="mb-3 text-lg font-semibold">People ({results.people.length})</h2>
-              <ul className="divide-y divide-archive-100 rounded-xl border border-archive-100 bg-white shadow-sm">
+              <ul className="divide-y divide-archive-100 rounded-xl border border-archive-100 bg-surface shadow-sm">
                 {results.people.map((p) => (
                   <li key={p.id}>
                     <Link
@@ -210,7 +210,7 @@ export default async function SearchPage({
               <h2 className="mb-3 text-lg font-semibold">
                 Collections ({results.collections.length})
               </h2>
-              <ul className="divide-y divide-archive-100 rounded-xl border border-archive-100 bg-white shadow-sm">
+              <ul className="divide-y divide-archive-100 rounded-xl border border-archive-100 bg-surface shadow-sm">
                 {results.collections.map((c) => (
                   <li key={c.id}>
                     <Link

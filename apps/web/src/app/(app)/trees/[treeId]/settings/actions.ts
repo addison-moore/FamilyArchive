@@ -10,6 +10,7 @@ import { z } from "zod";
 
 import { recordAudit } from "@/lib/audit";
 import { enqueueEmail, smtpConfigured } from "@/lib/email";
+import { renderBrandedEmail } from "@/lib/email-template";
 import { DEFAULT_INVITE_EXPIRY_DAYS, generateInviteToken } from "@/lib/invites";
 import { getEnv } from "@familyarchive/config";
 
@@ -136,10 +137,18 @@ export async function createInviteAction(formData: FormData): Promise<void> {
         to: email,
         subject: `You're invited to join "${treeName}" on FamilyArchive`,
         text:
-          `${inviter} has invited you to join the family tree "${treeName}" on FamilyArchive ` +
+          `${inviter} has invited you to join the family archive "${treeName}" on FamilyArchive ` +
           `as ${parsed.data.role}.\n\n` +
           `Open this link to join:\n${inviteUrl}\n\n` +
           `The invite expires on ${expiresAt.toDateString()}.`,
+        html: renderBrandedEmail({
+          heading: `You're invited to join "${treeName}"`,
+          bodyLines: [
+            `${inviter} has invited you to join the family archive "${treeName}" as ${parsed.data.role}.`,
+          ],
+          cta: { label: "Join the archive", url: inviteUrl },
+          footerNote: `This invite expires on ${expiresAt.toDateString()}.`,
+        }),
       });
       emailStatus = "&emailed=1";
     } else {

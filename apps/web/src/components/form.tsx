@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 /** Small shared form styling primitives (server components). */
 
 export const inputClass =
-  "w-full rounded-md border border-archive-100 bg-white px-3 py-2 text-sm " +
+  "w-full rounded-md border border-archive-100 bg-surface px-3 py-2 text-sm " +
   "focus:border-accent-600 focus:outline-none";
 
 export const buttonClass =
@@ -11,11 +11,11 @@ export const buttonClass =
   "hover:bg-accent-600/90 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const subtleButtonClass =
-  "rounded-md border border-archive-100 bg-white px-3 py-1.5 text-sm " +
+  "rounded-md border border-archive-100 bg-surface px-3 py-1.5 text-sm " +
   "text-archive-700 hover:bg-archive-50";
 
 export const dangerButtonClass =
-  "rounded-md border border-red-200 bg-white px-3 py-1.5 text-sm text-red-700 hover:bg-red-50";
+  "rounded-md border border-danger-line bg-surface px-3 py-1.5 text-sm text-danger hover:bg-danger-soft";
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -29,7 +29,7 @@ export function Field({ label, children }: { label: string; children: ReactNode 
 export function FormError({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+    <p className="rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
       {message}
     </p>
   );
@@ -37,6 +37,6 @@ export function FormError({ message }: { message?: string }) {
 
 export function Card({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-archive-100 bg-white p-6 shadow-sm">{children}</div>
+    <div className="rounded-xl border border-archive-100 bg-surface p-6 shadow-sm">{children}</div>
   );
 }

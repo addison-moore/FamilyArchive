@@ -191,7 +191,7 @@ export default async function MediaDetailPage({
             {derivatives.length > 0 && ` · ${derivatives.length} derivative(s)`}
           </p>
           {media.processingStatus === "failed" && processingError && (
-            <p className="mt-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="mt-2 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               {processingError}
             </p>
           )}
@@ -200,7 +200,7 @@ export default async function MediaDetailPage({
               Face detection: <strong>{meta.faces.status}</strong>
               {meta.faces.status === "done" && ` · ${meta.faces.count ?? 0} face(s) found`}
               {meta.faces.status === "failed" && meta.faces.error && (
-                <span className="text-red-700"> — {meta.faces.error}</span>
+                <span className="text-danger"> — {meta.faces.error}</span>
               )}
             </p>
           )}
@@ -236,12 +236,12 @@ export default async function MediaDetailPage({
             {meta.ai?.status ? ` · AI cleanup: ${meta.ai.status}` : ""}
           </p>
           {meta.ocr?.status === "failed" && meta.ocr.error && (
-            <p className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="mb-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               OCR failed: {meta.ocr.error}
             </p>
           )}
           {meta.ai?.status === "failed" && meta.ai.error && (
-            <p className="mb-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="mb-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
               AI cleanup failed: {meta.ai.error}
             </p>
           )}
@@ -366,7 +366,7 @@ export default async function MediaDetailPage({
                     <input type="hidden" name="tagRowId" value={tagged.rowId} />
                     <button
                       type="submit"
-                      className="text-archive-700/50 hover:text-red-700"
+                      className="text-archive-700/50 hover:text-danger"
                       title="Remove tag"
                     >
                       ×
@@ -427,7 +427,7 @@ export default async function MediaDetailPage({
                     <input type="hidden" name="mediaId" value={mediaId} />
                     <button
                       type="submit"
-                      className="text-archive-700/50 hover:text-red-700"
+                      className="text-archive-700/50 hover:text-danger"
                       title="Remove from collection"
                     >
                       ×
@@ -483,7 +483,7 @@ export default async function MediaDetailPage({
                     <input type="hidden" name="tagId" value={tag.id} />
                     <button
                       type="submit"
-                      className="text-archive-700/50 hover:text-red-700"
+                      className="text-archive-700/50 hover:text-danger"
                       title="Remove"
                     >
                       ×
@@ -607,7 +607,7 @@ export default async function MediaDetailPage({
 
       {isEditor && (
         <Card>
-          <h2 className="mb-1 text-lg font-semibold text-red-700">Delete media</h2>
+          <h2 className="mb-1 text-lg font-semibold text-danger">Delete media</h2>
           <p className="mb-4 text-sm text-archive-700/80">
             Hides this item from the library (soft delete). The original file is preserved in
             storage.

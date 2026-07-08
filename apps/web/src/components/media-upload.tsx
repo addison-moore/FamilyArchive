@@ -123,7 +123,7 @@ export function MediaUpload({ treeId, accept }: { treeId: string; accept: string
                 </Link>
               )}
               {upload.status === "duplicate" && (
-                <span className="text-amber-700">
+                <span className="text-warn">
                   duplicate{" "}
                   {upload.duplicateOf && (
                     <Link
@@ -135,7 +135,7 @@ export function MediaUpload({ treeId, accept }: { treeId: string; accept: string
                   )}
                 </span>
               )}
-              {upload.status === "error" && <span className="text-red-700">{upload.message}</span>}
+              {upload.status === "error" && <span className="text-danger">{upload.message}</span>}
             </li>
           ))}
         </ul>

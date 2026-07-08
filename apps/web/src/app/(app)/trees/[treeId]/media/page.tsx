@@ -83,7 +83,7 @@ export default async function MediaPage({
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold">Media</h1>
-        <div className="flex rounded-md border border-archive-100 bg-white p-0.5 text-sm">
+        <div className="flex rounded-md border border-archive-100 bg-surface p-0.5 text-sm">
           <Link
             href={viewQuery(false)}
             className={`rounded px-3 py-1.5 no-underline ${!mine ? "bg-archive-100 font-medium" : "text-archive-700 hover:bg-archive-50"}`}

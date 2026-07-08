@@ -83,7 +83,7 @@ export default async function PeoplePage({
             </p>
           </Card>
         ) : (
-          <ul className="divide-y divide-archive-100 rounded-xl border border-archive-100 bg-white shadow-sm">
+          <ul className="divide-y divide-archive-100 rounded-xl border border-archive-100 bg-surface shadow-sm">
             {peopleList.map((person) => (
               <li key={person.id}>
                 <Link

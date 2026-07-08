@@ -154,7 +154,7 @@ export default async function CollectionPage({
           </Card>
 
           <Card>
-            <h2 className="mb-1 text-lg font-semibold text-red-700">Delete collection</h2>
+            <h2 className="mb-1 text-lg font-semibold text-danger">Delete collection</h2>
             <p className="mb-4 text-sm text-archive-700/80">
               Removes the collection only — its media stays in the library.
             </p>

@@ -34,7 +34,7 @@ function PersonNode({ data }: NodeProps<PersonFlowNode>) {
     .join("");
   return (
     <div
-      className={`flex w-[190px] items-center gap-2.5 rounded-lg border bg-white px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md ${
+      className={`flex w-[190px] items-center gap-2.5 rounded-lg border bg-surface px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md ${
         data.isSelected
           ? "border-accent-600 ring-2 ring-accent-600/30"
           : data.isStart
@@ -135,7 +135,7 @@ export function TreeCanvas({
           sourceHandle: "bottom",
           targetHandle: "top",
           type: "smoothstep",
-          style: { stroke: "#6b5d4a", strokeWidth: 1.5 },
+          style: { stroke: "var(--color-archive-700)", strokeWidth: 1.5 },
         };
       }
       // Partner edges connect side-to-side. Whichever node sits further left
@@ -158,13 +158,13 @@ export function TreeCanvas({
         sourceHandle: "right-source",
         targetHandle: "left-target",
         type: sameRow ? "straight" : "smoothstep",
-        style: { stroke: "#b45309", strokeDasharray: "6 4", strokeWidth: 1.5 },
+        style: { stroke: "var(--color-accent-600)", strokeDasharray: "6 4", strokeWidth: 1.5 },
       };
     });
   }, [edges, nodes]);
 
   return (
-    <div className="h-[70vh] min-h-[420px] rounded-xl border border-archive-100 bg-white shadow-sm">
+    <div className="h-[70vh] min-h-[420px] rounded-xl border border-archive-100 bg-surface shadow-sm">
       <ReactFlow
         nodes={flowNodes}
         edges={flowEdges}
@@ -181,7 +181,7 @@ export function TreeCanvas({
           router.push(`/trees/${treeId}?${params.toString()}`, { scroll: false });
         }}
       >
-        <Background gap={24} color="#e5ddd0" />
+        <Background gap={24} color="var(--color-archive-100)" />
         <Controls showInteractive={false} />
       </ReactFlow>
     </div>

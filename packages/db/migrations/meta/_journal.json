@@ -78,6 +78,13 @@
       "when": 1783467264365,
       "tag": "0010_empty_microchip",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783483578016,
+      "tag": "0011_brown_wiccan",
+      "breakpoints": true
     }
   ]
 }

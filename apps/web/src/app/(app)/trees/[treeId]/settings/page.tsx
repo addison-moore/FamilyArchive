@@ -256,7 +256,7 @@ export default async function TreeSettingsPage({
           </button>
         </form>
         {tree.isPublic && (
-          <p className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <p className="mt-3 rounded-md border border-warn-line bg-warn-soft px-3 py-2 text-sm text-warn">
             This archive is currently public.
           </p>
         )}
@@ -292,7 +292,7 @@ export default async function TreeSettingsPage({
 
       {user.role === "owner" && (
         <Card>
-          <h2 id="danger" className="mb-1 text-lg font-semibold text-red-700">
+          <h2 id="danger" className="mb-1 text-lg font-semibold text-danger">
             Danger zone
           </h2>
           <p className="mb-4 text-sm text-archive-700/80">

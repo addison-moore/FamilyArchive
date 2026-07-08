@@ -106,7 +106,7 @@ export function PersonSummary({
   }
 
   return (
-    <aside className="rounded-xl border border-archive-100 bg-white p-5 shadow-sm">
+    <aside className="rounded-xl border border-archive-100 bg-surface p-5 shadow-sm">
       <div className="flex items-center gap-4">
         <PersonAvatar name={person.fullName} size="lg" photoUrl={photoUrl} />
         <div className="min-w-0">

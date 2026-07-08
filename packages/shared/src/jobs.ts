@@ -8,7 +8,10 @@ export const EMAIL_QUEUE = "email";
 export interface EmailJob {
   to: string;
   subject: string;
+  /** Plain-text body — always present as the fallback. */
   text: string;
+  /** Branded HTML body (see apps/web lib/email-template). */
+  html?: string;
 }
 
 /** Parse a redis:// URL into BullMQ connection options (BullMQ bundles its own ioredis). */

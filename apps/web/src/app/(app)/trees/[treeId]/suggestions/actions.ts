@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { enqueueEmail, smtpConfigured } from "@/lib/email";
+import { renderBrandedEmail } from "@/lib/email-template";
 import { getMediaItem } from "@/lib/media";
 import { getPerson } from "@/lib/people";
 import { getEnv } from "@familyarchive/config";
@@ -68,13 +69,19 @@ export async function submitSuggestionAction(formData: FormData): Promise<void> 
     const submitter = user.name ?? user.email;
     for (const admin of admins) {
       if (admin.email === user.email) continue;
+      const reviewUrl = `${getEnv().APP_URL}/trees/${treeId}/suggestions`;
       await enqueueEmail({
         to: admin.email,
         subject: `New suggestion for "${treeName}" on FamilyArchive`,
         text:
           `${submitter} suggested a correction for ${targetLabel} in "${treeName}":\n\n` +
           `${message}\n\n` +
-          `Review it here:\n${getEnv().APP_URL}/trees/${treeId}/suggestions`,
+          `Review it here:\n${reviewUrl}`,
+        html: renderBrandedEmail({
+          heading: `New suggestion for "${treeName}"`,
+          bodyLines: [`${submitter} suggested a correction for ${targetLabel}:`, `“${message}”`],
+          cta: { label: "Review the suggestion", url: reviewUrl },
+        }),
       });
     }
   }

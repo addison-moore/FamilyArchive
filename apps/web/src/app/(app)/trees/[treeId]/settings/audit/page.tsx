@@ -43,7 +43,7 @@ export default async function AuditPage({ params }: { params: Promise<{ treeId: 
           <p className="text-sm text-archive-700">No audit entries yet.</p>
         </Card>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-archive-100 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-xl border border-archive-100 bg-surface shadow-sm">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-archive-100 text-left text-xs text-archive-700/70">

@@ -71,7 +71,7 @@ export default async function TreeLayout({
           <summary className="cursor-pointer list-none text-xl font-semibold hover:text-accent-600">
             {tree.name} <span className="text-sm text-archive-700/50">▾</span>
           </summary>
-          <div className="absolute z-10 mt-1 w-64 rounded-md border border-archive-100 bg-white p-1 shadow-md">
+          <div className="absolute z-10 mt-1 w-64 rounded-md border border-archive-100 bg-surface p-1 shadow-md">
             {accessibleTrees.map((item) => (
               <Link
                 key={item.id}

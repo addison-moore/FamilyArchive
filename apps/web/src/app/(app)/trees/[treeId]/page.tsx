@@ -98,7 +98,7 @@ export default async function TreePage({
         </div>
       )}
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex rounded-md border border-archive-100 bg-white p-0.5">
+        <div className="flex rounded-md border border-archive-100 bg-surface p-0.5">
           {TREE_VIEW_MODES.map((m) => (
             <Link
               key={m}
