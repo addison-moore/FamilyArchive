@@ -27,7 +27,8 @@ without one.
    - Open questions, if any, listed at the top for review before starting
 3. Wait for the plan to be reviewed/approved before implementing.
 4. As work proceeds, check off items (`- [x]`) in the PLAN.md as they are completed.
-   Update the checklist in the same commit as the work when practical.
+   Note: `_plans/` is intentionally untracked (private, local-only) — plan documents
+   are never committed to the repository.
 5. If scope changes mid-implementation, update the PLAN.md first, then continue.
 6. When the plan is complete, add a short "Outcome" section at the bottom: what was
    built, what was deferred (and where it was deferred to), and any follow-ups.
@@ -77,7 +78,7 @@ familyarchive/
     config/     # env/config parsing
   docker/       # Dockerfiles, compose files
   docs/         # user + self-hosting documentation
-  _plans/       # PRD and feature plan documents (not shipped)
+  _plans/       # PRD and feature plan documents (private: untracked, never committed)
 ```
 
 ## Architecture Conventions

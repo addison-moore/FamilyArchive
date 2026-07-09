@@ -61,3 +61,6 @@ tests/smoke/playwright-report/
 
 # Vercel
 .vercel/
+
+# Plans are private (local-only, never committed)
+_plans/
