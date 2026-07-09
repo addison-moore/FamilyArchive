@@ -58,3 +58,6 @@ _scratch/
 # Playwright
 tests/smoke/test-results/
 tests/smoke/playwright-report/
+
+# Vercel
+.vercel/

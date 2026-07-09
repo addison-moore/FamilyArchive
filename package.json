@@ -5,7 +5,7 @@
   "license": "AGPL-3.0-or-later",
   "repository": {
     "type": "git",
-    "url": "https://github.com/familyarchive/familyarchive"
+    "url": "https://github.com/addison-moore/FamilyArchive"
   },
   "engines": {
     "node": ">=22"

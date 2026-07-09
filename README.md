@@ -1,6 +1,7 @@
 # FamilyArchive
 
 A free, open-source, self-hosted family history and media archive.
+Website & docs: [family-archive.net](https://family-archive.net)
 
 Maintain interactive family trees, upload and organize photos, videos, audio, and
 scanned documents, tag people in media, OCR old letters and records, and search
