@@ -10,8 +10,8 @@ command.
 ## Steps
 
 ```bash
-git clone https://github.com/familyarchive/familyarchive.git
-cd familyarchive
+git clone https://github.com/addison-moore/FamilyArchive.git
+cd FamilyArchive
 
 # 1. Configure
 cp .env.example .env
@@ -26,6 +26,20 @@ Then open <http://localhost:3000>.
 
 Database migrations run automatically (the one-shot `migrate` service) before the
 app and worker start.
+
+## Faster: run published images (no build)
+
+Each release publishes ready-made images for amd64 and arm64. Skip the source
+build entirely:
+
+```bash
+docker compose -f compose.yaml -f docker/docker-compose.images.yml pull
+docker compose -f compose.yaml -f docker/docker-compose.images.yml up -d --no-build
+```
+
+Pin a release by setting `FAMILYARCHIVE_VERSION` in `.env` (for example
+`FAMILYARCHIVE_VERSION=0.1.0`). Images are only tagged with versions — pick one
+deliberately when you upgrade.
 
 ## First run: create the owner account
 

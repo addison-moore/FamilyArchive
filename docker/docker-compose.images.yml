@@ -1,0 +1,16 @@
+# Overlay: run FamilyArchive from published GHCR images instead of building
+# from source. Usage (from the repo root):
+#
+#   docker compose -f compose.yaml -f docker/docker-compose.images.yml pull
+#   docker compose -f compose.yaml -f docker/docker-compose.images.yml up -d --no-build
+#
+# Pin the release with FAMILYARCHIVE_VERSION in .env (images are only published
+# with version tags — there is deliberately no `latest`).
+
+services:
+  app:
+    image: ghcr.io/addison-moore/familyarchive-web:${FAMILYARCHIVE_VERSION:-0.1.0}
+  worker:
+    image: ghcr.io/addison-moore/familyarchive-worker:${FAMILYARCHIVE_VERSION:-0.1.0}
+  migrate:
+    image: ghcr.io/addison-moore/familyarchive-worker:${FAMILYARCHIVE_VERSION:-0.1.0}
