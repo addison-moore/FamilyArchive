@@ -11,6 +11,12 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "^22.20.0",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@familyarchive/db": "workspace:*",
+    "@familyarchive/shared": "workspace:*",
+    "drizzle-orm": "^0.44.7"
   }
 }

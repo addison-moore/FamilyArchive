@@ -49,3 +49,8 @@ export function uploadTempKey(treeId: string, mediaId: string): string {
 export function derivativeKey(treeId: string, mediaId: string, fileName: string): string {
   return `trees/${treeId}/media/${mediaId}/derivatives/${fileName}`;
 }
+
+/** Archive export bundles live outside media/ so they never mix with originals. */
+export function exportKey(treeId: string, exportId: string): string {
+  return `trees/${treeId}/exports/${exportId}.zip`;
+}

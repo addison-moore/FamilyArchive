@@ -8,3 +8,4 @@ export * from "./faces";
 export * from "./sources";
 export * from "./collections";
 export * from "./suggestions";
+export * from "./exports";

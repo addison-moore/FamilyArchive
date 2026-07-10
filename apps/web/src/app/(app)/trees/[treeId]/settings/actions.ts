@@ -9,8 +9,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { recordAudit } from "@/lib/audit";
+import { requestArchiveExport } from "@/lib/export";
 import { enqueueEmail, smtpConfigured } from "@/lib/email";
-import { renderBrandedEmail } from "@/lib/email-template";
+import { renderBrandedEmail } from "@familyarchive/shared";
 import { DEFAULT_INVITE_EXPIRY_DAYS, generateInviteToken } from "@/lib/invites";
 import { getEnv } from "@familyarchive/config";
 
@@ -187,6 +188,14 @@ export async function revokeInviteAction(formData: FormData): Promise<void> {
 }
 
 /** Public read-only mode + indexing toggles (admin, PRD §23, §31.3). Audited. */
+/** Kick off a full archive export (admin+, PRD §5.5). */
+export async function requestArchiveExportAction(formData: FormData): Promise<void> {
+  const treeId = String(formData.get("treeId") ?? "");
+  const { user } = await requireMemberRole(treeId, "admin");
+  await requestArchiveExport(treeId, user.id, formData.get("includeDeleted") === "on");
+  revalidatePath(settingsPath(treeId));
+}
+
 export async function setPublicModeAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const { user } = await requireMemberRole(treeId, "admin");

@@ -1,11 +1,13 @@
 import { getEnv } from "@familyarchive/config";
 import {
   AI_QUEUE,
+  EXPORT_QUEUE,
   FACES_QUEUE,
   MEDIA_QUEUE,
   OCR_QUEUE,
   redisConnectionOptions,
   type AiCleanupJob,
+  type ArchiveExportJob,
   type FaceDetectJob,
   type MediaProcessJob,
   type OcrJob,
@@ -46,6 +48,10 @@ export async function enqueueAiCleanup(treeId: string, mediaId: string): Promise
 
 export async function enqueueFaceDetection(treeId: string, mediaId: string): Promise<void> {
   await getQueue<FaceDetectJob>(FACES_QUEUE).add("detect", { treeId, mediaId });
+}
+
+export async function enqueueArchiveExport(job: ArchiveExportJob): Promise<void> {
+  await getQueue<ArchiveExportJob>(EXPORT_QUEUE).add("export", job);
 }
 
 /** AI features render only when the admin configured a provider (PRD §31.4). */

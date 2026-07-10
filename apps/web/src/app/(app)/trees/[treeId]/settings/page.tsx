@@ -16,16 +16,26 @@ import {
 } from "@/components/form";
 import { smtpConfigured } from "@/lib/email";
 
+import { ExportStatusPoller } from "@/components/export-status-poller";
+import { latestExport } from "@/lib/export";
+
 import {
   changeMemberRoleAction,
   createInviteAction,
   deleteTreeAction,
   removeMemberAction,
+  requestArchiveExportAction,
   revokeInviteAction,
   setPublicModeAction,
   updateTreeAction,
 } from "./actions";
 import Link from "next/link";
+
+function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`;
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
 
 export default async function TreeSettingsPage({
   params,
@@ -45,6 +55,7 @@ export default async function TreeSettingsPage({
   const { error, invite: createdToken, emailed, smtp } = await searchParams;
 
   const db = getDb();
+  const exportRow = await latestExport(treeId);
   const [treeRows, members, activeInvites] = await Promise.all([
     db.select().from(trees).where(eq(trees.id, treeId)).limit(1),
     db
@@ -288,6 +299,70 @@ export default async function TreeSettingsPage({
         >
           Download .ged file
         </a>
+      </Card>
+
+      <Card>
+        <h2 className="mb-1 text-lg font-semibold">Export everything</h2>
+        <p className="mb-4 text-sm text-archive-700/80">
+          Download this entire archive — the family tree, every original photo and file, and all
+          details — as a single ZIP. Useful as a backup, and everything you&apos;d need to move to
+          another server.
+        </p>
+
+        {exportRow?.status === "pending" || exportRow?.status === "running" ? (
+          <div className="text-sm text-archive-700">
+            <ExportStatusPoller treeId={treeId} />
+            Preparing your export… this can take a while for large archives. You can leave this page
+            {smtpConfigured() ? " — we'll email you when it's ready." : "."}
+          </div>
+        ) : (
+          <>
+            {exportRow?.status === "complete" && (
+              <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-archive-100 bg-archive-50 px-4 py-3 text-sm">
+                <span className="text-archive-700">
+                  Ready: exported{" "}
+                  {exportRow.completedAt?.toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                  })}{" "}
+                  · {formatBytes(exportRow.fileSize)}
+                  {exportRow.expiresAt && (
+                    <>
+                      {" "}
+                      · available until{" "}
+                      {exportRow.expiresAt.toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                      })}
+                    </>
+                  )}
+                </span>
+                <a
+                  href={`/api/trees/${treeId}/export/download`}
+                  className={`${buttonClass} inline-block no-underline`}
+                >
+                  Download
+                </a>
+              </div>
+            )}
+            {exportRow?.status === "failed" && (
+              <p className="mb-4 text-sm text-danger">
+                The last export didn&apos;t finish{exportRow.error ? ` (${exportRow.error})` : ""} —
+                try again below.
+              </p>
+            )}
+            <form action={requestArchiveExportAction} className="space-y-3">
+              <input type="hidden" name="treeId" value={treeId} />
+              <label className="flex items-center gap-2 text-sm text-archive-700">
+                <input type="checkbox" name="includeDeleted" />
+                Also include people and files that were deleted
+              </label>
+              <button type="submit" className={subtleButtonClass}>
+                {exportRow?.status === "complete" ? "Export a fresh copy" : "Export archive"}
+              </button>
+            </form>
+          </>
+        )}
       </Card>
 
       {user.role === "owner" && (

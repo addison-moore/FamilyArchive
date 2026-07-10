@@ -17,3 +17,4 @@ export type {
   GedcomNode,
   ParsedGedcom,
 } from "./types";
+export { generateGedcom } from "./generate";

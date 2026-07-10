@@ -1,6 +1,6 @@
 import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
 
-import { generateGedcom } from "@/lib/gedcom-export";
+import { generateGedcom } from "@familyarchive/gedcom";
 
 /** GEDCOM export (PRD §14.5, §5.5) — any tree member may export. */
 export async function GET(

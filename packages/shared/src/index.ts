@@ -19,3 +19,5 @@ export * from "./media";
 export * from "./processing";
 export * from "./ocr";
 export * from "./faces";
+export * from "./export";
+export * from "./email-template";

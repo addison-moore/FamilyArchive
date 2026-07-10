@@ -7,6 +7,7 @@ export { LocalStorageDriver } from "./local";
 export { S3StorageDriver, type S3DriverOptions } from "./s3";
 export {
   derivativeKey,
+  exportKey,
   originalKey,
   uploadTempKey,
   type ByteRange,

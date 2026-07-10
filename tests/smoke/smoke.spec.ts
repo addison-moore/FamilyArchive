@@ -1,4 +1,7 @@
+import { createHash } from "node:crypto";
+
 import { expect, test, type Page } from "@playwright/test";
+import AdmZip from "adm-zip";
 
 import {
   fetchPortrait,
@@ -237,6 +240,57 @@ test("public mode exposes a read-only archive", async ({ browser }) => {
   await anonPage.goto(`/trees/${treeId}/people`);
   await anonPage.waitForURL(/\/login/);
   await anonContext.close();
+});
+
+test("archive export produces a complete bundle", async () => {
+  test.setTimeout(240_000);
+  const create = await page.request.post(`/api/trees/${treeId}/export`, { data: {} });
+  expect(create.status(), await create.text()).toBe(201);
+
+  const deadline = Date.now() + 180_000;
+  let status = "";
+  while (Date.now() < deadline) {
+    const response = await page.request.get(`/api/trees/${treeId}/export`);
+    const body = (await response.json()) as { export: { status: string; error?: string } | null };
+    status = body.export?.status ?? "";
+    if (status === "complete") break;
+    expect(status, body.export?.error ?? "").not.toBe("failed");
+    await page.waitForTimeout(3_000);
+  }
+  expect(status).toBe("complete");
+
+  // The settings card surfaces the finished bundle.
+  await page.goto(`/trees/${treeId}/settings`);
+  await expect(page.getByText("Export everything")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Download", exact: true })).toBeVisible();
+
+  // The bundle is complete and internally consistent.
+  const download = await page.request.get(`/api/trees/${treeId}/export/download`);
+  expect(download.status()).toBe(200);
+  const zip = new AdmZip(await download.body());
+  const names = zip.getEntries().map((entry) => entry.entryName);
+  expect(names).toEqual(expect.arrayContaining(["manifest.json", "data.json", "gedcom.ged"]));
+
+  const manifest = JSON.parse(zip.readAsText("manifest.json")) as {
+    counts: { people: number; media: number };
+  };
+  expect(manifest.counts.people).toBe(2);
+  expect(manifest.counts.media).toBe(3);
+
+  const gedcom = zip.readAsText("gedcom.ged");
+  expect(gedcom).toContain("0 HEAD");
+  expect(gedcom).toContain("Arthur");
+
+  // Original bytes round-trip: the PDF inside the ZIP matches its recorded hash.
+  const data = JSON.parse(zip.readAsText("data.json")) as {
+    media: { originalFilename: string; bundlePath: string; hash: string }[];
+  };
+  const pdf = data.media.find((m) => m.originalFilename === "smoke-doc.pdf");
+  expect(pdf).toBeTruthy();
+  const entry = zip.getEntry(pdf!.bundlePath);
+  expect(entry).toBeTruthy();
+  const digest = createHash("sha256").update(entry!.getData()).digest("hex");
+  expect(digest).toBe(pdf!.hash);
 });
 
 test("GEDCOM import creates an archive", async () => {

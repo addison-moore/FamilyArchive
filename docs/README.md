@@ -15,6 +15,7 @@ and media archive application.
 - [Storage configuration](self-hosting/storage.md)
 - [OCR and AI assistance](self-hosting/ocr-ai.md)
 - [Backup and restore](self-hosting/backup-restore.md)
+- [Archive export](self-hosting/export.md)
 
 ## For contributors
 

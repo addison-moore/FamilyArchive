@@ -12,8 +12,10 @@
   "dependencies": {
     "@familyarchive/config": "workspace:*",
     "@familyarchive/db": "workspace:*",
+    "@familyarchive/gedcom": "workspace:*",
     "@familyarchive/media": "workspace:*",
     "@familyarchive/shared": "workspace:*",
+    "archiver": "^8.0.0",
     "bullmq": "^5.56.0",
     "drizzle-orm": "^0.44.7",
     "nodemailer": "^9.0.3",

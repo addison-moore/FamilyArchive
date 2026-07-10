@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { enqueueEmail, smtpConfigured } from "@/lib/email";
-import { renderBrandedEmail } from "@/lib/email-template";
+import { renderBrandedEmail } from "@familyarchive/shared";
 import { getMediaItem } from "@/lib/media";
 import { getPerson } from "@/lib/people";
 import { getEnv } from "@familyarchive/config";

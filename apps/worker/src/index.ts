@@ -5,6 +5,7 @@ import pino from "pino";
 
 import { startAuditCleanup } from "./audit-cleanup";
 import { startEmailWorker } from "./email";
+import { startExportWorker } from "./export";
 import { startFacesWorker } from "./faces";
 import { startMediaWorker } from "./media";
 import { startTextWorkers } from "./text-jobs";
@@ -38,6 +39,7 @@ const mediaWorker = startMediaWorker(connection, logger);
 const textWorkers = startTextWorkers(connection, logger);
 const facesWorker = startFacesWorker(connection, logger);
 const auditWorker = startAuditCleanup(connection, logger);
+const exportWorkers = startExportWorker(connection, logger);
 
 async function main() {
   await heartbeatQueue.upsertJobScheduler("heartbeat-every-minute", { every: 60_000 });
@@ -56,6 +58,7 @@ async function shutdown(signal: string) {
     ...textWorkers.map((w) => w.close()),
     facesWorker.close(),
     auditWorker.close(),
+    ...exportWorkers.map((w) => w.close()),
     heartbeatQueue.close(),
   ]);
   process.exit(0);

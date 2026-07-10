@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { enqueueEmail, smtpConfigured } from "@/lib/email";
-import { renderBrandedEmail } from "@/lib/email-template";
+import { renderBrandedEmail } from "@familyarchive/shared";
 import { createPasswordResetToken } from "@/lib/password-reset";
 
 export async function requestPasswordResetAction(formData: FormData): Promise<void> {
