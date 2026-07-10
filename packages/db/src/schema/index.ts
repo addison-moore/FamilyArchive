@@ -9,3 +9,4 @@ export * from "./sources";
 export * from "./collections";
 export * from "./suggestions";
 export * from "./exports";
+export * from "./usage";

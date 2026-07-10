@@ -23,12 +23,14 @@ Copy `.env.example` to `.env` and adjust. The schema lives in `packages/config`
 
 ## Storage (see [storage.md](storage.md))
 
-| Variable               | Default       | Description                               |
-| ---------------------- | ------------- | ----------------------------------------- |
-| `MEDIA_STORAGE_DRIVER` | `local`       | `local` or `s3`                           |
-| `MEDIA_LOCAL_PATH`     | `/data/media` | Media path for the local driver           |
-| `MEDIA_MAX_UPLOAD_MB`  | `500`         | Per-file upload cap                       |
-| `S3_*`                 | —             | S3-compatible storage; see `.env.example` |
+| Variable               | Default       | Description                                                       |
+| ---------------------- | ------------- | ----------------------------------------------------------------- |
+| `MEDIA_STORAGE_DRIVER` | `local`       | `local` or `s3`                                                   |
+| `MEDIA_LOCAL_PATH`     | `/data/media` | Media path for the local driver                                   |
+| `MEDIA_MAX_UPLOAD_MB`  | `500`         | Per-file upload cap                                               |
+| `MEDIA_QUOTA_MB`       | `0`           | Total media storage cap (originals + previews); `0` = unlimited   |
+| `METRICS_TOKEN`        | —             | Enables `GET /api/admin/usage` (bearer auth) for external tooling |
+| `S3_*`                 | —             | S3-compatible storage; see `.env.example`                         |
 
 ## SMTP (used from Milestone 2, optional)
 

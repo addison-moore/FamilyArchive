@@ -18,6 +18,7 @@ import { smtpConfigured } from "@/lib/email";
 
 import { ExportStatusPoller } from "@/components/export-status-poller";
 import { latestExport } from "@/lib/export";
+import { formatStorage, quotaState } from "@/lib/quota";
 
 import {
   changeMemberRoleAction,
@@ -55,7 +56,7 @@ export default async function TreeSettingsPage({
   const { error, invite: createdToken, emailed, smtp } = await searchParams;
 
   const db = getDb();
-  const exportRow = await latestExport(treeId);
+  const [exportRow, storage] = await Promise.all([latestExport(treeId), quotaState()]);
   const [treeRows, members, activeInvites] = await Promise.all([
     db.select().from(trees).where(eq(trees.id, treeId)).limit(1),
     db
@@ -299,6 +300,48 @@ export default async function TreeSettingsPage({
         >
           Download .ged file
         </a>
+      </Card>
+
+      <Card>
+        <h2 className="mb-1 text-lg font-semibold">Storage</h2>
+        {storage.quotaBytes === null ? (
+          <p className="text-sm text-archive-700/80">
+            {formatStorage(storage.usedBytes)} of photos and files stored · no limit set.
+          </p>
+        ) : (
+          <>
+            <p className="mb-3 text-sm text-archive-700/80">
+              {formatStorage(storage.usedBytes)} of {formatStorage(storage.quotaBytes)} used
+            </p>
+            <div
+              role="progressbar"
+              aria-valuenow={Math.min(100, storage.percent ?? 0)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Storage used"
+              className="h-2 w-full overflow-hidden rounded-full bg-archive-100"
+            >
+              <div
+                className={`h-full rounded-full ${
+                  (storage.percent ?? 0) >= 90 ? "bg-danger" : "bg-accent-600"
+                }`}
+                style={{ width: `${Math.min(100, storage.percent ?? 0)}%` }}
+              />
+            </div>
+            {(storage.percent ?? 0) >= 100 ? (
+              <p className="mt-3 text-sm text-danger">
+                Storage is full — new uploads are paused. Free up space by removing media, or raise
+                the limit on the server.
+              </p>
+            ) : (
+              (storage.percent ?? 0) >= 90 && (
+                <p className="mt-3 text-sm text-warn">
+                  Storage is almost full ({storage.percent}%).
+                </p>
+              )
+            )}
+          </>
+        )}
       </Card>
 
       <Card>

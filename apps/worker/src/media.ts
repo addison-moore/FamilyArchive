@@ -6,7 +6,7 @@ import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { promisify } from "node:util";
 
-import { getDb, mediaDerivatives, mediaItems } from "@familyarchive/db";
+import { getDb, mediaDerivatives, mediaItems, recomputeInstanceUsage } from "@familyarchive/db";
 import { derivativeKey } from "@familyarchive/media";
 import {
   FACES_QUEUE,
@@ -215,6 +215,8 @@ async function processMedia(
     }
 
     await setStatus(mediaId, "processed");
+    // Fold the new derivatives into the instance storage counter (quota plan).
+    await recomputeInstanceUsage();
     logger.info({ mediaId, derivatives: outputs.length }, "media processed");
 
     // Documents and PDFs continue into OCR (PRD §18.1, §26.4).

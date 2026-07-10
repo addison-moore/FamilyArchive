@@ -21,6 +21,9 @@ const envSchema = z.object({
   MEDIA_STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
   MEDIA_LOCAL_PATH: z.string().default("/data/media"),
   MEDIA_MAX_UPLOAD_MB: z.coerce.number().int().positive().default(500),
+  // Instance-wide cap on media storage (originals + generated previews).
+  // 0/unset = unlimited. Export bundles never count against it.
+  MEDIA_QUOTA_MB: z.coerce.number().int().min(0).default(0),
   S3_ENDPOINT: z.string().optional(),
   S3_BUCKET: z.string().optional(),
   S3_ACCESS_KEY_ID: z.string().optional(),
@@ -40,6 +43,10 @@ const envSchema = z.object({
 
   // Audit log retention in days (PRD §22.3); 0/unset keeps entries forever.
   AUDIT_RETENTION_DAYS: z.coerce.number().int().min(0).default(0),
+
+  // Bearer token for the machine-readable /api/admin/usage endpoint; the
+  // endpoint is disabled entirely when unset.
+  METRICS_TOKEN: z.string().min(16).optional(),
 
   // External AI providers (disabled by default, PRD §31.4; explicit admin opt-in)
   AI_PROVIDER: z.enum(["openai", "anthropic"]).optional(),

@@ -92,6 +92,13 @@
       "when": 1783641530721,
       "tag": "0012_previous_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1783643049861,
+      "tag": "0013_open_scorpion",
+      "breakpoints": true
     }
   ]
 }

@@ -12,6 +12,7 @@ import Link from "next/link";
 import { Card, inputClass, subtleButtonClass } from "@/components/form";
 import { MediaThumb } from "@/components/media-thumb";
 import { MediaUpload } from "@/components/media-upload";
+import { quotaState } from "@/lib/quota";
 import { ScopeToggle } from "@/components/scope-toggle";
 import { resolveView } from "@/lib/branch";
 import { listMedia, taggedPersonIdsByMedia, thumbUrls } from "@/lib/media";
@@ -67,6 +68,8 @@ export default async function MediaPage({
   );
   const canUpload = treeRoleAtLeast(role, "contributor");
   const accept = Object.keys(UPLOAD_MIME_TYPES).join(",");
+  const storage = canUpload ? await quotaState() : null;
+  const storagePercent = storage?.percent ?? 0;
 
   const viewQuery = (mineValue: boolean) => {
     const params = new URLSearchParams();
@@ -140,7 +143,21 @@ export default async function MediaPage({
 
       {canUpload && (
         <div className="mb-6">
-          <MediaUpload treeId={treeId} accept={accept} />
+          {storagePercent >= 100 ? (
+            <p className="rounded-lg border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger">
+              Storage is full — new uploads are paused. Free up space by removing media, or ask your
+              administrator to raise the limit.
+            </p>
+          ) : (
+            <>
+              {storagePercent >= 90 && (
+                <p className="mb-3 rounded-lg border border-warn-line bg-warn-soft px-4 py-3 text-sm text-warn">
+                  Storage is almost full ({storagePercent}% used).
+                </p>
+              )}
+              <MediaUpload treeId={treeId} accept={accept} />
+            </>
+          )}
         </div>
       )}
 

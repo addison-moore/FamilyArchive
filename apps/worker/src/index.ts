@@ -9,6 +9,7 @@ import { startExportWorker } from "./export";
 import { startFacesWorker } from "./faces";
 import { startMediaWorker } from "./media";
 import { startTextWorkers } from "./text-jobs";
+import { startUsageReconcile } from "./usage";
 
 /**
  * FamilyArchive job worker. Current consumers: heartbeat (M1 plumbing check) and
@@ -40,6 +41,7 @@ const textWorkers = startTextWorkers(connection, logger);
 const facesWorker = startFacesWorker(connection, logger);
 const auditWorker = startAuditCleanup(connection, logger);
 const exportWorkers = startExportWorker(connection, logger);
+const usageWorker = startUsageReconcile(connection, logger);
 
 async function main() {
   await heartbeatQueue.upsertJobScheduler("heartbeat-every-minute", { every: 60_000 });
@@ -59,6 +61,7 @@ async function shutdown(signal: string) {
     facesWorker.close(),
     auditWorker.close(),
     ...exportWorkers.map((w) => w.close()),
+    usageWorker.close(),
     heartbeatQueue.close(),
   ]);
   process.exit(0);

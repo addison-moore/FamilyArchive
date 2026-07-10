@@ -3,7 +3,7 @@ import { Readable, Transform } from "node:stream";
 
 import { AuthorizationError, requireMemberRole } from "@familyarchive/auth";
 import { getEnv } from "@familyarchive/config";
-import { getDb, mediaItems } from "@familyarchive/db";
+import { adjustInstanceUsage, getDb, mediaItems } from "@familyarchive/db";
 import { originalKey, uploadTempKey } from "@familyarchive/media";
 import { UPLOAD_MIME_TYPES } from "@familyarchive/shared";
 import { and, eq, isNull, ne } from "drizzle-orm";
@@ -11,6 +11,10 @@ import { and, eq, isNull, ne } from "drizzle-orm";
 import { recordAudit } from "@/lib/audit";
 import { enqueueMediaProcessing } from "@/lib/jobs";
 import { getStorageDriver } from "@/lib/media";
+import { maybeNotifyOwners, quotaState } from "@/lib/quota";
+
+const QUOTA_FULL_MESSAGE =
+  "This archive's storage is full. Free up space by removing media, or ask your administrator to raise the limit.";
 
 /**
  * Media upload (PRD §15.5, §24.6, §31.5): raw request body streamed through a
@@ -52,6 +56,24 @@ export async function POST(
       { status: 413 },
     );
   }
+
+  // Storage quota (storage-quota plan): fast-fail at initiation, then enforce
+  // mid-stream via the same byte-counting tap as the upload size limit —
+  // nothing over-quota is ever finalized.
+  const quota = await quotaState();
+  const quotaHeadroom =
+    quota.quotaBytes === null ? Infinity : Math.max(0, quota.quotaBytes - quota.usedBytes);
+  if (declaredSize > quotaHeadroom) {
+    await recordAudit({
+      treeId,
+      actorId: user.id,
+      action: "media.upload_blocked",
+      targetType: "tree",
+      targetId: treeId,
+      summary: "Upload blocked: storage quota reached",
+    });
+    return Response.json({ error: QUOTA_FULL_MESSAGE }, { status: 413 });
+  }
   const rawName = request.headers.get("x-file-name") ?? "upload";
   // Sanitized for storage as metadata only — never used in storage keys (§31.5).
   const originalFilename = decodeURIComponent(rawName)
@@ -92,6 +114,10 @@ export async function POST(
         callback(new Error("size-limit"));
         return;
       }
+      if (byteCount > quotaHeadroom) {
+        callback(new Error("quota-limit"));
+        return;
+      }
       hasher.update(chunk);
       callback(null, chunk);
     },
@@ -113,6 +139,17 @@ export async function POST(
         { error: `File exceeds the ${env.MEDIA_MAX_UPLOAD_MB} MB upload limit` },
         { status: 413 },
       );
+    }
+    if (error instanceof Error && error.message === "quota-limit") {
+      await recordAudit({
+        treeId,
+        actorId: user.id,
+        action: "media.upload_blocked",
+        targetType: "tree",
+        targetId: treeId,
+        summary: "Upload blocked mid-transfer: storage quota reached",
+      });
+      return Response.json({ error: QUOTA_FULL_MESSAGE }, { status: 413 });
     }
     throw error;
   }
@@ -151,6 +188,9 @@ export async function POST(
     .update(mediaItems)
     .set({ hash, fileSize: byteCount, storageKey: finalKey, updatedAt: new Date() })
     .where(eq(mediaItems.id, mediaId));
+
+  await adjustInstanceUsage({ originalBytes: byteCount, mediaCount: 1 });
+  await maybeNotifyOwners();
 
   await enqueueMediaProcessing(treeId, mediaId);
   await recordAudit({
