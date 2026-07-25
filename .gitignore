@@ -54,6 +54,9 @@ storage/
 # Claude
 .claude/
 
+# Codex (contains credentials)
+.codex/
+
 _scratch/
 # Playwright
 tests/smoke/test-results/

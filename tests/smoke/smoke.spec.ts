@@ -338,10 +338,15 @@ test("large import auto-collapses the tree and branches expand", async () => {
   const hubId = /people\/([0-9a-f-]{36})/.exec(profileHref ?? "")?.[1];
   expect(hubId).toBeTruthy();
   await page.goto(`/trees/${largeTreeId}?selected=${hubId}`);
-  await page.getByRole("button", { name: "Set as my starting person" }).click();
-  // The form only renders for non-starting people, so its disappearance is the
-  // reliable signal that the action landed and the page re-rendered.
-  await expect(page.getByRole("button", { name: "Set as my starting person" })).toBeHidden();
+  await expect(page.getByText(/Showing \d+ of \d+ people/)).toBeVisible();
+  // The set-start form only renders when the hub didn't already win the
+  // created-at tie; its disappearance is the signal the action landed.
+  const setStart = page.getByRole("button", { name: "Set as my starting person" });
+  if ((await setStart.count()) > 0) {
+    await setStart.click();
+    await expect(setStart).toBeHidden();
+  }
+  await expect(page.getByText("starting from Cornelius Hartleigh")).toBeVisible();
 
   // Auto-collapse: far generations hidden, boundary chips visible.
   await expect(page.getByText(/Showing \d+ of 611 people/)).toBeVisible();
@@ -350,14 +355,19 @@ test("large import auto-collapses the tree and branches expand", async () => {
   expect(collapsedCount).toBeLessThan(150);
 
   // Expanding an ancestor boundary chip reveals that couple's generation.
+  // The canvas pans by CSS transform, so off-viewport chips can't be reached
+  // by scrolling — dispatch the click straight to the same React handler a
+  // panned-to click would hit.
   await page
     .getByRole("button", { name: /Show \d+ hidden ancestors/ })
     .first()
-    .click();
+    .dispatchEvent("click");
   await expect(page.locator(".react-flow__node")).toHaveCount(collapsedCount + 2);
 
   // Collapsing the hub's ancestor branch hides every ancestor again.
-  await page.getByRole("button", { name: "Hide ancestors of Cornelius Hartleigh" }).click();
+  await page
+    .getByRole("button", { name: "Hide ancestors of Cornelius Hartleigh" })
+    .dispatchEvent("click");
   await expect
     .poll(async () => page.locator(".react-flow__node").count())
     .toBeLessThan(collapsedCount);
