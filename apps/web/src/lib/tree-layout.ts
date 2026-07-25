@@ -1,13 +1,15 @@
 import dagre from "@dagrejs/dagre";
 
-import { personLifespan } from "@/components/person-summary";
-import type { TreeGraph } from "@/lib/tree-graph";
+import type { TreeGraphPayload, TreePersonNode } from "@/lib/tree-visibility";
 
 export const NODE_WIDTH = 190;
 export const NODE_HEIGHT = 76;
 const GAP = 40;
 
-/** Plain-serializable node data passed from the server page to the client canvas. */
+/** A subgraph to lay out — the visible slice of the payload. */
+export type LayoutGraph = Pick<TreeGraphPayload, "people" | "parentEdges" | "partnerEdges">;
+
+/** Positioned node ready for the React Flow canvas. */
 export interface CanvasNode {
   id: string;
   x: number;
@@ -67,11 +69,11 @@ class RowOccupancy {
  *    afterwards parks in a stacked column at the top-left rather than on top
  *    of each other.
  */
-export function layoutTreeGraph(graph: TreeGraph, startPersonId: string): CanvasGraph {
+export function layoutTreeGraph(graph: LayoutGraph, startPersonId: string): CanvasGraph {
   const inParentEdges = new Set<string>();
   for (const edge of graph.parentEdges) {
-    inParentEdges.add(edge.fromPersonId);
-    inParentEdges.add(edge.toPersonId);
+    inParentEdges.add(edge.from);
+    inParentEdges.add(edge.to);
   }
 
   const g = new dagre.graphlib.Graph();
@@ -79,19 +81,19 @@ export function layoutTreeGraph(graph: TreeGraph, startPersonId: string): Canvas
   g.setDefaultEdgeLabel(() => ({}));
 
   const ranked = graph.people.filter(
-    ({ person }) => inParentEdges.has(person.id) || person.id === startPersonId,
+    (person) => inParentEdges.has(person.id) || person.id === startPersonId,
   );
-  for (const { person } of ranked) {
+  for (const person of ranked) {
     g.setNode(person.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
   }
   for (const edge of graph.parentEdges) {
-    g.setEdge(edge.fromPersonId, edge.toPersonId);
+    g.setEdge(edge.from, edge.to);
   }
   dagre.layout(g);
 
   const positions = new Map<string, { x: number; y: number }>();
   const occupancy = new RowOccupancy();
-  for (const { person } of ranked) {
+  for (const person of ranked) {
     const node = g.node(person.id);
     if (node) {
       const pos = { x: node.x - NODE_WIDTH / 2, y: node.y - NODE_HEIGHT / 2 };
@@ -101,20 +103,20 @@ export function layoutTreeGraph(graph: TreeGraph, startPersonId: string): Canvas
   }
 
   // Partner satellites, in passes so chains anchor transitively.
-  let pending = graph.people.filter(({ person }) => !positions.has(person.id));
+  let pending: TreePersonNode[] = graph.people.filter((person) => !positions.has(person.id));
   const slotsUsed = new Map<string, number>(); // anchor id -> partner slots taken
   for (let pass = 0; pass < 4 && pending.length > 0; pass++) {
     const unresolved: typeof pending = [];
-    for (const entry of pending) {
-      const personId = entry.person.id;
+    for (const person of pending) {
+      const personId = person.id;
       // Any partner edge whose other end already has a position can anchor us.
       const anchorId = graph.partnerEdges
-        .filter((e) => e.fromPersonId === personId || e.toPersonId === personId)
-        .map((e) => (e.fromPersonId === personId ? e.toPersonId : e.fromPersonId))
+        .filter((e) => e.from === personId || e.to === personId)
+        .map((e) => (e.from === personId ? e.to : e.from))
         .find((id) => positions.has(id));
       const anchor = anchorId ? positions.get(anchorId) : undefined;
       if (!anchor || !anchorId) {
-        unresolved.push(entry);
+        unresolved.push(person);
         continue;
       }
 
@@ -138,22 +140,22 @@ export function layoutTreeGraph(graph: TreeGraph, startPersonId: string): Canvas
   // Truly unanchored context people: park in a stacked column at the top-left.
   if (pending.length > 0) {
     const minX = Math.min(0, ...[...positions.values()].map((p) => p.x));
-    pending.forEach((entry, index) => {
-      positions.set(entry.person.id, {
+    pending.forEach((person, index) => {
+      positions.set(person.id, {
         x: minX - NODE_WIDTH - GAP * 2,
         y: index * (NODE_HEIGHT + GAP / 2),
       });
     });
   }
 
-  const nodes: CanvasNode[] = graph.people.map(({ person }) => {
+  const nodes: CanvasNode[] = graph.people.map((person) => {
     const pos = positions.get(person.id) ?? { x: 0, y: 0 };
     return {
       id: person.id,
       x: pos.x,
       y: pos.y,
       fullName: person.fullName,
-      lifespan: personLifespan(person),
+      lifespan: person.lifespan,
       isStart: person.id === startPersonId,
     };
   });
@@ -162,7 +164,7 @@ export function layoutTreeGraph(graph: TreeGraph, startPersonId: string): Canvas
   // pair would just draw identical overlapping dashes.
   const seenPairs = new Set<string>();
   const partnerEdges = graph.partnerEdges.filter((e) => {
-    const key = [e.fromPersonId, e.toPersonId].sort().join("|");
+    const key = [e.from, e.to].sort().join("|");
     if (seenPairs.has(key)) return false;
     seenPairs.add(key);
     return true;
@@ -171,14 +173,14 @@ export function layoutTreeGraph(graph: TreeGraph, startPersonId: string): Canvas
   const edges: CanvasEdge[] = [
     ...graph.parentEdges.map((e) => ({
       id: e.id,
-      source: e.fromPersonId,
-      target: e.toPersonId,
+      source: e.from,
+      target: e.to,
       kind: "parent" as const,
     })),
     ...partnerEdges.map((e) => ({
       id: e.id,
-      source: e.fromPersonId,
-      target: e.toPersonId,
+      source: e.from,
+      target: e.to,
       kind: "partner" as const,
     })),
   ];

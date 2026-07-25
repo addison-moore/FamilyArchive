@@ -3,7 +3,7 @@ import { treeRoleAtLeast } from "@familyarchive/shared";
 import Link from "next/link";
 
 import { buttonClass, Card, FormError } from "@/components/form";
-import { PersonSummary } from "@/components/person-summary";
+import { PersonSummary, personLifespan } from "@/components/person-summary";
 import { TreeCanvas } from "@/components/tree-canvas";
 import { TreeNodeActions } from "@/components/tree-node-actions";
 import { profilePhotoUrl } from "@/lib/media";
@@ -14,8 +14,8 @@ import {
   TREE_VIEW_MODES,
   type TreeViewMode,
 } from "@/lib/tree-graph";
-import { layoutTreeGraph } from "@/lib/tree-layout";
 import { resolveStartingPerson } from "@/lib/tree-graph";
+import type { TreeGraphPayload } from "@/lib/tree-visibility";
 
 const MODE_LABELS: Record<TreeViewMode, string> = {
   both: "Ancestors & descendants",
@@ -68,7 +68,27 @@ export default async function TreePage({
   }
 
   const graph = await buildTreeGraph(treeId, startPerson.id, mode);
-  const canvas = layoutTreeGraph(graph, startPerson.id);
+  // Visibility and layout run client-side (collapsible branches); the page
+  // ships only the plain graph data.
+  const payload: TreeGraphPayload = {
+    startId: startPerson.id,
+    people: graph.people.map(({ person, generation }) => ({
+      id: person.id,
+      fullName: person.fullName,
+      lifespan: personLifespan(person),
+      generation,
+    })),
+    parentEdges: graph.parentEdges.map((e) => ({
+      id: e.id,
+      from: e.fromPersonId,
+      to: e.toPersonId,
+    })),
+    partnerEdges: graph.partnerEdges.map((e) => ({
+      id: e.id,
+      from: e.fromPersonId,
+      to: e.toPersonId,
+    })),
+  };
 
   const selectedPerson = (selected ? await getPerson(treeId, selected) : null) ?? startPerson;
   const [selectedGraph, selectedPhotoUrl] = await Promise.all([
@@ -113,19 +133,12 @@ export default async function TreePage({
             </Link>
           ))}
         </div>
-        <span className="text-sm text-archive-700/70">
-          {canvas.nodes.length} people shown · starting from {startPerson.fullName}
-        </span>
+        <span className="text-sm text-archive-700/70">starting from {startPerson.fullName}</span>
       </div>
 
       <div className="flex flex-col gap-6 xl:flex-row">
         <div className="min-w-0 flex-1">
-          <TreeCanvas
-            treeId={treeId}
-            nodes={canvas.nodes}
-            edges={canvas.edges}
-            selectedId={selectedPerson.id}
-          />
+          <TreeCanvas treeId={treeId} graph={payload} selectedId={selectedPerson.id} />
         </div>
         <div className="w-full xl:w-96 xl:shrink-0">
           <PersonSummary

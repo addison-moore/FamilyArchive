@@ -26,5 +26,12 @@ export default tseslint.config(
     },
     settings: { next: { rootDir: "apps/web" } },
   },
+  {
+    // Node fixture-generator scripts run outside any TS project.
+    files: ["tests/smoke/fixtures/**/*.mjs"],
+    languageOptions: {
+      globals: { console: "readonly", process: "readonly" },
+    },
+  },
   prettier,
 );

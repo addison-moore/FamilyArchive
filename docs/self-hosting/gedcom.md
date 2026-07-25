@@ -41,6 +41,13 @@ After import, review **possible duplicates** (linked from the success banner):
 people with the same name and compatible birth years. FamilyArchive v1 warns but
 does not merge.
 
+Large imports (hundreds or thousands of people, common with Ancestry.com
+exports) stay readable on the tree canvas: trees over ~60 people open showing
+three generations around your starting person, with "▲ 12"-style chips marking
+collapsed branches. Click a chip to reveal the next generation of that line,
+hover a person to collapse a branch, or use **Expand all** / **Reset view** in
+the canvas footer.
+
 ## Export
 
 **Tree settings → GEDCOM export**, or `GET /api/trees/<treeId>/gedcom` as any

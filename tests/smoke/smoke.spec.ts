@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 import AdmZip from "adm-zip";
@@ -306,4 +308,61 @@ test("GEDCOM import creates an archive", async () => {
   await page.waitForURL(/imported=1/);
   await expect(page.getByText(/GEDCOM import complete: 3 people/)).toBeVisible();
   await expect(page.locator(".react-flow__node")).toHaveCount(3);
+});
+
+test("large import auto-collapses the tree and branches expand", async () => {
+  test.setTimeout(300_000);
+  const gedcom = readFileSync(join(__dirname, "fixtures", "large-family.ged"));
+  await page.goto("/trees/import");
+  await page.locator('input[name="file"]').setInputFiles({
+    name: "large-family.ged",
+    mimeType: "text/plain",
+    buffer: gedcom,
+  });
+  await page.locator('select[name="target"]').selectOption("new");
+  await page.locator('input[name="treeName"]').fill("Hartleigh Import");
+  await page.getByRole("button", { name: "Import" }).click();
+  await page.waitForURL(/imported=1/, { timeout: 240_000 });
+  await expect(page.getByText(/GEDCOM import complete: 611 people/)).toBeVisible();
+  const largeTreeId = new URL(page.url()).pathname.split("/")[2]!;
+
+  // Import order does not set a deterministic starting person (one createdAt
+  // for the whole transaction), so pin the view to the pedigree hub.
+  await page.goto(`/trees/${largeTreeId}/search?q=Cornelius&scope=all`);
+  const profileHref = await page
+    .locator("section")
+    .filter({ hasText: "People" })
+    .getByRole("link", { name: /Cornelius Hartleigh/ })
+    .first()
+    .getAttribute("href");
+  const hubId = /people\/([0-9a-f-]{36})/.exec(profileHref ?? "")?.[1];
+  expect(hubId).toBeTruthy();
+  await page.goto(`/trees/${largeTreeId}?selected=${hubId}`);
+  await page.getByRole("button", { name: "Set as my starting person" }).click();
+  // The form only renders for non-starting people, so its disappearance is the
+  // reliable signal that the action landed and the page re-rendered.
+  await expect(page.getByRole("button", { name: "Set as my starting person" })).toBeHidden();
+
+  // Auto-collapse: far generations hidden, boundary chips visible.
+  await expect(page.getByText(/Showing \d+ of 611 people/)).toBeVisible();
+  const collapsedCount = await page.locator(".react-flow__node").count();
+  expect(collapsedCount).toBeGreaterThan(10);
+  expect(collapsedCount).toBeLessThan(150);
+
+  // Expanding an ancestor boundary chip reveals that couple's generation.
+  await page
+    .getByRole("button", { name: /Show \d+ hidden ancestors/ })
+    .first()
+    .click();
+  await expect(page.locator(".react-flow__node")).toHaveCount(collapsedCount + 2);
+
+  // Collapsing the hub's ancestor branch hides every ancestor again.
+  await page.getByRole("button", { name: "Hide ancestors of Cornelius Hartleigh" }).click();
+  await expect
+    .poll(async () => page.locator(".react-flow__node").count())
+    .toBeLessThan(collapsedCount);
+
+  // Expand all renders the entire archive.
+  await page.getByRole("button", { name: "Expand all" }).click();
+  await expect(page.locator(".react-flow__node")).toHaveCount(611, { timeout: 60_000 });
 });

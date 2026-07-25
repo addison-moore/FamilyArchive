@@ -5,7 +5,7 @@ Website & docs: [family-archive.net](https://family-archive.net)
 
 Maintain interactive family trees, upload and organize photos, videos, audio, and
 scanned documents, tag people in media, OCR old letters and records, and search
-across your family's history — all on your own server.
+across your family's history all on your own server.
 
 > **Status:** feature-complete for v1 (0.1.0), undergoing user acceptance
 > testing before the first public release. See `CHANGELOG.md` for what's

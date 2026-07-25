@@ -1,0 +1,4224 @@
+0 HEAD
+1 SOUR FamilyArchive-Smoke
+1 GEDC
+2 VERS 5.5.1
+2 FORM LINEAGE-LINKED
+1 CHAR UTF-8
+0 @I1@ INDI
+1 NAME Cornelius /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 1931
+0 @I2@ INDI
+1 NAME Caspian /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 1959
+0 @I3@ INDI
+1 NAME Delphine /Grimsbury/
+1 SEX F
+1 BIRT
+2 DATE 1960
+0 @I4@ INDI
+1 NAME Edmund /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 1988
+0 @I5@ INDI
+1 NAME Fenella /Ivorydale/
+1 SEX F
+1 BIRT
+2 DATE 1984
+0 @I6@ INDI
+1 NAME Gideon /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 2012
+0 @I7@ INDI
+1 NAME Henrietta /Kestrelmoor/
+1 SEX F
+1 BIRT
+2 DATE 2013
+0 @I8@ INDI
+1 NAME Ignatius /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 2041
+0 @I9@ INDI
+1 NAME Josephine /Mistleford/
+1 SEX F
+1 BIRT
+2 DATE 2042
+0 @I10@ INDI
+1 NAME Leopold /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 2065
+0 @I11@ INDI
+1 NAME Millicent /Quillingham/
+1 SEX F
+1 BIRT
+2 DATE 2066
+0 @I12@ INDI
+1 NAME Nathaniel /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 2094
+0 @I13@ INDI
+1 NAME Ophelia /Wrenfield/
+1 SEX F
+1 BIRT
+2 DATE 2095
+0 @I14@ INDI
+1 NAME Percival /Quillingham/
+1 SEX M
+1 BIRT
+2 DATE 2096
+0 @I15@ INDI
+1 NAME Rosalind /Suttonwood/
+1 SEX F
+1 BIRT
+2 DATE 2092
+0 @I16@ INDI
+1 NAME Rutherford /Mistleford/
+1 SEX M
+1 BIRT
+2 DATE 2066
+0 @I17@ INDI
+1 NAME Theodora /Ashgrove/
+1 SEX F
+1 BIRT
+2 DATE 2067
+0 @I18@ INDI
+1 NAME Thaddeus /Mistleford/
+1 SEX M
+1 BIRT
+2 DATE 2095
+0 @I19@ INDI
+1 NAME Winifred /Cloverfield/
+1 SEX F
+1 BIRT
+2 DATE 2096
+0 @I20@ INDI
+1 NAME Alaric /Ashgrove/
+1 SEX M
+1 BIRT
+2 DATE 2092
+0 @I21@ INDI
+1 NAME Beatrix /Elderglen/
+1 SEX F
+1 BIRT
+2 DATE 2093
+0 @I22@ INDI
+1 NAME Caspian /Kestrelmoor/
+1 SEX M
+1 BIRT
+2 DATE 2040
+0 @I23@ INDI
+1 NAME Delphine /Grimsbury/
+1 SEX F
+1 BIRT
+2 DATE 2041
+0 @I24@ INDI
+1 NAME Edmund /Kestrelmoor/
+1 SEX M
+1 BIRT
+2 DATE 2069
+0 @I25@ INDI
+1 NAME Fenella /Ivorydale/
+1 SEX F
+1 BIRT
+2 DATE 2065
+0 @I26@ INDI
+1 NAME Gideon /Kestrelmoor/
+1 SEX M
+1 BIRT
+2 DATE 2093
+0 @I27@ INDI
+1 NAME Henrietta /Kestrelmoor/
+1 SEX F
+1 BIRT
+2 DATE 2094
+0 @I28@ INDI
+1 NAME Ignatius /Ivorydale/
+1 SEX M
+1 BIRT
+2 DATE 2095
+0 @I29@ INDI
+1 NAME Josephine /Mistleford/
+1 SEX F
+1 BIRT
+2 DATE 2096
+0 @I30@ INDI
+1 NAME Leopold /Grimsbury/
+1 SEX M
+1 BIRT
+2 DATE 2065
+0 @I31@ INDI
+1 NAME Millicent /Quillingham/
+1 SEX F
+1 BIRT
+2 DATE 2066
+0 @I32@ INDI
+1 NAME Nathaniel /Grimsbury/
+1 SEX M
+1 BIRT
+2 DATE 2094
+0 @I33@ INDI
+1 NAME Ophelia /Wrenfield/
+1 SEX F
+1 BIRT
+2 DATE 2095
+0 @I34@ INDI
+1 NAME Percival /Quillingham/
+1 SEX M
+1 BIRT
+2 DATE 2096
+0 @I35@ INDI
+1 NAME Rosalind /Suttonwood/
+1 SEX F
+1 BIRT
+2 DATE 2092
+0 @I36@ INDI
+1 NAME Rutherford /Ivorydale/
+1 SEX M
+1 BIRT
+2 DATE 2012
+0 @I37@ INDI
+1 NAME Theodora /Ashgrove/
+1 SEX F
+1 BIRT
+2 DATE 2013
+0 @I38@ INDI
+1 NAME Thaddeus /Ivorydale/
+1 SEX M
+1 BIRT
+2 DATE 2041
+0 @I39@ INDI
+1 NAME Winifred /Cloverfield/
+1 SEX F
+1 BIRT
+2 DATE 2042
+0 @I40@ INDI
+1 NAME Alaric /Ivorydale/
+1 SEX M
+1 BIRT
+2 DATE 2065
+0 @I41@ INDI
+1 NAME Beatrix /Elderglen/
+1 SEX F
+1 BIRT
+2 DATE 2066
+0 @I42@ INDI
+1 NAME Caspian /Ivorydale/
+1 SEX M
+1 BIRT
+2 DATE 2094
+0 @I43@ INDI
+1 NAME Delphine /Grimsbury/
+1 SEX F
+1 BIRT
+2 DATE 2095
+0 @I44@ INDI
+1 NAME Edmund /Elderglen/
+1 SEX M
+1 BIRT
+2 DATE 2096
+0 @I45@ INDI
+1 NAME Fenella /Ivorydale/
+1 SEX F
+1 BIRT
+2 DATE 2092
+0 @I46@ INDI
+1 NAME Gideon /Cloverfield/
+1 SEX M
+1 BIRT
+2 DATE 2066
+0 @I47@ INDI
+1 NAME Henrietta /Kestrelmoor/
+1 SEX F
+1 BIRT
+2 DATE 2067
+0 @I48@ INDI
+1 NAME Ignatius /Cloverfield/
+1 SEX M
+1 BIRT
+2 DATE 2095
+0 @I49@ INDI
+1 NAME Josephine /Mistleford/
+1 SEX F
+1 BIRT
+2 DATE 2096
+0 @I50@ INDI
+1 NAME Leopold /Kestrelmoor/
+1 SEX M
+1 BIRT
+2 DATE 2092
+0 @I51@ INDI
+1 NAME Millicent /Quillingham/
+1 SEX F
+1 BIRT
+2 DATE 2093
+0 @I52@ INDI
+1 NAME Nathaniel /Ashgrove/
+1 SEX M
+1 BIRT
+2 DATE 2040
+0 @I53@ INDI
+1 NAME Ophelia /Wrenfield/
+1 SEX F
+1 BIRT
+2 DATE 2041
+0 @I54@ INDI
+1 NAME Percival /Ashgrove/
+1 SEX M
+1 BIRT
+2 DATE 2069
+0 @I55@ INDI
+1 NAME Rosalind /Suttonwood/
+1 SEX F
+1 BIRT
+2 DATE 2065
+0 @I56@ INDI
+1 NAME Rutherford /Ashgrove/
+1 SEX M
+1 BIRT
+2 DATE 2093
+0 @I57@ INDI
+1 NAME Theodora /Ashgrove/
+1 SEX F
+1 BIRT
+2 DATE 2094
+0 @I58@ INDI
+1 NAME Thaddeus /Suttonwood/
+1 SEX M
+1 BIRT
+2 DATE 2095
+0 @I59@ INDI
+1 NAME Winifred /Cloverfield/
+1 SEX F
+1 BIRT
+2 DATE 2096
+0 @I60@ INDI
+1 NAME Alaric /Wrenfield/
+1 SEX M
+1 BIRT
+2 DATE 2065
+0 @I61@ INDI
+1 NAME Beatrix /Elderglen/
+1 SEX F
+1 BIRT
+2 DATE 2066
+0 @I62@ INDI
+1 NAME Caspian /Wrenfield/
+1 SEX M
+1 BIRT
+2 DATE 2094
+0 @I63@ INDI
+1 NAME Delphine /Grimsbury/
+1 SEX F
+1 BIRT
+2 DATE 2095
+0 @I64@ INDI
+1 NAME Edmund /Elderglen/
+1 SEX M
+1 BIRT
+2 DATE 2096
+0 @I65@ INDI
+1 NAME Fenella /Ivorydale/
+1 SEX F
+1 BIRT
+2 DATE 2092
+0 @I66@ INDI
+1 NAME Gideon /Grimsbury/
+1 SEX M
+1 BIRT
+2 DATE 1985
+0 @I67@ INDI
+1 NAME Henrietta /Kestrelmoor/
+1 SEX F
+1 BIRT
+2 DATE 1986
+0 @I68@ INDI
+1 NAME Ignatius /Grimsbury/
+1 SEX M
+1 BIRT
+2 DATE 2014
+0 @I69@ INDI
+1 NAME Josephine /Mistleford/
+1 SEX F
+1 BIRT
+2 DATE 2015
+0 @I70@ INDI
+1 NAME Leopold /Grimsbury/
+1 SEX M
+1 BIRT
+2 DATE 2038
+0 @I71@ INDI
+1 NAME Millicent /Quillingham/
+1 SEX F
+1 BIRT
+2 DATE 2039
+0 @I72@ INDI
+1 NAME Nathaniel /Grimsbury/
+1 SEX M
+1 BIRT
+2 DATE 2067
+0 @I73@ INDI
+1 NAME Ophelia /Wrenfield/
+1 SEX F
+1 BIRT
+2 DATE 2068
+0 @I74@ INDI
+1 NAME Percival /Grimsbury/
+1 SEX M
+1 BIRT
+2 DATE 2096
+0 @I75@ INDI
+1 NAME Rosalind /Suttonwood/
+1 SEX F
+1 BIRT
+2 DATE 2092
+0 @I76@ INDI
+1 NAME Rutherford /Wrenfield/
+1 SEX M
+1 BIRT
+2 DATE 2093
+0 @I77@ INDI
+1 NAME Theodora /Ashgrove/
+1 SEX F
+1 BIRT
+2 DATE 2094
+0 @I78@ INDI
+1 NAME Thaddeus /Quillingham/
+1 SEX M
+1 BIRT
+2 DATE 2068
+0 @I79@ INDI
+1 NAME Winifred /Cloverfield/
+1 SEX F
+1 BIRT
+2 DATE 2069
+0 @I80@ INDI
+1 NAME Alaric /Quillingham/
+1 SEX M
+1 BIRT
+2 DATE 2092
+0 @I81@ INDI
+1 NAME Beatrix /Elderglen/
+1 SEX F
+1 BIRT
+2 DATE 2093
+0 @I82@ INDI
+1 NAME Caspian /Cloverfield/
+1 SEX M
+1 BIRT
+2 DATE 2094
+0 @I83@ INDI
+1 NAME Delphine /Grimsbury/
+1 SEX F
+1 BIRT
+2 DATE 2095
+0 @I84@ INDI
+1 NAME Edmund /Mistleford/
+1 SEX M
+1 BIRT
+2 DATE 2042
+0 @I85@ INDI
+1 NAME Fenella /Ivorydale/
+1 SEX F
+1 BIRT
+2 DATE 2038
+0 @I86@ INDI
+1 NAME Gideon /Mistleford/
+1 SEX M
+1 BIRT
+2 DATE 2066
+0 @I87@ INDI
+1 NAME Henrietta /Kestrelmoor/
+1 SEX F
+1 BIRT
+2 DATE 2067
+0 @I88@ INDI
+1 NAME Ignatius /Mistleford/
+1 SEX M
+1 BIRT
+2 DATE 2095
+0 @I89@ INDI
+1 NAME Josephine /Mistleford/
+1 SEX F
+1 BIRT
+2 DATE 2096
+0 @I90@ INDI
+1 NAME Leopold /Kestrelmoor/
+1 SEX M
+1 BIRT
+2 DATE 2092
+0 @I91@ INDI
+1 NAME Millicent /Quillingham/
+1 SEX F
+1 BIRT
+2 DATE 2093
+0 @I92@ INDI
+1 NAME Nathaniel /Ivorydale/
+1 SEX M
+1 BIRT
+2 DATE 2067
+0 @I93@ INDI
+1 NAME Ophelia /Wrenfield/
+1 SEX F
+1 BIRT
+2 DATE 2068
+0 @I94@ INDI
+1 NAME Percival /Ivorydale/
+1 SEX M
+1 BIRT
+2 DATE 2096
+0 @I95@ INDI
+1 NAME Rosalind /Suttonwood/
+1 SEX F
+1 BIRT
+2 DATE 2092
+0 @I96@ INDI
+1 NAME Rutherford /Wrenfield/
+1 SEX M
+1 BIRT
+2 DATE 2093
+0 @I97@ INDI
+1 NAME Theodora /Ashgrove/
+1 SEX F
+1 BIRT
+2 DATE 2094
+0 @I98@ INDI
+1 NAME Thaddeus /Kestrelmoor/
+1 SEX M
+1 BIRT
+2 DATE 2014
+0 @I99@ INDI
+1 NAME Winifred /Cloverfield/
+1 SEX F
+1 BIRT
+2 DATE 2015
+0 @I100@ INDI
+1 NAME Alaric /Kestrelmoor/
+1 SEX M
+1 BIRT
+2 DATE 2038
+0 @I101@ INDI
+1 NAME Beatrix /Elderglen/
+1 SEX F
+1 BIRT
+2 DATE 2039
+0 @I102@ INDI
+1 NAME Caspian /Kestrelmoor/
+1 SEX M
+1 BIRT
+2 DATE 2067
+0 @I103@ INDI
+1 NAME Delphine /Grimsbury/
+1 SEX F
+1 BIRT
+2 DATE 2068
+0 @I104@ INDI
+1 NAME Edmund /Kestrelmoor/
+1 SEX M
+1 BIRT
+2 DATE 2096
+0 @I105@ INDI
+1 NAME Fenella /Ivorydale/
+1 SEX F
+1 BIRT
+2 DATE 2092
+0 @I106@ INDI
+1 NAME Gideon /Grimsbury/
+1 SEX M
+1 BIRT
+2 DATE 2093
+0 @I107@ INDI
+1 NAME Henrietta /Kestrelmoor/
+1 SEX F
+1 BIRT
+2 DATE 2094
+0 @I108@ INDI
+1 NAME Ignatius /Elderglen/
+1 SEX M
+1 BIRT
+2 DATE 2068
+0 @I109@ INDI
+1 NAME Josephine /Mistleford/
+1 SEX F
+1 BIRT
+2 DATE 2069
+0 @I110@ INDI
+1 NAME Leopold /Elderglen/
+1 SEX M
+1 BIRT
+2 DATE 2092
+0 @I111@ INDI
+1 NAME Millicent /Quillingham/
+1 SEX F
+1 BIRT
+2 DATE 2093
+0 @I112@ INDI
+1 NAME Nathaniel /Mistleford/
+1 SEX M
+1 BIRT
+2 DATE 2094
+0 @I113@ INDI
+1 NAME Ophelia /Wrenfield/
+1 SEX F
+1 BIRT
+2 DATE 2095
+0 @I114@ INDI
+1 NAME Percival /Cloverfield/
+1 SEX M
+1 BIRT
+2 DATE 2042
+0 @I115@ INDI
+1 NAME Rosalind /Suttonwood/
+1 SEX F
+1 BIRT
+2 DATE 2038
+0 @I116@ INDI
+1 NAME Rutherford /Cloverfield/
+1 SEX M
+1 BIRT
+2 DATE 2066
+0 @I117@ INDI
+1 NAME Theodora /Ashgrove/
+1 SEX F
+1 BIRT
+2 DATE 2067
+0 @I118@ INDI
+1 NAME Thaddeus /Cloverfield/
+1 SEX M
+1 BIRT
+2 DATE 2095
+0 @I119@ INDI
+1 NAME Winifred /Cloverfield/
+1 SEX F
+1 BIRT
+2 DATE 2096
+0 @I120@ INDI
+1 NAME Alaric /Ashgrove/
+1 SEX M
+1 BIRT
+2 DATE 2092
+0 @I121@ INDI
+1 NAME Beatrix /Elderglen/
+1 SEX F
+1 BIRT
+2 DATE 2093
+0 @I122@ INDI
+1 NAME Caspian /Suttonwood/
+1 SEX M
+1 BIRT
+2 DATE 2067
+0 @I123@ INDI
+1 NAME Delphine /Grimsbury/
+1 SEX F
+1 BIRT
+2 DATE 2068
+0 @I124@ INDI
+1 NAME Edmund /Suttonwood/
+1 SEX M
+1 BIRT
+2 DATE 2096
+0 @I125@ INDI
+1 NAME Fenella /Ivorydale/
+1 SEX F
+1 BIRT
+2 DATE 2092
+0 @I126@ INDI
+1 NAME Gideon /Grimsbury/
+1 SEX M
+1 BIRT
+2 DATE 2093
+0 @I127@ INDI
+1 NAME Henrietta /Kestrelmoor/
+1 SEX F
+1 BIRT
+2 DATE 2094
+0 @I128@ INDI
+1 NAME Isadora /Suttonwood/
+1 SEX F
+1 BIRT
+2 DATE 1933
+0 @I129@ INDI
+1 NAME Josephine /Hartleigh/
+1 SEX F
+1 BIRT
+2 DATE 1907
+0 @I130@ INDI
+1 NAME Leopold /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 1903
+0 @I131@ INDI
+1 NAME Millicent /Hartleigh/
+1 SEX F
+1 BIRT
+2 DATE 1904
+0 @I132@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1905
+0 @I133@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1879
+0 @I134@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1880
+0 @I135@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1876
+0 @I136@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1877
+0 @I137@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1851
+0 @I138@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1852
+0 @I139@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1853
+0 @I140@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1849
+0 @I141@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I142@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I143@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I144@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I145@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I146@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I147@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I148@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I149@ INDI
+1 NAME Josephine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I150@ INDI
+1 NAME Leopold /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I151@ INDI
+1 NAME Millicent /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I152@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I153@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I154@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I155@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I156@ INDI
+1 NAME Seraphina /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1850
+0 @I157@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I158@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I159@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I160@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I161@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I162@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I163@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I164@ INDI
+1 NAME Eulalia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I165@ INDI
+1 NAME Fenella /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I166@ INDI
+1 NAME Gideon /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I167@ INDI
+1 NAME Henrietta /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I168@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I169@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I170@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I171@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I172@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1851
+0 @I173@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I174@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I175@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I176@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I177@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I178@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I179@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I180@ INDI
+1 NAME Araminta /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I181@ INDI
+1 NAME Beatrix /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I182@ INDI
+1 NAME Caspian /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I183@ INDI
+1 NAME Delphine /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I184@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I185@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I186@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I187@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I188@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1879
+0 @I189@ INDI
+1 NAME Josephine /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1853
+0 @I190@ INDI
+1 NAME Leopold /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1849
+0 @I191@ INDI
+1 NAME Millicent /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1850
+0 @I192@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1851
+0 @I193@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I194@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I195@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I196@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I197@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I198@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I199@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I200@ INDI
+1 NAME Araminta /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I201@ INDI
+1 NAME Beatrix /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I202@ INDI
+1 NAME Caspian /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I203@ INDI
+1 NAME Delphine /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I204@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I205@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I206@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I207@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I208@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1852
+0 @I209@ INDI
+1 NAME Josephine /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I210@ INDI
+1 NAME Leopold /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I211@ INDI
+1 NAME Millicent /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I212@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I213@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I214@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I215@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I216@ INDI
+1 NAME Seraphina /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I217@ INDI
+1 NAME Theodora /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I218@ INDI
+1 NAME Thaddeus /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I219@ INDI
+1 NAME Winifred /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I220@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I221@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I222@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I223@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I224@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1853
+0 @I225@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I226@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I227@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I228@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I229@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I230@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I231@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I232@ INDI
+1 NAME Nerissa /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I233@ INDI
+1 NAME Ophelia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I234@ INDI
+1 NAME Percival /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I235@ INDI
+1 NAME Rosalind /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I236@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I237@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I238@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I239@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I240@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1876
+0 @I241@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1850
+0 @I242@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1851
+0 @I243@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1852
+0 @I244@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1853
+0 @I245@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I246@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I247@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I248@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I249@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I250@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I251@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I252@ INDI
+1 NAME Nerissa /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I253@ INDI
+1 NAME Ophelia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I254@ INDI
+1 NAME Percival /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I255@ INDI
+1 NAME Rosalind /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I256@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I257@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I258@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I259@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I260@ INDI
+1 NAME Araminta /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1849
+0 @I261@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I262@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I263@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I264@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I265@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I266@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I267@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I268@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I269@ INDI
+1 NAME Josephine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I270@ INDI
+1 NAME Leopold /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I271@ INDI
+1 NAME Millicent /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I272@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I273@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I274@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I275@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I276@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1850
+0 @I277@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I278@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I279@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I280@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I281@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I282@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I283@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I284@ INDI
+1 NAME Eulalia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I285@ INDI
+1 NAME Fenella /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I286@ INDI
+1 NAME Gideon /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I287@ INDI
+1 NAME Henrietta /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I288@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I289@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I290@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I291@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I292@ INDI
+1 NAME Nerissa /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1905
+0 @I293@ INDI
+1 NAME Ophelia /Hartleigh/
+1 SEX F
+1 BIRT
+2 DATE 1879
+0 @I294@ INDI
+1 NAME Percival /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 1880
+0 @I295@ INDI
+1 NAME Rosalind /Hartleigh/
+1 SEX F
+1 BIRT
+2 DATE 1876
+0 @I296@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1877
+0 @I297@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1851
+0 @I298@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1852
+0 @I299@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1853
+0 @I300@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1849
+0 @I301@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I302@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I303@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I304@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I305@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I306@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I307@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I308@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I309@ INDI
+1 NAME Josephine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I310@ INDI
+1 NAME Leopold /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I311@ INDI
+1 NAME Millicent /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I312@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I313@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I314@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I315@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I316@ INDI
+1 NAME Seraphina /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1850
+0 @I317@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I318@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I319@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I320@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I321@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I322@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I323@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I324@ INDI
+1 NAME Eulalia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I325@ INDI
+1 NAME Fenella /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I326@ INDI
+1 NAME Gideon /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I327@ INDI
+1 NAME Henrietta /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I328@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I329@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I330@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I331@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I332@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1851
+0 @I333@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I334@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I335@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I336@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I337@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I338@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I339@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I340@ INDI
+1 NAME Araminta /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I341@ INDI
+1 NAME Beatrix /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I342@ INDI
+1 NAME Caspian /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I343@ INDI
+1 NAME Delphine /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I344@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I345@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I346@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I347@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I348@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1879
+0 @I349@ INDI
+1 NAME Josephine /Hartleigh/
+1 SEX F
+1 BIRT
+2 DATE 1853
+0 @I350@ INDI
+1 NAME Leopold /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 1849
+0 @I351@ INDI
+1 NAME Millicent /Hartleigh/
+1 SEX F
+1 BIRT
+2 DATE 1850
+0 @I352@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1851
+0 @I353@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I354@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I355@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I356@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I357@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I358@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I359@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I360@ INDI
+1 NAME Araminta /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I361@ INDI
+1 NAME Beatrix /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I362@ INDI
+1 NAME Caspian /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I363@ INDI
+1 NAME Delphine /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I364@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I365@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I366@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I367@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I368@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1852
+0 @I369@ INDI
+1 NAME Josephine /Hartleigh/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I370@ INDI
+1 NAME Leopold /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I371@ INDI
+1 NAME Millicent /Hartleigh/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I372@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I373@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I374@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I375@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I376@ INDI
+1 NAME Seraphina /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I377@ INDI
+1 NAME Theodora /Hartleigh/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I378@ INDI
+1 NAME Thaddeus /Hartleigh/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I379@ INDI
+1 NAME Winifred /Hartleigh/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I380@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I381@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I382@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I383@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I384@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1853
+0 @I385@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I386@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I387@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I388@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I389@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I390@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I391@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I392@ INDI
+1 NAME Nerissa /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I393@ INDI
+1 NAME Ophelia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I394@ INDI
+1 NAME Percival /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I395@ INDI
+1 NAME Rosalind /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I396@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I397@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I398@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I399@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I400@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1876
+0 @I401@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1850
+0 @I402@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1851
+0 @I403@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1852
+0 @I404@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1853
+0 @I405@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I406@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I407@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I408@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I409@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I410@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I411@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I412@ INDI
+1 NAME Nerissa /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I413@ INDI
+1 NAME Ophelia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I414@ INDI
+1 NAME Percival /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I415@ INDI
+1 NAME Rosalind /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I416@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I417@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I418@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I419@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I420@ INDI
+1 NAME Araminta /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1849
+0 @I421@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I422@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I423@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I424@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I425@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I426@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I427@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I428@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I429@ INDI
+1 NAME Josephine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I430@ INDI
+1 NAME Leopold /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I431@ INDI
+1 NAME Millicent /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I432@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I433@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I434@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I435@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I436@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1850
+0 @I437@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I438@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I439@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I440@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I441@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I442@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I443@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I444@ INDI
+1 NAME Eulalia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I445@ INDI
+1 NAME Fenella /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I446@ INDI
+1 NAME Gideon /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I447@ INDI
+1 NAME Henrietta /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I448@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I449@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I450@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I451@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I452@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1905
+0 @I453@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1879
+0 @I454@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1880
+0 @I455@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1876
+0 @I456@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1877
+0 @I457@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1851
+0 @I458@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1852
+0 @I459@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1853
+0 @I460@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1849
+0 @I461@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I462@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I463@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I464@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I465@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I466@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I467@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I468@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I469@ INDI
+1 NAME Josephine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I470@ INDI
+1 NAME Leopold /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I471@ INDI
+1 NAME Millicent /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I472@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I473@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I474@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I475@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I476@ INDI
+1 NAME Seraphina /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1850
+0 @I477@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I478@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I479@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I480@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I481@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I482@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I483@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I484@ INDI
+1 NAME Eulalia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I485@ INDI
+1 NAME Fenella /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I486@ INDI
+1 NAME Gideon /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I487@ INDI
+1 NAME Henrietta /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I488@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I489@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I490@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I491@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I492@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1851
+0 @I493@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I494@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I495@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I496@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I497@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I498@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I499@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I500@ INDI
+1 NAME Araminta /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I501@ INDI
+1 NAME Beatrix /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I502@ INDI
+1 NAME Caspian /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I503@ INDI
+1 NAME Delphine /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I504@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I505@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I506@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I507@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I508@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1879
+0 @I509@ INDI
+1 NAME Josephine /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1853
+0 @I510@ INDI
+1 NAME Leopold /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1849
+0 @I511@ INDI
+1 NAME Millicent /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1850
+0 @I512@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1851
+0 @I513@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I514@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I515@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I516@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I517@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I518@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I519@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I520@ INDI
+1 NAME Araminta /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I521@ INDI
+1 NAME Beatrix /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I522@ INDI
+1 NAME Caspian /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I523@ INDI
+1 NAME Delphine /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I524@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I525@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I526@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I527@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I528@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1852
+0 @I529@ INDI
+1 NAME Josephine /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I530@ INDI
+1 NAME Leopold /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I531@ INDI
+1 NAME Millicent /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I532@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I533@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I534@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I535@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I536@ INDI
+1 NAME Seraphina /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I537@ INDI
+1 NAME Theodora /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I538@ INDI
+1 NAME Thaddeus /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I539@ INDI
+1 NAME Winifred /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I540@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I541@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I542@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I543@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I544@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1853
+0 @I545@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I546@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I547@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I548@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I549@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I550@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I551@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I552@ INDI
+1 NAME Nerissa /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I553@ INDI
+1 NAME Ophelia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I554@ INDI
+1 NAME Percival /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I555@ INDI
+1 NAME Rosalind /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I556@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I557@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I558@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I559@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I560@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1876
+0 @I561@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1850
+0 @I562@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1851
+0 @I563@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1852
+0 @I564@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1853
+0 @I565@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1822
+0 @I566@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I567@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I568@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I569@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I570@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I571@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I572@ INDI
+1 NAME Nerissa /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I573@ INDI
+1 NAME Ophelia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I574@ INDI
+1 NAME Percival /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I575@ INDI
+1 NAME Rosalind /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I576@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1823
+0 @I577@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I578@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1798
+0 @I579@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I580@ INDI
+1 NAME Araminta /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1849
+0 @I581@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1823
+0 @I582@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I583@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I584@ INDI
+1 NAME Edmund /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1826
+0 @I585@ INDI
+1 NAME Fenella /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I586@ INDI
+1 NAME Gideon /Duskwater/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I587@ INDI
+1 NAME Henrietta /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I588@ INDI
+1 NAME Isadora /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1825
+0 @I589@ INDI
+1 NAME Josephine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I590@ INDI
+1 NAME Leopold /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I591@ INDI
+1 NAME Millicent /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I592@ INDI
+1 NAME Nathaniel /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1824
+0 @I593@ INDI
+1 NAME Ophelia /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I594@ INDI
+1 NAME Percival /Larkspur/
+1 SEX M
+1 BIRT
+2 DATE 1799
+0 @I595@ INDI
+1 NAME Rosalind /Larkspur/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I596@ INDI
+1 NAME Rutherford /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1850
+0 @I597@ INDI
+1 NAME Theodora /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1824
+0 @I598@ INDI
+1 NAME Thaddeus /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I599@ INDI
+1 NAME Winifred /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I600@ INDI
+1 NAME Alaric /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1822
+0 @I601@ INDI
+1 NAME Beatrix /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @I602@ INDI
+1 NAME Caspian /Fenwicke/
+1 SEX M
+1 BIRT
+2 DATE 1797
+0 @I603@ INDI
+1 NAME Delphine /Fenwicke/
+1 SEX F
+1 BIRT
+2 DATE 1798
+0 @I604@ INDI
+1 NAME Eulalia /Duskwater/
+1 SEX F
+1 BIRT
+2 DATE 1826
+0 @I605@ INDI
+1 NAME Fenella /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1795
+0 @I606@ INDI
+1 NAME Gideon /Thornberry/
+1 SEX M
+1 BIRT
+2 DATE 1796
+0 @I607@ INDI
+1 NAME Henrietta /Thornberry/
+1 SEX F
+1 BIRT
+2 DATE 1797
+0 @I608@ INDI
+1 NAME Ignatius /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1825
+0 @I609@ INDI
+1 NAME Josephine /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1799
+0 @I610@ INDI
+1 NAME Leopold /Hollowbrook/
+1 SEX M
+1 BIRT
+2 DATE 1795
+0 @I611@ INDI
+1 NAME Millicent /Hollowbrook/
+1 SEX F
+1 BIRT
+2 DATE 1796
+0 @F1@ FAM
+1 HUSB @I2@
+1 WIFE @I3@
+1 CHIL @I1@
+1 MARR
+0 @F2@ FAM
+1 HUSB @I4@
+1 WIFE @I5@
+1 CHIL @I2@
+1 MARR
+0 @F3@ FAM
+1 HUSB @I6@
+1 WIFE @I7@
+1 CHIL @I4@
+1 MARR
+0 @F4@ FAM
+1 HUSB @I8@
+1 WIFE @I9@
+1 CHIL @I6@
+1 MARR
+0 @F5@ FAM
+1 HUSB @I10@
+1 WIFE @I11@
+1 CHIL @I8@
+1 MARR
+0 @F6@ FAM
+1 HUSB @I12@
+1 WIFE @I13@
+1 CHIL @I10@
+1 MARR
+0 @F7@ FAM
+1 HUSB @I14@
+1 WIFE @I15@
+1 CHIL @I11@
+1 MARR
+0 @F8@ FAM
+1 HUSB @I16@
+1 WIFE @I17@
+1 CHIL @I9@
+1 MARR
+0 @F9@ FAM
+1 HUSB @I18@
+1 WIFE @I19@
+1 CHIL @I16@
+1 MARR
+0 @F10@ FAM
+1 HUSB @I20@
+1 WIFE @I21@
+1 CHIL @I17@
+1 MARR
+0 @F11@ FAM
+1 HUSB @I22@
+1 WIFE @I23@
+1 CHIL @I7@
+1 MARR
+0 @F12@ FAM
+1 HUSB @I24@
+1 WIFE @I25@
+1 CHIL @I22@
+1 MARR
+0 @F13@ FAM
+1 HUSB @I26@
+1 WIFE @I27@
+1 CHIL @I24@
+1 MARR
+0 @F14@ FAM
+1 HUSB @I28@
+1 WIFE @I29@
+1 CHIL @I25@
+1 MARR
+0 @F15@ FAM
+1 HUSB @I30@
+1 WIFE @I31@
+1 CHIL @I23@
+1 MARR
+0 @F16@ FAM
+1 HUSB @I32@
+1 WIFE @I33@
+1 CHIL @I30@
+1 MARR
+0 @F17@ FAM
+1 HUSB @I34@
+1 WIFE @I35@
+1 CHIL @I31@
+1 MARR
+0 @F18@ FAM
+1 HUSB @I36@
+1 WIFE @I37@
+1 CHIL @I5@
+1 MARR
+0 @F19@ FAM
+1 HUSB @I38@
+1 WIFE @I39@
+1 CHIL @I36@
+1 MARR
+0 @F20@ FAM
+1 HUSB @I40@
+1 WIFE @I41@
+1 CHIL @I38@
+1 MARR
+0 @F21@ FAM
+1 HUSB @I42@
+1 WIFE @I43@
+1 CHIL @I40@
+1 MARR
+0 @F22@ FAM
+1 HUSB @I44@
+1 WIFE @I45@
+1 CHIL @I41@
+1 MARR
+0 @F23@ FAM
+1 HUSB @I46@
+1 WIFE @I47@
+1 CHIL @I39@
+1 MARR
+0 @F24@ FAM
+1 HUSB @I48@
+1 WIFE @I49@
+1 CHIL @I46@
+1 MARR
+0 @F25@ FAM
+1 HUSB @I50@
+1 WIFE @I51@
+1 CHIL @I47@
+1 MARR
+0 @F26@ FAM
+1 HUSB @I52@
+1 WIFE @I53@
+1 CHIL @I37@
+1 MARR
+0 @F27@ FAM
+1 HUSB @I54@
+1 WIFE @I55@
+1 CHIL @I52@
+1 MARR
+0 @F28@ FAM
+1 HUSB @I56@
+1 WIFE @I57@
+1 CHIL @I54@
+1 MARR
+0 @F29@ FAM
+1 HUSB @I58@
+1 WIFE @I59@
+1 CHIL @I55@
+1 MARR
+0 @F30@ FAM
+1 HUSB @I60@
+1 WIFE @I61@
+1 CHIL @I53@
+1 MARR
+0 @F31@ FAM
+1 HUSB @I62@
+1 WIFE @I63@
+1 CHIL @I60@
+1 MARR
+0 @F32@ FAM
+1 HUSB @I64@
+1 WIFE @I65@
+1 CHIL @I61@
+1 MARR
+0 @F33@ FAM
+1 HUSB @I66@
+1 WIFE @I67@
+1 CHIL @I3@
+1 MARR
+0 @F34@ FAM
+1 HUSB @I68@
+1 WIFE @I69@
+1 CHIL @I66@
+1 MARR
+0 @F35@ FAM
+1 HUSB @I70@
+1 WIFE @I71@
+1 CHIL @I68@
+1 MARR
+0 @F36@ FAM
+1 HUSB @I72@
+1 WIFE @I73@
+1 CHIL @I70@
+1 MARR
+0 @F37@ FAM
+1 HUSB @I74@
+1 WIFE @I75@
+1 CHIL @I72@
+1 MARR
+0 @F38@ FAM
+1 HUSB @I76@
+1 WIFE @I77@
+1 CHIL @I73@
+1 MARR
+0 @F39@ FAM
+1 HUSB @I78@
+1 WIFE @I79@
+1 CHIL @I71@
+1 MARR
+0 @F40@ FAM
+1 HUSB @I80@
+1 WIFE @I81@
+1 CHIL @I78@
+1 MARR
+0 @F41@ FAM
+1 HUSB @I82@
+1 WIFE @I83@
+1 CHIL @I79@
+1 MARR
+0 @F42@ FAM
+1 HUSB @I84@
+1 WIFE @I85@
+1 CHIL @I69@
+1 MARR
+0 @F43@ FAM
+1 HUSB @I86@
+1 WIFE @I87@
+1 CHIL @I84@
+1 MARR
+0 @F44@ FAM
+1 HUSB @I88@
+1 WIFE @I89@
+1 CHIL @I86@
+1 MARR
+0 @F45@ FAM
+1 HUSB @I90@
+1 WIFE @I91@
+1 CHIL @I87@
+1 MARR
+0 @F46@ FAM
+1 HUSB @I92@
+1 WIFE @I93@
+1 CHIL @I85@
+1 MARR
+0 @F47@ FAM
+1 HUSB @I94@
+1 WIFE @I95@
+1 CHIL @I92@
+1 MARR
+0 @F48@ FAM
+1 HUSB @I96@
+1 WIFE @I97@
+1 CHIL @I93@
+1 MARR
+0 @F49@ FAM
+1 HUSB @I98@
+1 WIFE @I99@
+1 CHIL @I67@
+1 MARR
+0 @F50@ FAM
+1 HUSB @I100@
+1 WIFE @I101@
+1 CHIL @I98@
+1 MARR
+0 @F51@ FAM
+1 HUSB @I102@
+1 WIFE @I103@
+1 CHIL @I100@
+1 MARR
+0 @F52@ FAM
+1 HUSB @I104@
+1 WIFE @I105@
+1 CHIL @I102@
+1 MARR
+0 @F53@ FAM
+1 HUSB @I106@
+1 WIFE @I107@
+1 CHIL @I103@
+1 MARR
+0 @F54@ FAM
+1 HUSB @I108@
+1 WIFE @I109@
+1 CHIL @I101@
+1 MARR
+0 @F55@ FAM
+1 HUSB @I110@
+1 WIFE @I111@
+1 CHIL @I108@
+1 MARR
+0 @F56@ FAM
+1 HUSB @I112@
+1 WIFE @I113@
+1 CHIL @I109@
+1 MARR
+0 @F57@ FAM
+1 HUSB @I114@
+1 WIFE @I115@
+1 CHIL @I99@
+1 MARR
+0 @F58@ FAM
+1 HUSB @I116@
+1 WIFE @I117@
+1 CHIL @I114@
+1 MARR
+0 @F59@ FAM
+1 HUSB @I118@
+1 WIFE @I119@
+1 CHIL @I116@
+1 MARR
+0 @F60@ FAM
+1 HUSB @I120@
+1 WIFE @I121@
+1 CHIL @I117@
+1 MARR
+0 @F61@ FAM
+1 HUSB @I122@
+1 WIFE @I123@
+1 CHIL @I115@
+1 MARR
+0 @F62@ FAM
+1 HUSB @I124@
+1 WIFE @I125@
+1 CHIL @I122@
+1 MARR
+0 @F63@ FAM
+1 HUSB @I126@
+1 WIFE @I127@
+1 CHIL @I123@
+1 MARR
+0 @F64@ FAM
+1 HUSB @I1@
+1 WIFE @I128@
+1 CHIL @I129@
+1 CHIL @I130@
+1 CHIL @I131@
+1 MARR
+0 @F65@ FAM
+1 HUSB @I132@
+1 WIFE @I129@
+1 CHIL @I133@
+1 CHIL @I134@
+1 CHIL @I135@
+1 MARR
+0 @F66@ FAM
+1 HUSB @I136@
+1 WIFE @I133@
+1 CHIL @I137@
+1 CHIL @I138@
+1 CHIL @I139@
+1 MARR
+0 @F67@ FAM
+1 HUSB @I140@
+1 WIFE @I137@
+1 CHIL @I141@
+1 CHIL @I142@
+1 CHIL @I143@
+1 MARR
+0 @F68@ FAM
+1 HUSB @I144@
+1 WIFE @I141@
+1 CHIL @I145@
+1 CHIL @I146@
+1 CHIL @I147@
+1 MARR
+0 @F69@ FAM
+1 HUSB @I142@
+1 WIFE @I148@
+1 CHIL @I149@
+1 CHIL @I150@
+1 CHIL @I151@
+1 MARR
+0 @F70@ FAM
+1 HUSB @I152@
+1 WIFE @I143@
+1 CHIL @I153@
+1 CHIL @I154@
+1 CHIL @I155@
+1 MARR
+0 @F71@ FAM
+1 HUSB @I138@
+1 WIFE @I156@
+1 CHIL @I157@
+1 CHIL @I158@
+1 CHIL @I159@
+1 MARR
+0 @F72@ FAM
+1 HUSB @I160@
+1 WIFE @I157@
+1 CHIL @I161@
+1 CHIL @I162@
+1 CHIL @I163@
+1 MARR
+0 @F73@ FAM
+1 HUSB @I158@
+1 WIFE @I164@
+1 CHIL @I165@
+1 CHIL @I166@
+1 CHIL @I167@
+1 MARR
+0 @F74@ FAM
+1 HUSB @I168@
+1 WIFE @I159@
+1 CHIL @I169@
+1 CHIL @I170@
+1 CHIL @I171@
+1 MARR
+0 @F75@ FAM
+1 HUSB @I172@
+1 WIFE @I139@
+1 CHIL @I173@
+1 CHIL @I174@
+1 CHIL @I175@
+1 MARR
+0 @F76@ FAM
+1 HUSB @I176@
+1 WIFE @I173@
+1 CHIL @I177@
+1 CHIL @I178@
+1 CHIL @I179@
+1 MARR
+0 @F77@ FAM
+1 HUSB @I174@
+1 WIFE @I180@
+1 CHIL @I181@
+1 CHIL @I182@
+1 CHIL @I183@
+1 MARR
+0 @F78@ FAM
+1 HUSB @I184@
+1 WIFE @I175@
+1 CHIL @I185@
+1 CHIL @I186@
+1 CHIL @I187@
+1 MARR
+0 @F79@ FAM
+1 HUSB @I134@
+1 WIFE @I188@
+1 CHIL @I189@
+1 CHIL @I190@
+1 CHIL @I191@
+1 MARR
+0 @F80@ FAM
+1 HUSB @I192@
+1 WIFE @I189@
+1 CHIL @I193@
+1 CHIL @I194@
+1 CHIL @I195@
+1 MARR
+0 @F81@ FAM
+1 HUSB @I196@
+1 WIFE @I193@
+1 CHIL @I197@
+1 CHIL @I198@
+1 CHIL @I199@
+1 MARR
+0 @F82@ FAM
+1 HUSB @I194@
+1 WIFE @I200@
+1 CHIL @I201@
+1 CHIL @I202@
+1 CHIL @I203@
+1 MARR
+0 @F83@ FAM
+1 HUSB @I204@
+1 WIFE @I195@
+1 CHIL @I205@
+1 CHIL @I206@
+1 CHIL @I207@
+1 MARR
+0 @F84@ FAM
+1 HUSB @I190@
+1 WIFE @I208@
+1 CHIL @I209@
+1 CHIL @I210@
+1 CHIL @I211@
+1 MARR
+0 @F85@ FAM
+1 HUSB @I212@
+1 WIFE @I209@
+1 CHIL @I213@
+1 CHIL @I214@
+1 CHIL @I215@
+1 MARR
+0 @F86@ FAM
+1 HUSB @I210@
+1 WIFE @I216@
+1 CHIL @I217@
+1 CHIL @I218@
+1 CHIL @I219@
+1 MARR
+0 @F87@ FAM
+1 HUSB @I220@
+1 WIFE @I211@
+1 CHIL @I221@
+1 CHIL @I222@
+1 CHIL @I223@
+1 MARR
+0 @F88@ FAM
+1 HUSB @I224@
+1 WIFE @I191@
+1 CHIL @I225@
+1 CHIL @I226@
+1 CHIL @I227@
+1 MARR
+0 @F89@ FAM
+1 HUSB @I228@
+1 WIFE @I225@
+1 CHIL @I229@
+1 CHIL @I230@
+1 CHIL @I231@
+1 MARR
+0 @F90@ FAM
+1 HUSB @I226@
+1 WIFE @I232@
+1 CHIL @I233@
+1 CHIL @I234@
+1 CHIL @I235@
+1 MARR
+0 @F91@ FAM
+1 HUSB @I236@
+1 WIFE @I227@
+1 CHIL @I237@
+1 CHIL @I238@
+1 CHIL @I239@
+1 MARR
+0 @F92@ FAM
+1 HUSB @I240@
+1 WIFE @I135@
+1 CHIL @I241@
+1 CHIL @I242@
+1 CHIL @I243@
+1 MARR
+0 @F93@ FAM
+1 HUSB @I244@
+1 WIFE @I241@
+1 CHIL @I245@
+1 CHIL @I246@
+1 CHIL @I247@
+1 MARR
+0 @F94@ FAM
+1 HUSB @I248@
+1 WIFE @I245@
+1 CHIL @I249@
+1 CHIL @I250@
+1 CHIL @I251@
+1 MARR
+0 @F95@ FAM
+1 HUSB @I246@
+1 WIFE @I252@
+1 CHIL @I253@
+1 CHIL @I254@
+1 CHIL @I255@
+1 MARR
+0 @F96@ FAM
+1 HUSB @I256@
+1 WIFE @I247@
+1 CHIL @I257@
+1 CHIL @I258@
+1 CHIL @I259@
+1 MARR
+0 @F97@ FAM
+1 HUSB @I242@
+1 WIFE @I260@
+1 CHIL @I261@
+1 CHIL @I262@
+1 CHIL @I263@
+1 MARR
+0 @F98@ FAM
+1 HUSB @I264@
+1 WIFE @I261@
+1 CHIL @I265@
+1 CHIL @I266@
+1 CHIL @I267@
+1 MARR
+0 @F99@ FAM
+1 HUSB @I262@
+1 WIFE @I268@
+1 CHIL @I269@
+1 CHIL @I270@
+1 CHIL @I271@
+1 MARR
+0 @F100@ FAM
+1 HUSB @I272@
+1 WIFE @I263@
+1 CHIL @I273@
+1 CHIL @I274@
+1 CHIL @I275@
+1 MARR
+0 @F101@ FAM
+1 HUSB @I276@
+1 WIFE @I243@
+1 CHIL @I277@
+1 CHIL @I278@
+1 CHIL @I279@
+1 MARR
+0 @F102@ FAM
+1 HUSB @I280@
+1 WIFE @I277@
+1 CHIL @I281@
+1 CHIL @I282@
+1 CHIL @I283@
+1 MARR
+0 @F103@ FAM
+1 HUSB @I278@
+1 WIFE @I284@
+1 CHIL @I285@
+1 CHIL @I286@
+1 CHIL @I287@
+1 MARR
+0 @F104@ FAM
+1 HUSB @I288@
+1 WIFE @I279@
+1 CHIL @I289@
+1 CHIL @I290@
+1 CHIL @I291@
+1 MARR
+0 @F105@ FAM
+1 HUSB @I130@
+1 WIFE @I292@
+1 CHIL @I293@
+1 CHIL @I294@
+1 CHIL @I295@
+1 MARR
+0 @F106@ FAM
+1 HUSB @I296@
+1 WIFE @I293@
+1 CHIL @I297@
+1 CHIL @I298@
+1 CHIL @I299@
+1 MARR
+0 @F107@ FAM
+1 HUSB @I300@
+1 WIFE @I297@
+1 CHIL @I301@
+1 CHIL @I302@
+1 CHIL @I303@
+1 MARR
+0 @F108@ FAM
+1 HUSB @I304@
+1 WIFE @I301@
+1 CHIL @I305@
+1 CHIL @I306@
+1 CHIL @I307@
+1 MARR
+0 @F109@ FAM
+1 HUSB @I302@
+1 WIFE @I308@
+1 CHIL @I309@
+1 CHIL @I310@
+1 CHIL @I311@
+1 MARR
+0 @F110@ FAM
+1 HUSB @I312@
+1 WIFE @I303@
+1 CHIL @I313@
+1 CHIL @I314@
+1 CHIL @I315@
+1 MARR
+0 @F111@ FAM
+1 HUSB @I298@
+1 WIFE @I316@
+1 CHIL @I317@
+1 CHIL @I318@
+1 CHIL @I319@
+1 MARR
+0 @F112@ FAM
+1 HUSB @I320@
+1 WIFE @I317@
+1 CHIL @I321@
+1 CHIL @I322@
+1 CHIL @I323@
+1 MARR
+0 @F113@ FAM
+1 HUSB @I318@
+1 WIFE @I324@
+1 CHIL @I325@
+1 CHIL @I326@
+1 CHIL @I327@
+1 MARR
+0 @F114@ FAM
+1 HUSB @I328@
+1 WIFE @I319@
+1 CHIL @I329@
+1 CHIL @I330@
+1 CHIL @I331@
+1 MARR
+0 @F115@ FAM
+1 HUSB @I332@
+1 WIFE @I299@
+1 CHIL @I333@
+1 CHIL @I334@
+1 CHIL @I335@
+1 MARR
+0 @F116@ FAM
+1 HUSB @I336@
+1 WIFE @I333@
+1 CHIL @I337@
+1 CHIL @I338@
+1 CHIL @I339@
+1 MARR
+0 @F117@ FAM
+1 HUSB @I334@
+1 WIFE @I340@
+1 CHIL @I341@
+1 CHIL @I342@
+1 CHIL @I343@
+1 MARR
+0 @F118@ FAM
+1 HUSB @I344@
+1 WIFE @I335@
+1 CHIL @I345@
+1 CHIL @I346@
+1 CHIL @I347@
+1 MARR
+0 @F119@ FAM
+1 HUSB @I294@
+1 WIFE @I348@
+1 CHIL @I349@
+1 CHIL @I350@
+1 CHIL @I351@
+1 MARR
+0 @F120@ FAM
+1 HUSB @I352@
+1 WIFE @I349@
+1 CHIL @I353@
+1 CHIL @I354@
+1 CHIL @I355@
+1 MARR
+0 @F121@ FAM
+1 HUSB @I356@
+1 WIFE @I353@
+1 CHIL @I357@
+1 CHIL @I358@
+1 CHIL @I359@
+1 MARR
+0 @F122@ FAM
+1 HUSB @I354@
+1 WIFE @I360@
+1 CHIL @I361@
+1 CHIL @I362@
+1 CHIL @I363@
+1 MARR
+0 @F123@ FAM
+1 HUSB @I364@
+1 WIFE @I355@
+1 CHIL @I365@
+1 CHIL @I366@
+1 CHIL @I367@
+1 MARR
+0 @F124@ FAM
+1 HUSB @I350@
+1 WIFE @I368@
+1 CHIL @I369@
+1 CHIL @I370@
+1 CHIL @I371@
+1 MARR
+0 @F125@ FAM
+1 HUSB @I372@
+1 WIFE @I369@
+1 CHIL @I373@
+1 CHIL @I374@
+1 CHIL @I375@
+1 MARR
+0 @F126@ FAM
+1 HUSB @I370@
+1 WIFE @I376@
+1 CHIL @I377@
+1 CHIL @I378@
+1 CHIL @I379@
+1 MARR
+0 @F127@ FAM
+1 HUSB @I380@
+1 WIFE @I371@
+1 CHIL @I381@
+1 CHIL @I382@
+1 CHIL @I383@
+1 MARR
+0 @F128@ FAM
+1 HUSB @I384@
+1 WIFE @I351@
+1 CHIL @I385@
+1 CHIL @I386@
+1 CHIL @I387@
+1 MARR
+0 @F129@ FAM
+1 HUSB @I388@
+1 WIFE @I385@
+1 CHIL @I389@
+1 CHIL @I390@
+1 CHIL @I391@
+1 MARR
+0 @F130@ FAM
+1 HUSB @I386@
+1 WIFE @I392@
+1 CHIL @I393@
+1 CHIL @I394@
+1 CHIL @I395@
+1 MARR
+0 @F131@ FAM
+1 HUSB @I396@
+1 WIFE @I387@
+1 CHIL @I397@
+1 CHIL @I398@
+1 CHIL @I399@
+1 MARR
+0 @F132@ FAM
+1 HUSB @I400@
+1 WIFE @I295@
+1 CHIL @I401@
+1 CHIL @I402@
+1 CHIL @I403@
+1 MARR
+0 @F133@ FAM
+1 HUSB @I404@
+1 WIFE @I401@
+1 CHIL @I405@
+1 CHIL @I406@
+1 CHIL @I407@
+1 MARR
+0 @F134@ FAM
+1 HUSB @I408@
+1 WIFE @I405@
+1 CHIL @I409@
+1 CHIL @I410@
+1 CHIL @I411@
+1 MARR
+0 @F135@ FAM
+1 HUSB @I406@
+1 WIFE @I412@
+1 CHIL @I413@
+1 CHIL @I414@
+1 CHIL @I415@
+1 MARR
+0 @F136@ FAM
+1 HUSB @I416@
+1 WIFE @I407@
+1 CHIL @I417@
+1 CHIL @I418@
+1 CHIL @I419@
+1 MARR
+0 @F137@ FAM
+1 HUSB @I402@
+1 WIFE @I420@
+1 CHIL @I421@
+1 CHIL @I422@
+1 CHIL @I423@
+1 MARR
+0 @F138@ FAM
+1 HUSB @I424@
+1 WIFE @I421@
+1 CHIL @I425@
+1 CHIL @I426@
+1 CHIL @I427@
+1 MARR
+0 @F139@ FAM
+1 HUSB @I422@
+1 WIFE @I428@
+1 CHIL @I429@
+1 CHIL @I430@
+1 CHIL @I431@
+1 MARR
+0 @F140@ FAM
+1 HUSB @I432@
+1 WIFE @I423@
+1 CHIL @I433@
+1 CHIL @I434@
+1 CHIL @I435@
+1 MARR
+0 @F141@ FAM
+1 HUSB @I436@
+1 WIFE @I403@
+1 CHIL @I437@
+1 CHIL @I438@
+1 CHIL @I439@
+1 MARR
+0 @F142@ FAM
+1 HUSB @I440@
+1 WIFE @I437@
+1 CHIL @I441@
+1 CHIL @I442@
+1 CHIL @I443@
+1 MARR
+0 @F143@ FAM
+1 HUSB @I438@
+1 WIFE @I444@
+1 CHIL @I445@
+1 CHIL @I446@
+1 CHIL @I447@
+1 MARR
+0 @F144@ FAM
+1 HUSB @I448@
+1 WIFE @I439@
+1 CHIL @I449@
+1 CHIL @I450@
+1 CHIL @I451@
+1 MARR
+0 @F145@ FAM
+1 HUSB @I452@
+1 WIFE @I131@
+1 CHIL @I453@
+1 CHIL @I454@
+1 CHIL @I455@
+1 MARR
+0 @F146@ FAM
+1 HUSB @I456@
+1 WIFE @I453@
+1 CHIL @I457@
+1 CHIL @I458@
+1 CHIL @I459@
+1 MARR
+0 @F147@ FAM
+1 HUSB @I460@
+1 WIFE @I457@
+1 CHIL @I461@
+1 CHIL @I462@
+1 CHIL @I463@
+1 MARR
+0 @F148@ FAM
+1 HUSB @I464@
+1 WIFE @I461@
+1 CHIL @I465@
+1 CHIL @I466@
+1 CHIL @I467@
+1 MARR
+0 @F149@ FAM
+1 HUSB @I462@
+1 WIFE @I468@
+1 CHIL @I469@
+1 CHIL @I470@
+1 CHIL @I471@
+1 MARR
+0 @F150@ FAM
+1 HUSB @I472@
+1 WIFE @I463@
+1 CHIL @I473@
+1 CHIL @I474@
+1 CHIL @I475@
+1 MARR
+0 @F151@ FAM
+1 HUSB @I458@
+1 WIFE @I476@
+1 CHIL @I477@
+1 CHIL @I478@
+1 CHIL @I479@
+1 MARR
+0 @F152@ FAM
+1 HUSB @I480@
+1 WIFE @I477@
+1 CHIL @I481@
+1 CHIL @I482@
+1 CHIL @I483@
+1 MARR
+0 @F153@ FAM
+1 HUSB @I478@
+1 WIFE @I484@
+1 CHIL @I485@
+1 CHIL @I486@
+1 CHIL @I487@
+1 MARR
+0 @F154@ FAM
+1 HUSB @I488@
+1 WIFE @I479@
+1 CHIL @I489@
+1 CHIL @I490@
+1 CHIL @I491@
+1 MARR
+0 @F155@ FAM
+1 HUSB @I492@
+1 WIFE @I459@
+1 CHIL @I493@
+1 CHIL @I494@
+1 CHIL @I495@
+1 MARR
+0 @F156@ FAM
+1 HUSB @I496@
+1 WIFE @I493@
+1 CHIL @I497@
+1 CHIL @I498@
+1 CHIL @I499@
+1 MARR
+0 @F157@ FAM
+1 HUSB @I494@
+1 WIFE @I500@
+1 CHIL @I501@
+1 CHIL @I502@
+1 CHIL @I503@
+1 MARR
+0 @F158@ FAM
+1 HUSB @I504@
+1 WIFE @I495@
+1 CHIL @I505@
+1 CHIL @I506@
+1 CHIL @I507@
+1 MARR
+0 @F159@ FAM
+1 HUSB @I454@
+1 WIFE @I508@
+1 CHIL @I509@
+1 CHIL @I510@
+1 CHIL @I511@
+1 MARR
+0 @F160@ FAM
+1 HUSB @I512@
+1 WIFE @I509@
+1 CHIL @I513@
+1 CHIL @I514@
+1 CHIL @I515@
+1 MARR
+0 @F161@ FAM
+1 HUSB @I516@
+1 WIFE @I513@
+1 CHIL @I517@
+1 CHIL @I518@
+1 CHIL @I519@
+1 MARR
+0 @F162@ FAM
+1 HUSB @I514@
+1 WIFE @I520@
+1 CHIL @I521@
+1 CHIL @I522@
+1 CHIL @I523@
+1 MARR
+0 @F163@ FAM
+1 HUSB @I524@
+1 WIFE @I515@
+1 CHIL @I525@
+1 CHIL @I526@
+1 CHIL @I527@
+1 MARR
+0 @F164@ FAM
+1 HUSB @I510@
+1 WIFE @I528@
+1 CHIL @I529@
+1 CHIL @I530@
+1 CHIL @I531@
+1 MARR
+0 @F165@ FAM
+1 HUSB @I532@
+1 WIFE @I529@
+1 CHIL @I533@
+1 CHIL @I534@
+1 CHIL @I535@
+1 MARR
+0 @F166@ FAM
+1 HUSB @I530@
+1 WIFE @I536@
+1 CHIL @I537@
+1 CHIL @I538@
+1 CHIL @I539@
+1 MARR
+0 @F167@ FAM
+1 HUSB @I540@
+1 WIFE @I531@
+1 CHIL @I541@
+1 CHIL @I542@
+1 CHIL @I543@
+1 MARR
+0 @F168@ FAM
+1 HUSB @I544@
+1 WIFE @I511@
+1 CHIL @I545@
+1 CHIL @I546@
+1 CHIL @I547@
+1 MARR
+0 @F169@ FAM
+1 HUSB @I548@
+1 WIFE @I545@
+1 CHIL @I549@
+1 CHIL @I550@
+1 CHIL @I551@
+1 MARR
+0 @F170@ FAM
+1 HUSB @I546@
+1 WIFE @I552@
+1 CHIL @I553@
+1 CHIL @I554@
+1 CHIL @I555@
+1 MARR
+0 @F171@ FAM
+1 HUSB @I556@
+1 WIFE @I547@
+1 CHIL @I557@
+1 CHIL @I558@
+1 CHIL @I559@
+1 MARR
+0 @F172@ FAM
+1 HUSB @I560@
+1 WIFE @I455@
+1 CHIL @I561@
+1 CHIL @I562@
+1 CHIL @I563@
+1 MARR
+0 @F173@ FAM
+1 HUSB @I564@
+1 WIFE @I561@
+1 CHIL @I565@
+1 CHIL @I566@
+1 CHIL @I567@
+1 MARR
+0 @F174@ FAM
+1 HUSB @I568@
+1 WIFE @I565@
+1 CHIL @I569@
+1 CHIL @I570@
+1 CHIL @I571@
+1 MARR
+0 @F175@ FAM
+1 HUSB @I566@
+1 WIFE @I572@
+1 CHIL @I573@
+1 CHIL @I574@
+1 CHIL @I575@
+1 MARR
+0 @F176@ FAM
+1 HUSB @I576@
+1 WIFE @I567@
+1 CHIL @I577@
+1 CHIL @I578@
+1 CHIL @I579@
+1 MARR
+0 @F177@ FAM
+1 HUSB @I562@
+1 WIFE @I580@
+1 CHIL @I581@
+1 CHIL @I582@
+1 CHIL @I583@
+1 MARR
+0 @F178@ FAM
+1 HUSB @I584@
+1 WIFE @I581@
+1 CHIL @I585@
+1 CHIL @I586@
+1 CHIL @I587@
+1 MARR
+0 @F179@ FAM
+1 HUSB @I582@
+1 WIFE @I588@
+1 CHIL @I589@
+1 CHIL @I590@
+1 CHIL @I591@
+1 MARR
+0 @F180@ FAM
+1 HUSB @I592@
+1 WIFE @I583@
+1 CHIL @I593@
+1 CHIL @I594@
+1 CHIL @I595@
+1 MARR
+0 @F181@ FAM
+1 HUSB @I596@
+1 WIFE @I563@
+1 CHIL @I597@
+1 CHIL @I598@
+1 CHIL @I599@
+1 MARR
+0 @F182@ FAM
+1 HUSB @I600@
+1 WIFE @I597@
+1 CHIL @I601@
+1 CHIL @I602@
+1 CHIL @I603@
+1 MARR
+0 @F183@ FAM
+1 HUSB @I598@
+1 WIFE @I604@
+1 CHIL @I605@
+1 CHIL @I606@
+1 CHIL @I607@
+1 MARR
+0 @F184@ FAM
+1 HUSB @I608@
+1 WIFE @I599@
+1 CHIL @I609@
+1 CHIL @I610@
+1 CHIL @I611@
+1 MARR
+0 TRLR
