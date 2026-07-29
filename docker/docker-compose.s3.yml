@@ -1,0 +1,46 @@
+# Opt-in S3 smoke stack (testing-improvements plan): runs the whole app on
+# the MinIO service instead of the local-disk driver, so the S3 storage path
+# gets exercised end to end before releases.
+#
+#   docker compose down -v
+#   docker compose -f compose.yaml -f docker/docker-compose.s3.yml --profile minio up -d --build
+#   S3_SMOKE=1 pnpm --filter @familyarchive/smoke-tests exec playwright test --project=s3
+services:
+  minio-init:
+    image: minio/mc:latest
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >
+        mc alias set local http://minio:9000
+        ${MINIO_ROOT_USER:-familyarchive} ${MINIO_ROOT_PASSWORD:-familyarchive-minio} &&
+        mc mb --ignore-existing local/familyarchive-media
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    environment:
+      MEDIA_STORAGE_DRIVER: s3
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: familyarchive-media
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-familyarchive}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-familyarchive-minio}
+      S3_REGION: us-east-1
+      S3_FORCE_PATH_STYLE: "true"
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+
+  worker:
+    environment:
+      MEDIA_STORAGE_DRIVER: s3
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: familyarchive-media
+      S3_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-familyarchive}
+      S3_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-familyarchive-minio}
+      S3_REGION: us-east-1
+      S3_FORCE_PATH_STYLE: "true"
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully

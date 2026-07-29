@@ -19,6 +19,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import sharp from "sharp";
 import type pino from "pino";
 
+import { filterFreshDetections } from "./face-boxes";
 import { storageDriverFor } from "./storage";
 
 const execFileAsync = promisify(execFile);
@@ -98,16 +99,6 @@ async function detectFaces(job: Job<FaceDetectJob>, logger: pino.Logger): Promis
     });
     const boxes = JSON.parse(stdout) as DetectedBox[];
 
-    // Intersection-over-union — used to avoid re-adding a detection on top of a
-    // box that survived the re-run (assigned or manually drawn).
-    const iou = (a: DetectedBox, b: { x: number; y: number; width: number; height: number }) => {
-      const ix = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
-      const iy = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
-      const inter = ix * iy;
-      const union = a.width * a.height + b.width * b.height - inter;
-      return union > 0 ? inter / union : 0;
-    };
-
     await db.transaction(async (tx) => {
       await tx
         .delete(mediaFaces)
@@ -127,7 +118,7 @@ async function detectFaces(job: Job<FaceDetectJob>, logger: pino.Logger): Promis
         })
         .from(mediaFaces)
         .where(eq(mediaFaces.mediaId, mediaId));
-      const fresh = boxes.filter((box) => !surviving.some((kept) => iou(box, kept) > 0.4));
+      const fresh = filterFreshDetections(boxes, surviving);
       if (fresh.length > 0) {
         await tx.insert(mediaFaces).values(
           fresh.map((box) => ({

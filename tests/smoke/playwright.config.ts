@@ -20,4 +20,14 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   reporter: [["list"]],
+  // Ordering matters on a fresh stack: smoke.spec registers the instance
+  // owner (first-account bootstrap), so everything else depends on "core".
+  // `--project=permissions --no-deps` reruns just that spec on a used stack.
+  projects: [
+    { name: "core", testMatch: /smoke\.spec\.ts/ },
+    { name: "permissions", testMatch: /permissions\.spec\.ts/, dependencies: ["core"] },
+    { name: "features", testMatch: /features-.*\.spec\.ts/, dependencies: ["core"] },
+    { name: "quota", testMatch: /quota\.spec\.ts/ },
+    { name: "s3", testMatch: /s3\.spec\.ts/ },
+  ],
 });

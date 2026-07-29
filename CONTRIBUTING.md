@@ -12,16 +12,36 @@ against `docker compose up -d postgres valkey`.
 ## Before opening a PR
 
 ```bash
-pnpm typecheck && pnpm lint && pnpm format:check && pnpm build
+pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit && pnpm build
 ```
+
+CI runs the same checks on every push and PR (`.github/workflows/ci.yml`).
+Unit tests are Vitest files colocated with their source
+(`packages/*/src/**/*.test.ts`); add or extend them when you touch pure logic.
 
 For changes touching end-to-end behavior, run the smoke suite against a fresh
-stack:
+stack (CI runs it on pushes to `main` and release tags):
 
 ```bash
-docker compose down -v && docker compose up -d --build
+docker compose down -v
+docker compose -f compose.yaml -f docker/docker-compose.mailpit.yml up -d --build
 pnpm test:smoke
 ```
+
+This runs the core smoke spec first (it bootstraps the instance owner), then
+the permission-matrix and feature specs. The Mailpit override is optional —
+it captures outbound email so the password-reset spec can follow the emailed
+link; without it that one spec skips itself. To rerun just the permission
+checks on an already-used stack:
+
+```bash
+pnpm --filter @familyarchive/smoke-tests exec playwright test --project=permissions --no-deps
+```
+
+Two opt-in suites need specially-configured stacks and run before releases —
+see [docs/development/release-checklist.md](docs/development/release-checklist.md):
+the storage-quota pass (`QUOTA_SMOKE=1`) and the S3/MinIO driver pass
+(`S3_SMOKE=1`).
 
 ## Ground rules
 

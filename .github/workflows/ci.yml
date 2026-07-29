@@ -1,0 +1,86 @@
+name: CI
+
+# Static checks + unit tests run on every push and PR. The smoke job needs a
+# full compose build (ffmpeg/Tesseract/MediaPipe layers), so it runs only on
+# main pushes, release tags, and manual dispatch (testing-improvements plan,
+# Open Question 2).
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+
+      - run: pnpm format:check
+
+      - run: pnpm typecheck
+
+      - run: pnpm test:unit
+
+  smoke:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @familyarchive/smoke-tests exec playwright install --with-deps chromium
+
+      - name: Start a fresh stack (with the Mailpit sink for email-flow specs)
+        run: |
+          echo "AUTH_SECRET=$(openssl rand -base64 32)" > .env
+          docker compose -f compose.yaml -f docker/docker-compose.mailpit.yml up -d --build
+
+      - name: Wait for the app to become healthy
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3000/api/health > /dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "app never became healthy" >&2
+          docker compose ps
+          exit 1
+
+      - run: pnpm test:smoke
+
+      - name: Dump compose logs
+        if: failure()
+        run: docker compose -f compose.yaml -f docker/docker-compose.mailpit.yml logs --no-color --tail 400
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f compose.yaml -f docker/docker-compose.mailpit.yml down -v

@@ -133,7 +133,11 @@ export function buildGedcom(input: {
       .filter((p) => p.xref);
     const husband =
       parents.find((p) => p.person?.gender === "male") ??
-      parents.find((p) => p.person?.gender !== "female");
+      parents.find((p) => p.person?.gender !== "female") ??
+      // Two female parents: fall back to position so neither is dropped
+      // (5.5.1 has no gender-neutral parent slot). A single female parent
+      // still exports as WIFE only.
+      (parents.length > 1 ? parents[0] : undefined);
     const wife = parents.find((p) => p !== husband);
     if (husband) lines.push(`1 HUSB ${husband.xref}`);
     if (wife) lines.push(`1 WIFE ${wife.xref}`);

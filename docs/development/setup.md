@@ -25,15 +25,17 @@ pnpm dev
 
 ## Common commands
 
-| Command            | Description                              |
-| ------------------ | ---------------------------------------- |
-| `pnpm dev`         | Web app + worker in watch mode           |
-| `pnpm build`       | Production build                         |
-| `pnpm typecheck`   | TypeScript across all packages           |
-| `pnpm lint`        | ESLint                                   |
-| `pnpm format`      | Prettier (write)                         |
-| `pnpm db:generate` | Generate a Drizzle migration from schema |
-| `pnpm db:migrate`  | Apply migrations                         |
+| Command            | Description                                  |
+| ------------------ | -------------------------------------------- |
+| `pnpm dev`         | Web app + worker in watch mode               |
+| `pnpm build`       | Production build                             |
+| `pnpm typecheck`   | TypeScript across all packages               |
+| `pnpm lint`        | ESLint                                       |
+| `pnpm format`      | Prettier (write)                             |
+| `pnpm test:unit`   | Vitest unit tests (`src/**/*.test.ts`)       |
+| `pnpm test:smoke`  | Playwright smoke suite (needs a fresh stack) |
+| `pnpm db:generate` | Generate a Drizzle migration from schema     |
+| `pnpm db:migrate`  | Apply migrations                             |
 
 ## Repository layout
 

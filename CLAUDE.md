@@ -125,7 +125,9 @@ Requires Node 22 (`.nvmrc`) and pnpm 10 (`corepack enable`).
 - Build: `pnpm build`
 - Lint: `pnpm lint` · Format: `pnpm format` (check: `pnpm format:check`)
 - Typecheck: `pnpm typecheck`
-- Tests: `pnpm test:smoke` — Playwright smoke suite (tests/smoke) against a FRESH
+- Unit tests: `pnpm test:unit` — Vitest, colocated `src/**/*.test.ts` files in
+  packages and apps (root `vitest.config.ts`)
+- Smoke tests: `pnpm test:smoke` — Playwright smoke suite (tests/smoke) against a FRESH
   stack (`docker compose down -v && docker compose up -d --build` first);
   one-time `pnpm --filter @familyarchive/smoke-tests exec playwright install chromium`
 - DB: `pnpm db:generate` (create migration from schema), `pnpm db:migrate` (apply)

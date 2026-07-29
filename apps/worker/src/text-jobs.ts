@@ -21,6 +21,7 @@ import { Worker, type ConnectionOptions, type Job } from "bullmq";
 import { eq } from "drizzle-orm";
 import type pino from "pino";
 
+import { aiConfig, type AiConfig } from "./ai-config";
 import { storageDriverFor } from "./storage";
 
 const execFileAsync = promisify(execFile);
@@ -135,21 +136,6 @@ async function runOcr(job: Job<OcrJob>, logger: pino.Logger): Promise<void> {
   } finally {
     await rm(workDir, { recursive: true, force: true });
   }
-}
-
-interface AiConfig {
-  provider: "openai" | "anthropic";
-  apiKey: string;
-  model: string;
-}
-
-/** Present only when the admin explicitly configured a provider (PRD §31.4). */
-export function aiConfig(): AiConfig | null {
-  const env = getEnv();
-  if (!env.AI_PROVIDER || !env.AI_API_KEY) return null;
-  const model =
-    env.AI_MODEL ?? (env.AI_PROVIDER === "anthropic" ? "claude-haiku-4-5-20251001" : "gpt-4o-mini");
-  return { provider: env.AI_PROVIDER, apiKey: env.AI_API_KEY, model };
 }
 
 const CLEANUP_PROMPT =

@@ -1,6 +1,6 @@
 import { deflateSync } from "node:zlib";
 
-import type { Page } from "@playwright/test";
+import type { Browser, BrowserContext, Page } from "@playwright/test";
 
 /** All smoke data is fictional (PRD §1.5). */
 export const OWNER = {
@@ -21,6 +21,68 @@ export async function login(page: Page, email: string, password: string): Promis
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/trees/);
+}
+
+/** Create an archive as the signed-in user and return its tree id. */
+export async function createArchive(page: Page, name: string): Promise<string> {
+  await page.goto("/trees/new");
+  await page.getByLabel("Name").fill(name);
+  await page.getByRole("button", { name: "Create tree" }).click();
+  await page.waitForURL(/\/trees\/[0-9a-f-]{36}/);
+  return page.url().match(/\/trees\/([0-9a-f-]{36})/)![1]!;
+}
+
+/** Create an invite as an admin; the settings redirect carries the token. */
+export async function createInvite(
+  adminPage: Page,
+  treeId: string,
+  role: "admin" | "editor" | "contributor" | "viewer",
+): Promise<string> {
+  await adminPage.goto(`/trees/${treeId}/settings`);
+  await adminPage
+    .locator('form:has([name="expiresInDays"]) select[name="role"]')
+    .selectOption(role);
+  await adminPage.getByRole("button", { name: "Create invite" }).click();
+  await adminPage.waitForURL(/invite=/);
+  const token = new URL(adminPage.url()).searchParams.get("invite");
+  if (!token) throw new Error("settings redirect did not carry the invite token");
+  return token;
+}
+
+/** Register a new account through an invite link; returns its browser context. */
+export async function registerViaInvite(
+  browser: Browser,
+  token: string,
+  user: { name: string; email: string; password: string },
+  treeId: string,
+): Promise<BrowserContext> {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto(`/invite/${token}`);
+  await page.getByLabel("Name").fill(user.name);
+  await page.getByLabel("Email").fill(user.email);
+  await page.getByLabel(/Password/).fill(user.password);
+  await page.getByRole("button", { name: "Create account and join" }).click();
+  await page.waitForURL(new RegExp(`/trees/${treeId}`));
+  return context;
+}
+
+/** Upload bytes through the media endpoint using the page's session. */
+export async function uploadMedia(
+  page: Page,
+  treeId: string,
+  fileName: string,
+  mime: string,
+  body: Buffer,
+): Promise<string> {
+  const response = await page.request.post(`/api/trees/${treeId}/media`, {
+    headers: { "Content-Type": mime, "X-File-Name": encodeURIComponent(fileName) },
+    data: body,
+  });
+  if (response.status() !== 201) {
+    throw new Error(`upload ${fileName} failed: ${response.status()} ${await response.text()}`);
+  }
+  return ((await response.json()) as { mediaId: string }).mediaId;
 }
 
 /** Minimal valid one-page PDF with real (Helvetica) text for the OCR job. */

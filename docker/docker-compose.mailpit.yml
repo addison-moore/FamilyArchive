@@ -1,0 +1,24 @@
+# Test-only SMTP sink (testing-improvements plan): captures outbound mail so
+# the password-reset spec can follow the emailed link. Never for production.
+#
+#   docker compose -f compose.yaml -f docker/docker-compose.mailpit.yml up -d
+#
+# Web UI / API on http://localhost:8025; the spec auto-skips when it's absent.
+services:
+  mailpit:
+    image: axllent/mailpit:v1.30.4
+    ports:
+      - "8025:8025"
+    restart: unless-stopped
+
+  app:
+    environment:
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_FROM: archive@familyarchive.test
+
+  worker:
+    environment:
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_FROM: archive@familyarchive.test

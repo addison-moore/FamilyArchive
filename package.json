@@ -27,7 +27,8 @@
     "typecheck": "pnpm -r typecheck",
     "db:generate": "pnpm --filter @familyarchive/db generate",
     "db:migrate": "pnpm --filter @familyarchive/db migrate",
-    "test:smoke": "pnpm --filter @familyarchive/smoke-tests test"
+    "test:smoke": "pnpm --filter @familyarchive/smoke-tests test",
+    "test:unit": "vitest run"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.0",
@@ -36,6 +37,7 @@
     "eslint-config-prettier": "^10.1.5",
     "prettier": "^3.6.2",
     "typescript": "^5.8.3",
-    "typescript-eslint": "^8.35.0"
+    "typescript-eslint": "^8.35.0",
+    "vitest": "^3.2.4"
   }
 }

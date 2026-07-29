@@ -8,6 +8,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 
+import { parseContentRange } from "./content-range";
 import type { ByteRange, StorageDriver, StorageObjectStream } from "./storage";
 
 export interface S3DriverOptions {
@@ -57,13 +58,12 @@ export class S3StorageDriver implements StorageDriver {
     if (!response.Body) throw new Error(`Empty storage object: ${key}`);
     const stream = response.Body as Readable;
     if (range && response.ContentRange) {
-      // "bytes start-end/total"
-      const match = response.ContentRange.match(/bytes (\d+)-(\d+)\/(\d+)/);
-      if (match) {
+      const parsed = parseContentRange(response.ContentRange);
+      if (parsed) {
         return {
           stream,
-          totalSize: Number(match[3]),
-          range: { start: Number(match[1]), end: Number(match[2]) },
+          totalSize: parsed.total,
+          range: { start: parsed.start, end: parsed.end },
         };
       }
     }
