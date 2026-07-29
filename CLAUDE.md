@@ -11,7 +11,9 @@ the PRD conflict, the PRD wins — flag the conflict rather than guessing.
 
 ## Project Status
 
-Greenfield. No code exists yet. Work begins at Milestone 1 (see "Milestones" below).
+Feature-complete for v1 (0.1.0), in user acceptance testing ahead of the first
+public release. The milestone list below is the completed build history; new
+work follows the planning workflow below.
 
 ## Planning Workflow (required)
 

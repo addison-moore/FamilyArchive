@@ -13,12 +13,18 @@ across your family's history all on your own server.
 
 ## Quickstart
 
+Run the published images — no checkout needed (requires Docker with Compose v2):
+
 ```bash
-cp .env.example .env   # set AUTH_SECRET (openssl rand -base64 32)
-docker compose up -d
+curl -fsSLO https://github.com/addison-moore/FamilyArchive/releases/latest/download/install.sh
+bash install.sh
 ```
 
-Full guide: [docs/self-hosting/quickstart.md](docs/self-hosting/quickstart.md)
+Full guide (including manual setup without the script):
+[docs/self-hosting/quickstart.md](docs/self-hosting/quickstart.md)
+
+In a checkout, `docker compose up -d` **builds the images from source** and
+runs the same stack — see [docs/development/setup.md](docs/development/setup.md).
 
 ## Documentation
 

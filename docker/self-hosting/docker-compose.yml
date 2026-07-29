@@ -1,0 +1,149 @@
+# FamilyArchive — standalone self-hosting stack (published GHCR images, no
+# source checkout needed). Download this file and example.env side by side,
+# or let install.sh set everything up:
+#
+#   https://github.com/addison-moore/FamilyArchive/releases/latest/download/install.sh
+#
+# The copy attached to each GitHub release defaults FAMILYARCHIVE_VERSION to
+# that release; this repository copy requires it explicitly. Images are only
+# published with version tags — there is deliberately no `latest`.
+#
+# Contributors: this file is for end users. To build from source, use the
+# repository's root compose.yaml instead (docs/development/setup.md).
+#
+# No `name:` on purpose: Compose derives the project (and volume) names from
+# this file's directory, so installs in differently-named directories stay
+# fully separate stacks.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-familyarchive}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-familyarchive}
+      POSTGRES_DB: ${POSTGRES_DB:-familyarchive}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-familyarchive} -d ${POSTGRES_DB:-familyarchive}",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  migrate:
+    image: ghcr.io/addison-moore/familyarchive-worker:${FAMILYARCHIVE_VERSION:?Set FAMILYARCHIVE_VERSION in .env (see https://github.com/addison-moore/FamilyArchive/releases)}
+    command: ["pnpm", "--filter", "@familyarchive/db", "migrate"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-familyarchive}:${POSTGRES_PASSWORD:-familyarchive}@postgres:5432/${POSTGRES_DB:-familyarchive}
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env (openssl rand -base64 32)}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    image: ghcr.io/addison-moore/familyarchive-web:${FAMILYARCHIVE_VERSION:?Set FAMILYARCHIVE_VERSION in .env (see https://github.com/addison-moore/FamilyArchive/releases)}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-familyarchive}:${POSTGRES_PASSWORD:-familyarchive}@postgres:5432/${POSTGRES_DB:-familyarchive}
+      REDIS_URL: redis://valkey:6379
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env (openssl rand -base64 32)}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-0}
+      MEDIA_STORAGE_DRIVER: ${MEDIA_STORAGE_DRIVER:-local}
+      MEDIA_LOCAL_PATH: /data/media
+      MEDIA_MAX_UPLOAD_MB: ${MEDIA_MAX_UPLOAD_MB:-500}
+      MEDIA_QUOTA_MB: ${MEDIA_QUOTA_MB:-0}
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      S3_REGION: ${S3_REGION:-}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+    volumes:
+      - media-data:/data/media
+    healthcheck:
+      # Lets tooling (and install.sh) wait for "up"; migrations are already
+      # done by then (see depends_on below).
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 20s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  worker:
+    image: ghcr.io/addison-moore/familyarchive-worker:${FAMILYARCHIVE_VERSION:?Set FAMILYARCHIVE_VERSION in .env (see https://github.com/addison-moore/FamilyArchive/releases)}
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-familyarchive}:${POSTGRES_PASSWORD:-familyarchive}@postgres:5432/${POSTGRES_DB:-familyarchive}
+      REDIS_URL: redis://valkey:6379
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env (openssl rand -base64 32)}
+      MEDIA_STORAGE_DRIVER: ${MEDIA_STORAGE_DRIVER:-local}
+      MEDIA_LOCAL_PATH: /data/media
+      MEDIA_MAX_UPLOAD_MB: ${MEDIA_MAX_UPLOAD_MB:-500}
+      MEDIA_QUOTA_MB: ${MEDIA_QUOTA_MB:-0}
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-}
+      S3_REGION: ${S3_REGION:-}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      OCR_LANGUAGES: ${OCR_LANGUAGES:-eng}
+      AUDIT_RETENTION_DAYS: ${AUDIT_RETENTION_DAYS:-0}
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+    volumes:
+      - media-data:/data/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  valkey-data:
+  media-data:

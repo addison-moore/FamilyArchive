@@ -15,14 +15,20 @@ against `docker compose up -d postgres valkey`.
 pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit && pnpm build
 ```
 
-CI runs the same checks on every push and PR (`.github/workflows/ci.yml`).
+CI (`.github/workflows/ci.yml`) runs lint, format check, typecheck, and unit
+tests on every push and PR; `pnpm build` and the smoke suite run in CI only on
+pushes to `main` and release tags, so run them locally before opening a PR.
 Unit tests are Vitest files colocated with their source
-(`packages/*/src/**/*.test.ts`); add or extend them when you touch pure logic.
+(`apps/*/src/**/*.test.ts` and `packages/*/src/**/*.test.ts`); add or extend
+them when you touch pure logic.
 
 For changes touching end-to-end behavior, run the smoke suite against a fresh
-stack (CI runs it on pushes to `main` and release tags):
+stack:
 
 ```bash
+# One-time: install the Playwright browser
+pnpm --filter @familyarchive/smoke-tests exec playwright install chromium
+
 docker compose down -v
 docker compose -f compose.yaml -f docker/docker-compose.mailpit.yml up -d --build
 pnpm test:smoke

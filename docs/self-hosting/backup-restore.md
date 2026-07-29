@@ -8,7 +8,9 @@ A FamilyArchive instance has exactly two things worth backing up:
    (`/data/media` in the containers; the `media-data` Docker volume).
 
 Valkey holds only transient job queues — it never needs backup. All commands
-below run from the repository root against the Docker Compose deployment.
+below run from your install directory — the folder holding `docker-compose.yml`
+and `.env` (the installer's `familyarchive/`; in a source checkout, the repo
+root).
 
 ## Backup
 
@@ -30,7 +32,8 @@ For consistency on a busy instance, stop the app and worker first
 
 ## Restore
 
-On a fresh checkout with your `.env` in place:
+In a fresh install directory with the same `docker-compose.yml` and your
+backed-up `.env` in place:
 
 ```bash
 docker compose up -d postgres            # database only, healthy

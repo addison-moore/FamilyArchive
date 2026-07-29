@@ -1,7 +1,9 @@
 # Environment Variables Reference
 
-Copy `.env.example` to `.env` and adjust. The schema lives in `packages/config`
-(`getEnv()`), which validates on startup and fails fast with a readable error.
+Set these in the `.env` file next to your `docker-compose.yml` — the release's
+`example.env` is the template (in a source checkout, copy `.env.example`
+instead). Configuration is validated on startup and fails fast with a readable
+error.
 
 ## Required
 
@@ -11,26 +13,26 @@ Copy `.env.example` to `.env` and adjust. The schema lives in `packages/config`
 
 ## Core (defaults shown)
 
-| Variable            | Default                  | Description                               |
-| ------------------- | ------------------------ | ----------------------------------------- |
-| `APP_URL`           | `http://localhost:3000`  | Public URL of the instance                |
-| `APP_PORT`          | `3000`                   | Host port mapped to the web app (compose) |
-| `DATABASE_URL`      | _(set by compose)_       | Postgres connection string                |
-| `REDIS_URL`         | `redis://localhost:6379` | Valkey/Redis connection string            |
-| `POSTGRES_USER`     | `familyarchive`          | Compose-managed Postgres user             |
-| `POSTGRES_PASSWORD` | `familyarchive`          | Change this for any non-local deployment  |
-| `POSTGRES_DB`       | `familyarchive`          | Compose-managed database name             |
+| Variable            | Default                 | Description                                                                 |
+| ------------------- | ----------------------- | --------------------------------------------------------------------------- |
+| `APP_URL`           | `http://localhost:3000` | Public URL of the instance                                                  |
+| `APP_PORT`          | `3000`                  | Host port mapped to the web app (compose)                                   |
+| `DATABASE_URL`      | _(set by compose)_      | Postgres connection string                                                  |
+| `REDIS_URL`         | _(set by compose)_      | Valkey/Redis connection string; `redis://localhost:6379` for bare-metal dev |
+| `POSTGRES_USER`     | `familyarchive`         | Compose-managed Postgres user                                               |
+| `POSTGRES_PASSWORD` | `familyarchive`         | Change this for any non-local deployment (the installer generates one)      |
+| `POSTGRES_DB`       | `familyarchive`         | Compose-managed database name                                               |
 
 ## Storage (see [storage.md](storage.md))
 
-| Variable               | Default       | Description                                                       |
-| ---------------------- | ------------- | ----------------------------------------------------------------- |
-| `MEDIA_STORAGE_DRIVER` | `local`       | `local` or `s3`                                                   |
-| `MEDIA_LOCAL_PATH`     | `/data/media` | Media path for the local driver                                   |
-| `MEDIA_MAX_UPLOAD_MB`  | `500`         | Per-file upload cap                                               |
-| `MEDIA_QUOTA_MB`       | `0`           | Total media storage cap (originals + previews); `0` = unlimited   |
-| `METRICS_TOKEN`        | —             | Enables `GET /api/admin/usage` (bearer auth) for external tooling |
-| `S3_*`                 | —             | S3-compatible storage; see `.env.example`                         |
+| Variable               | Default       | Description                                                                              |
+| ---------------------- | ------------- | ---------------------------------------------------------------------------------------- |
+| `MEDIA_STORAGE_DRIVER` | `local`       | `local` or `s3`                                                                          |
+| `MEDIA_LOCAL_PATH`     | `/data/media` | Media path for the local driver (fixed inside the compose deployment; a bare-metal knob) |
+| `MEDIA_MAX_UPLOAD_MB`  | `500`         | Per-file upload cap                                                                      |
+| `MEDIA_QUOTA_MB`       | `0`           | Total media storage cap (originals + previews); `0` = unlimited                          |
+| `METRICS_TOKEN`        | —             | Enables `GET /api/admin/usage` (bearer auth) for external tooling                        |
+| `S3_*`                 | —             | S3-compatible storage; see [storage.md](storage.md) and the `.env` template              |
 
 ## SMTP (used from Milestone 2, optional)
 

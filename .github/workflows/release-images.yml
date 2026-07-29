@@ -58,3 +58,40 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max,scope=${{ matrix.app }}
+
+  # Once both images are pushed, publish the GitHub Release with the
+  # self-hosting artifacts. `releases/latest/download/…` then always serves a
+  # compose file pinned to the newest release — the no-`latest`-image policy
+  # holds because pinning lives in the file, not in a floating tag.
+  release:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Render self-hosting artifacts
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist
+          # The repo copy requires FAMILYARCHIVE_VERSION; the release copy
+          # defaults it to this release so the download works with no edits.
+          sed -E 's|\$\{FAMILYARCHIVE_VERSION:\?[^}]*\}|${FAMILYARCHIVE_VERSION:-'"${VERSION}"'}|g' \
+            docker/self-hosting/docker-compose.yml > dist/docker-compose.yml
+          cp docker/self-hosting/example.env dist/example.env
+          cp install.sh dist/install.sh
+          (cd dist && sha256sum docker-compose.yml example.env install.sh > checksums.txt)
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          # Semver prereleases (v1.2.0-rc.1) must not become the release that
+          # releases/latest/download/ serves to installers.
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            dist/docker-compose.yml
+            dist/example.env
+            dist/install.sh
+            dist/checksums.txt

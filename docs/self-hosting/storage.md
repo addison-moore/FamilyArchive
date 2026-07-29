@@ -32,9 +32,11 @@ Uploads stream through the app server to the bucket (the server computes the
 content hash for deduplication); files are served back through authorized
 application routes, so the bucket can stay fully private.
 
-### Local MinIO profile
+### Local MinIO profile (source checkout only)
 
-For an S3-compatible store on the same host:
+The standalone self-hosting stack does not bundle MinIO — point the `S3_*`
+variables at any S3-compatible service you already run. In a source checkout,
+the dev stack ships an optional MinIO for local testing:
 
 ```bash
 docker compose --profile minio up -d

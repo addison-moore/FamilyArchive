@@ -46,5 +46,22 @@ docker compose down -v   # leave nothing running on test data
 - Update `CHANGELOG.md` (date + notes) and commit.
 - `git tag vX.Y.Z && git push origin vX.Y.Z` — the `release-images.yml`
   workflow builds and publishes versioned multi-arch images to GHCR (no
-  `latest` tag, by design).
-- Create the GitHub release with the changelog notes.
+  `latest` tag, by design), then creates the GitHub Release with the
+  self-hosting artifacts attached: `docker-compose.yml` (version-stamped),
+  `example.env`, `install.sh`, and `checksums.txt`.
+- Edit the generated release notes against the changelog.
+
+## 6. Verify the published release
+
+- **First release only:** make the GHCR packages public —
+  `familyarchive-web` and `familyarchive-worker` under the repo owner's
+  Packages settings default to private on first publish, which breaks
+  anonymous pulls.
+- `docker manifest inspect ghcr.io/addison-moore/familyarchive-web:X.Y.Z`
+  succeeds anonymously.
+- On a clean machine (or an empty directory on a machine without the repo):
+  run the two quickstart commands (`curl -fsSLO …/install.sh && bash
+install.sh`), register the owner, and import the sample GEDCOM
+  ([download](https://raw.githubusercontent.com/addison-moore/FamilyArchive/main/sample-data/ashford-family.ged)).
+- Re-sync the website docs snapshot (`pnpm sync-docs` in `family-archive-site`,
+  review the diff, commit) so the published guide matches the release.
