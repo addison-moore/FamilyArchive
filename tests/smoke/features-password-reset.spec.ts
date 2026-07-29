@@ -25,6 +25,10 @@ test.beforeAll(async ({ browser }) => {
   ownerPage = await browser.newPage();
   try {
     mailpitUp = (await ownerPage.request.get(`${MAILPIT}/api/v1/messages`)).ok();
+    // Mailpit outlives `docker compose down -v` (it lives in an overlay file),
+    // so drain stale messages — an old reset email for the same address would
+    // win the poll below and hand the test a consumed token.
+    if (mailpitUp) await ownerPage.request.delete(`${MAILPIT}/api/v1/messages`);
   } catch {
     mailpitUp = false;
   }

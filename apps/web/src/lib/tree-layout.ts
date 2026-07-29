@@ -1,5 +1,6 @@
 import dagre from "@dagrejs/dagre";
 
+import { deriveFamilies } from "@/lib/tree-families";
 import type { TreeGraphPayload, TreePersonNode } from "@/lib/tree-visibility";
 
 export const NODE_WIDTH = 190;
@@ -54,11 +55,25 @@ class RowOccupancy {
   }
 }
 
+/** Dagre size of the invisible per-family union node (never rendered). */
+const UNION_SIZE = 10;
+/** Separation between the person→union and union→child ranks. Chosen so the
+ * person-row pitch stays what it was with direct edges and ranksep 90:
+ * 76/2 + 40 + 10 + 40 + 76/2 = 166px. */
+const UNION_RANKSEP = 40;
+
 /**
  * Layered layout (PRD §11.1 "simple, readable"):
  *
- * 1. dagre ranks everyone connected by parent→child edges top-down — parents
- *    above, children below.
+ * 1. Family units (tree-families) become invisible dagre "union" nodes:
+ *    parent → union → child replaces direct parent→child edges. Dagre's
+ *    crossing minimization then sees family structure — partners tend to land
+ *    adjacent (both feed the same union), children group under their own
+ *    family's midpoint, and a remarried parent's partners spread to its
+ *    sides — so stems from different families don't cross unnecessarily.
+ *    Dagre's ordering is heuristic; when it can't seat a couple together the
+ *    connector layer falls back to behind-card lines or below-row brackets.
+ *    Union nodes are layout-only and never emitted.
  * 2. Partner-only "satellites" (no parent-child edge of their own in view) are
  *    placed beside their partner: first partner to the right, second to the
  *    left, then further out — so one anchor with several partners never draws
@@ -77,7 +92,7 @@ export function layoutTreeGraph(graph: LayoutGraph, startPersonId: string): Canv
   }
 
   const g = new dagre.graphlib.Graph();
-  g.setGraph({ rankdir: "TB", nodesep: GAP, ranksep: 90 });
+  g.setGraph({ rankdir: "TB", nodesep: GAP, ranksep: UNION_RANKSEP });
   g.setDefaultEdgeLabel(() => ({}));
 
   const ranked = graph.people.filter(
@@ -86,8 +101,26 @@ export function layoutTreeGraph(graph: LayoutGraph, startPersonId: string): Canv
   for (const person of ranked) {
     g.setNode(person.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
   }
-  for (const edge of graph.parentEdges) {
-    g.setEdge(edge.from, edge.to);
+  const { families } = deriveFamilies([
+    ...graph.parentEdges.map((e) => ({
+      id: e.id,
+      source: e.from,
+      target: e.to,
+      kind: "parent" as const,
+    })),
+    ...graph.partnerEdges.map((e) => ({
+      id: e.id,
+      source: e.from,
+      target: e.to,
+      kind: "partner" as const,
+    })),
+  ]);
+  for (const family of families) {
+    // "union:" cannot collide with person ids (UUIDs).
+    const unionId = `union:${family.key}`;
+    g.setNode(unionId, { width: UNION_SIZE, height: UNION_SIZE });
+    for (const parentId of family.parents) g.setEdge(parentId, unionId);
+    for (const childId of family.children) g.setEdge(unionId, childId);
   }
   dagre.layout(g);
 

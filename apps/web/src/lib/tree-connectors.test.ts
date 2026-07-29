@@ -5,10 +5,10 @@ import {
   BUS_OFFSET,
   BUS_STAGGER,
   buildConnectorEdges,
-  deriveFamilies,
   type CoupleFlowEdge,
   type FamilyFlowEdge,
 } from "@/lib/tree-connectors";
+import { deriveFamilies } from "@/lib/tree-families";
 import { GAP, NODE_HEIGHT, NODE_WIDTH, type CanvasEdge, type CanvasNode } from "@/lib/tree-layout";
 
 // All names fictional (PRD §1.5).
@@ -408,5 +408,36 @@ describe("buildConnectorEdges", () => {
     const soloBus = family.find((edge) => edge.id === "fam:solo:step");
     expect(coupleBus?.data?.path).toContain(`,${166 - BUS_OFFSET} `);
     expect(soloBus?.data?.path).toContain(`,${166 - BUS_OFFSET - BUS_STAGGER} `);
+  });
+
+  it("puts the family whose drop sits inside another's span on the lowest bus", () => {
+    // B's span [95,210] covers A's left drop at 195; A's span [195,695] does
+    // not cover B's drop at 95. A must take the LOW bus so its drop never
+    // crosses B's bus; the old leftmost-first order produced that crossing.
+    const nodes = [
+      person("b1", 0, 0),
+      person("b2", 230, 0),
+      person("a1", 460, 0),
+      person("a2", 690, 0),
+      person("k3", 0, 200), // child of B, drop 95
+      person("k1", 100, 200), // child of A, drop 195
+      person("k2", 600, 200), // child of A, drop 695
+    ];
+    const edges = buildConnectorEdges(nodes, [
+      partner("b1", "b2"),
+      partner("a1", "a2"),
+      parent("b1", "k3"),
+      parent("b2", "k3"),
+      parent("a1", "k1"),
+      parent("a2", "k1"),
+      parent("a1", "k2"),
+      parent("a2", "k2"),
+    ]);
+    const family = familyEdges(edges);
+    const aBus = family.find((edge) => edge.id === "fam:couple:a1|a2");
+    const bBus = family.find((edge) => edge.id === "fam:couple:b1|b2");
+    // A low (level 0), B lifted above it (level 1).
+    expect(aBus?.data?.path).toContain(`,${200 - BUS_OFFSET} `);
+    expect(bBus?.data?.path).toContain(`,${200 - BUS_OFFSET - BUS_STAGGER} `);
   });
 });
