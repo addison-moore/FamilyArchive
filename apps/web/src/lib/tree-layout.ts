@@ -4,7 +4,7 @@ import type { TreeGraphPayload, TreePersonNode } from "@/lib/tree-visibility";
 
 export const NODE_WIDTH = 190;
 export const NODE_HEIGHT = 76;
-const GAP = 40;
+export const GAP = 40;
 
 /** A subgraph to lay out — the visible slice of the payload. */
 export type LayoutGraph = Pick<TreeGraphPayload, "people" | "parentEdges" | "partnerEdges">;

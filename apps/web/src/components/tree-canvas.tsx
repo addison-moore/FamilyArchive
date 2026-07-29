@@ -6,7 +6,6 @@ import {
   Handle,
   Position,
   ReactFlow,
-  type Edge,
   type Node,
   type NodeProps,
   type ReactFlowInstance,
@@ -14,6 +13,8 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { edgeTypes } from "@/components/tree-edges";
+import { buildConnectorEdges, type ConnectorFlowEdge } from "@/lib/tree-connectors";
 import { layoutTreeGraph } from "@/lib/tree-layout";
 import {
   buildAdjacency,
@@ -114,8 +115,10 @@ function PersonNode({ id, data }: NodeProps<PersonFlowNode>) {
     .map((part) => part[0]?.toUpperCase())
     .join("");
   return (
+    // h-[76px] must equal tree-layout's NODE_HEIGHT: connector paths are
+    // precomputed from it, so card edges and line endpoints have to agree.
     <div
-      className={`group relative flex w-[190px] items-center gap-2.5 rounded-lg border bg-surface-raised px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md ${
+      className={`group relative flex h-[76px] w-[190px] items-center gap-2.5 rounded-lg border bg-surface-raised px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md ${
         data.isSelected
           ? "border-accent-600 ring-2 ring-accent-600/30"
           : data.isStart
@@ -199,7 +202,7 @@ export function TreeCanvas({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [maximized, setMaximized] = useState(false);
-  const flowRef = useRef<ReactFlowInstance<PersonFlowNode, Edge> | null>(null);
+  const flowRef = useRef<ReactFlowInstance<PersonFlowNode, ConnectorFlowEdge> | null>(null);
 
   const adjacency = useMemo(() => buildAdjacency(graph), [graph]);
   const defaults = useMemo(() => defaultCollapseMap(graph, adjacency), [graph, adjacency]);
@@ -274,46 +277,7 @@ export function TreeCanvas({
     }));
   }, [canvas.nodes, selectedId, collapsed, adjacency, visible, onToggleBranch]);
 
-  const flowEdges = useMemo<Edge[]>(() => {
-    const nodeById = new Map(canvas.nodes.map((node) => [node.id, node]));
-    return canvas.edges.map((edge) => {
-      if (edge.kind !== "partner") {
-        // Parent → child: always out the bottom of the parent, into the top of
-        // the child (pinned by handle id — see PersonNode).
-        return {
-          id: edge.id,
-          source: edge.source,
-          target: edge.target,
-          sourceHandle: "bottom",
-          targetHandle: "top",
-          type: "smoothstep",
-          style: { stroke: "var(--color-archive-700)", strokeWidth: 1.5 },
-        };
-      }
-      // Partner edges connect side-to-side. Whichever node sits further left
-      // sends the line out of its right handle into the other node's left
-      // handle, regardless of which end is "source" in the data. Partners on
-      // the same row get a clean straight line; a cross-row pair (a partner
-      // ranked into a different generation by their own parents) gets a
-      // stepped route instead of a long diagonal slash.
-      const sourceNode = nodeById.get(edge.source);
-      const targetNode = nodeById.get(edge.target);
-      const [left, right] =
-        (sourceNode?.x ?? 0) <= (targetNode?.x ?? 0)
-          ? [sourceNode, targetNode]
-          : [targetNode, sourceNode];
-      const sameRow = Math.abs((left?.y ?? 0) - (right?.y ?? 0)) < 8;
-      return {
-        id: edge.id,
-        source: left?.id ?? edge.source,
-        target: right?.id ?? edge.target,
-        sourceHandle: "right-source",
-        targetHandle: "left-target",
-        type: sameRow ? "straight" : "smoothstep",
-        style: { stroke: "var(--color-accent-600)", strokeDasharray: "6 4", strokeWidth: 1.5 },
-      };
-    });
-  }, [canvas.edges, canvas.nodes]);
+  const flowEdges = useMemo(() => buildConnectorEdges(canvas.nodes, canvas.edges), [canvas]);
 
   const total = graph.people.length;
   const anyCollapsed = visible.size < total;
@@ -406,6 +370,7 @@ export function TreeCanvas({
         nodes={flowNodes}
         edges={flowEdges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         fitView
         fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
         minZoom={0.15}
