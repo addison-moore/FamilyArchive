@@ -13,7 +13,7 @@ const PEDIGREE_BY_TYPE: Record<string, string> = {
 };
 
 /**
- * Generate a GEDCOM file for a tree (PRD §14.5). FAM records are reconstructed
+ * Generate a GEDCOM file for a tree. FAM records are reconstructed
  * from the relationship graph: each child's parent set (max 2 per FAM) defines a
  * family; a third+ parent gets its own FAM; partner pairs without children get a
  * spouse-only FAM.

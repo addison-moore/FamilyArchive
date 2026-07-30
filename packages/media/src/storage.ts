@@ -1,6 +1,6 @@
 import type { Readable } from "node:stream";
 
-/** Byte range for partial reads (video/audio seeking, PRD §25). */
+/** Byte range for partial reads (video/audio seeking). */
 export interface ByteRange {
   start: number;
   /** Inclusive; omitted = to end of file. */
@@ -16,7 +16,7 @@ export interface StorageObjectStream {
 }
 
 /**
- * Storage driver seam (PRD §24). Originals are immutable (§5.6): `delete` exists
+ * Storage driver seam. Originals are immutable: `delete` exists
  * for temp-upload cleanup and future derivative management, never for mutating
  * a stored original in place.
  */
@@ -32,7 +32,7 @@ export interface StorageDriver {
   delete(key: string): Promise<void>;
 }
 
-/** Generated object keys (PRD §24.5). Never derived from user input. */
+/** Generated object keys. Never derived from user input. */
 export function originalKey(
   treeId: string,
   mediaId: string,

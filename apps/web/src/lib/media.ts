@@ -48,7 +48,7 @@ export function getStorageDriver(): StorageDriver {
   return getStorageDriverFor(getEnv().MEDIA_STORAGE_DRIVER);
 }
 
-/** Metadata editing: editors and up, or contributors for their own uploads (PRD §8.4). */
+/** Metadata editing: editors and up, or contributors for their own uploads. */
 export function canEditMedia(user: SessionUser | null, role: TreeRole, media: MediaRow): boolean {
   if (!user) return false;
   return (
@@ -107,7 +107,7 @@ export interface MediaFilters {
   collectionId?: string;
 }
 
-/** Tree-scoped, soft-delete-aware media listing with M6 filters (PRD §15.3). */
+/** Tree-scoped, soft-delete-aware media listing with the library filters. */
 export async function listMedia(treeId: string, filters: MediaFilters): Promise<MediaRow[]> {
   const db = getDb();
   const conditions = [eq(mediaItems.treeId, treeId), isNull(mediaItems.deletedAt)];
@@ -123,7 +123,7 @@ export async function listMedia(treeId: string, filters: MediaFilters): Promise<
     );
   }
   if (filters.personId) {
-    // Simple people tags OR assigned face boxes both count (PRD §12.6, §17.6).
+    // Simple people tags OR assigned face boxes both count.
     conditions.push(
       sql`(exists (select 1 from media_people mp where mp.media_id = ${mediaItems.id} and mp.person_id = ${filters.personId})
         or exists (select 1 from media_faces mf where mf.media_id = ${mediaItems.id} and mf.person_id = ${filters.personId}))`,
@@ -138,14 +138,14 @@ export async function listMedia(treeId: string, filters: MediaFilters): Promise<
   return rows.map((row) => row.media);
 }
 
-/** Media items where a person is tagged (person profile media tab, PRD §12.6). */
+/** Media items where a person is tagged (person profile media tab). */
 export async function listMediaForPerson(treeId: string, personId: string): Promise<MediaRow[]> {
   return listMedia(treeId, { personId });
 }
 
 /**
  * mediaId → person ids tagged on it (simple tags + assigned face tags), for
- * branch-view filtering (PRD §10.6). Media absent from the map is untagged.
+ * branch-view filtering. Media absent from the map is untagged.
  */
 export async function taggedPersonIdsByMedia(mediaIds: string[]): Promise<Map<string, string[]>> {
   if (mediaIds.length === 0) return new Map();

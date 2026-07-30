@@ -10,7 +10,7 @@ export interface AccessibleTree {
   role: TreeRole;
 }
 
-/** Trees the user can open: all of them for the Owner (PRD §8.1), else memberships. */
+/** Trees the user can open: all of them for the Owner, else memberships. */
 export async function getAccessibleTrees(user: SessionUser): Promise<AccessibleTree[]> {
   const db = getDb();
   if (user.role === "owner") {

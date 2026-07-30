@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { layoutTreeGraph, NODE_HEIGHT, NODE_WIDTH } from "@/lib/tree-layout";
 import type { TreePersonNode } from "@/lib/tree-visibility";
 
-// All names fictional (PRD §1.5).
+// All names fictional.
 const person = (id: string): TreePersonNode => ({
   id,
   fullName: `Test ${id}`,

@@ -1,4 +1,4 @@
-# Opt-in S3 smoke stack (testing-improvements plan): runs the whole app on
+# Opt-in S3 smoke stack: runs the whole app on
 # the MinIO service instead of the local-disk driver, so the S3 storage path
 # gets exercised end to end before releases.
 #

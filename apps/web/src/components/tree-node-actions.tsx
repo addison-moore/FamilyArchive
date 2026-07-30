@@ -67,7 +67,7 @@ function QuickAddForm({
   );
 }
 
-/** Node actions (PRD §11.4) rendered under the person summary sidebar. */
+/** Node actions rendered under the person summary sidebar. */
 export function TreeNodeActions({
   treeId,
   personId,

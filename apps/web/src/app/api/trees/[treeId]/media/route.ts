@@ -17,10 +17,10 @@ const QUOTA_FULL_MESSAGE =
   "This archive's storage is full. Free up space by removing media, or ask your administrator to raise the limit.";
 
 /**
- * Media upload (PRD §15.5, §24.6, §31.5): raw request body streamed through a
+ * Media upload: raw request body streamed through a
  * SHA-256 transform into the storage driver at a temp key, then finalized to
- * the immutable §24.5 original key. Duplicate hashes within the tree are
- * rejected (§15.8). Contributor+ only.
+ * the immutable original key. Duplicate hashes within the tree are
+ * rejected. Contributor+ only.
  */
 export async function POST(
   request: Request,
@@ -57,7 +57,7 @@ export async function POST(
     );
   }
 
-  // Storage quota (storage-quota plan): fast-fail at initiation, then enforce
+  // Storage quota: fast-fail at initiation, then enforce
   // mid-stream via the same byte-counting tap as the upload size limit —
   // nothing over-quota is ever finalized.
   const quota = await quotaState();
@@ -75,7 +75,7 @@ export async function POST(
     return Response.json({ error: QUOTA_FULL_MESSAGE }, { status: 413 });
   }
   const rawName = request.headers.get("x-file-name") ?? "upload";
-  // Sanitized for storage as metadata only — never used in storage keys (§31.5).
+  // Sanitized for storage as metadata only — never used in storage keys.
   const originalFilename = decodeURIComponent(rawName)
     // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001f/\\]/g, "")
@@ -88,7 +88,7 @@ export async function POST(
   const db = getDb();
   const driver = getStorageDriver();
 
-  // Row first: the media id anchors the storage key (§24.5).
+  // Row first: the media id anchors the storage key.
   const inserted = await db
     .insert(mediaItems)
     .values({
@@ -161,7 +161,7 @@ export async function POST(
 
   const hash = hasher.digest("hex");
 
-  // Exact-duplicate detection (§15.8) among the tree's non-deleted media.
+  // Exact-duplicate detection among the tree's non-deleted media.
   const duplicate = await db
     .select({ id: mediaItems.id })
     .from(mediaItems)

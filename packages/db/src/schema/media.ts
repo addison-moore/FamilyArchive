@@ -18,10 +18,10 @@ import { people, places } from "./people";
 import { trees } from "./trees";
 
 /**
- * Media library tables (PRD §15, §28.4). Originals are immutable (§5.6): the
- * file columns here describe the stored original; derivatives (M7) get their
+ * Media library tables. Originals are immutable: the
+ * file columns here describe the stored original; derivatives get their
  * own table. Media is soft-deleted; queries must filter deleted_at and scope
- * by tree_id (§31.2).
+ * by tree_id.
  */
 
 export const mediaItems = pgTable(
@@ -37,7 +37,7 @@ export const mediaItems = pgTable(
     title: text("title"),
     description: text("description"),
     mediaType: text("media_type").$type<MediaType>().notNull(),
-    // Date parts (PRD §15.4): exact, partial, approximate, or unknown.
+    // Date parts: exact, partial, approximate, or unknown.
     dateYear: integer("date_year"),
     dateMonth: integer("date_month"),
     dateDay: integer("date_day"),
@@ -54,7 +54,7 @@ export const mediaItems = pgTable(
       .$type<ProcessingStatus>()
       .notNull()
       .default("pending"),
-    /** Populated by Milestone 8 (OCR) — reserved now per PRD §28.4. */
+    /** Raw OCR output; empty until a text job has run. */
     ocrText: text("ocr_text"),
     transcriptionText: text("transcription_text"),
     metadata: jsonb("metadata").notNull().default({}),
@@ -66,12 +66,12 @@ export const mediaItems = pgTable(
   (table) => [
     index("media_items_tree_idx").on(table.treeId, table.deletedAt),
     index("media_items_hash_idx").on(table.treeId, table.hash),
-    // Full-text search over media text (PRD §19.2); expression must match lib/search.ts.
+    // Full-text search over media text; expression must match lib/search.ts.
     index("media_items_text_search_idx").using(
       "gin",
       sql`to_tsvector('english', coalesce(${table.title}, '') || ' ' || coalesce(${table.description}, ''))`,
     ),
-    // Full-text indexes for search over document text (PRD §19.2).
+    // Full-text indexes for search over document text.
     index("media_items_ocr_search_idx").using(
       "gin",
       sql`to_tsvector('english', coalesce(${table.ocrText}, ''))`,
@@ -112,7 +112,7 @@ export const mediaTags = pgTable(
   (table) => [primaryKey({ columns: [table.mediaId, table.tagId] })],
 );
 
-/** Simple people tags (PRD §12.6); face-box tags are Milestone 9's media_faces. */
+/** Simple people tags; positioned face-box tags live in media_faces. */
 export const mediaPeople = pgTable(
   "media_people",
   {

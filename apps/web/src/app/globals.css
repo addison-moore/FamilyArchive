@@ -5,7 +5,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* Warm family-archive palette (PRD §29.1). These compile to CSS variables,
+  /* Warm family-archive palette. These compile to CSS variables,
      so the .dark block below re-themes every utility without component edits. */
   --color-archive-50: #faf7f2; /* page background */
   --color-archive-100: #f3ede2; /* borders, subtle fills */

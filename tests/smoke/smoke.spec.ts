@@ -16,7 +16,7 @@ import {
 } from "./helpers";
 
 /**
- * FamilyArchive smoke suite (PRD §32.2). Runs serially against a FRESH
+ * FamilyArchive smoke suite. Runs serially against a FRESH
  * instance (see playwright.config.ts); later tests build on earlier state.
  */
 test.describe.configure({ mode: "serial" });

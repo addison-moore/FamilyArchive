@@ -3,7 +3,7 @@ import { getEnv } from "@familyarchive/config";
 import { quotaState } from "@/lib/quota";
 
 /**
- * Machine-readable storage usage (storage-quota plan): for backup scripts and
+ * Machine-readable storage usage: for backup scripts and
  * external tooling to poll without a browser session. Gated by the
  * METRICS_TOKEN bearer env var; the endpoint does not exist when it is unset.
  */

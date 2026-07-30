@@ -3,10 +3,10 @@ import { expect, test, type Page } from "@playwright/test";
 import { createArchive, createInvite, login, OWNER, registerViaInvite } from "./helpers";
 
 /**
- * Password reset end-to-end via the emailed link (PRD §7). Reset tokens are
+ * Password reset end-to-end via the emailed link. Reset tokens are
  * stored hashed, so the only way to exercise the real flow is to capture the
  * email — via the Mailpit SMTP sink (docker/docker-compose.mailpit.yml).
- * Auto-skips when Mailpit isn't running. All data fictional (§1.5).
+ * Auto-skips when Mailpit isn't running. All data fictional.
  */
 test.describe.configure({ mode: "serial" });
 

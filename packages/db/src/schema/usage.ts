@@ -1,7 +1,7 @@
 import { bigint, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 /**
- * Single-row instance storage counter (storage-quota plan, 2026-07-09):
+ * Single-row instance storage counter:
  * enforcement reads this row instead of summing tables on the upload hot
  * path. Uploads/deletes adjust it; background processing and a nightly
  * worker job recompute it from media_items + media_derivatives to correct

@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { OWNER, samplePng } from "./helpers";
 
 /**
- * Storage-quota checks (storage-quota plan). Opt-in: they need a FRESH stack
+ * Storage-quota checks. Opt-in: they need a FRESH stack
  * started with a tiny quota and a metrics token, e.g.
  *
  *   MEDIA_QUOTA_MB=1 METRICS_TOKEN=smoke-metrics-token-1 docker compose up -d

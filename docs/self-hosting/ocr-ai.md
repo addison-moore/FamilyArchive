@@ -19,7 +19,7 @@ OCR_LANGUAGES=eng+deu
 ```
 
 Extracted text is stored on the media item, shown on the detail page, and
-included in search (Milestone 10).
+included in search.
 
 ## Manual transcription
 
@@ -30,7 +30,7 @@ hard-to-read handwriting, corrections, or full manual transcriptions. Editors
 ## Optional AI cleanup (disabled by default)
 
 FamilyArchive **never sends your family's data to an external service unless
-you explicitly configure it** (PRD §31.4). To enable the "Clean up OCR with
+you explicitly configure it**. To enable the "Clean up OCR with
 AI" button:
 
 ```env

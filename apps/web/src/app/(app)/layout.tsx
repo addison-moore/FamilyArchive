@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 
 /**
  * Authenticated app shell. Anonymous visitors are allowed through so public
- * archives (PRD §23) can render — every page/action enforces its own access;
+ * archives can render — every page/action enforces its own access;
  * non-public pages redirect to /login themselves.
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {

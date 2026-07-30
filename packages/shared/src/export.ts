@@ -1,4 +1,4 @@
-/** Archive export (PRD §5.5 portability, §3 amendment 2026-07-09). */
+/** Archive export (portability). */
 
 export const EXPORT_QUEUE = "export";
 

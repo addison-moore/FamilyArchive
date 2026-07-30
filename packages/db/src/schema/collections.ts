@@ -5,7 +5,7 @@ import { mediaItems } from "./media";
 import { trees } from "./trees";
 
 /**
- * Collections (PRD §16, §28.6): named groups of media within an archive. A
+ * Collections: named groups of media within an archive. A
  * media item may belong to any number of collections. Hard-deleted — removing
  * a collection never touches its media.
  */
@@ -18,7 +18,7 @@ export const collections = pgTable("collections", {
     .references(() => trees.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   description: text("description"),
-  /** Optional date range (PRD §16.2), year granularity. */
+  /** Optional date range, year granularity. */
   startYear: integer("start_year"),
   endYear: integer("end_year"),
   coverMediaId: text("cover_media_id").references(() => mediaItems.id, {

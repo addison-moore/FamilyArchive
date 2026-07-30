@@ -13,7 +13,7 @@ export interface FaceBox {
   personName: string | null;
 }
 
-/** Face boxes for a media item with assigned person names (PRD §17.6). */
+/** Face boxes for a media item with assigned person names. */
 export async function listFaces(mediaId: string): Promise<FaceBox[]> {
   const rows = await getDb()
     .select({

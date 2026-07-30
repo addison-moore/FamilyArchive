@@ -8,9 +8,9 @@ import { anyUserExists } from "@/lib/users";
 import { registerOwnerAction } from "./actions";
 
 /**
- * Owner bootstrap only (PRD §30.4): the first registered account becomes the
+ * Owner bootstrap only: the first registered account becomes the
  * instance Owner. Once any user exists, registration happens exclusively through
- * invite links (M2 decision).
+ * invite links.
  */
 export default async function RegisterPage({
   searchParams,

@@ -4,7 +4,7 @@ import { and, eq, isNull, ne } from "drizzle-orm";
 import type { PersonRow } from "@/lib/people";
 
 /**
- * Simple duplicate heuristic (PRD §14.7): same normalized full name, and birth
+ * Simple duplicate heuristic: same normalized full name, and birth
  * years within 2 of each other or unknown on either side. Non-blocking —
  * surfaced as warnings and a review page; merge is out of scope for v1.
  */

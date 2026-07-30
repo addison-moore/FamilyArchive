@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { isTreeRole, TREE_ROLES, treeRoleAtLeast } from "./roles";
 
 describe("treeRoleAtLeast", () => {
-  it("matches the PRD §8.3 ordering across the full role matrix", () => {
+  it("matches the ordering across the full role matrix", () => {
     // TREE_ROLES is declared most privileged first; the matrix must agree.
     for (const [roleIndex, role] of TREE_ROLES.entries()) {
       for (const [minIndex, minimum] of TREE_ROLES.entries()) {

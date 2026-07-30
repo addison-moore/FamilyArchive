@@ -9,7 +9,7 @@ export interface CollectionSummary extends CollectionRow {
   mediaCount: number;
 }
 
-/** Collections of an archive with member counts, newest first (PRD §16.3). */
+/** Collections of an archive with member counts, newest first. */
 export async function listCollections(treeId: string): Promise<CollectionSummary[]> {
   const rows = await getDb()
     .select({
@@ -47,7 +47,7 @@ export async function listCollectionMedia(collectionId: string): Promise<MediaRo
   return rows.map((row) => row.media);
 }
 
-/** Collections a media item belongs to (PRD §16.1: zero, one, or many). */
+/** Collections a media item belongs to (zero, one, or many). */
 export async function collectionsForMedia(
   treeId: string,
   mediaId: string,

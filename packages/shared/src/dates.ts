@@ -1,7 +1,7 @@
 /**
- * Person date handling (PRD §12.4): exact, partial (year or year+month),
+ * Person date handling: exact, partial (year or year+month),
  * approximate, or unknown (all parts null). Stored as separate integer parts so
- * GEDCOM dates (M5) round-trip without loss.
+ * GEDCOM dates round-trip without loss.
  */
 
 export interface DateParts {

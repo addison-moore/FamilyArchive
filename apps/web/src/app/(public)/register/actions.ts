@@ -16,7 +16,7 @@ export async function registerOwnerAction(formData: FormData): Promise<void> {
     redirect(`/register?error=${encodeURIComponent(message)}`);
   }
 
-  // Owner bootstrap is only available while the instance has no users (PRD §30.4).
+  // Owner bootstrap is only available while the instance has no users.
   if (await anyUserExists()) redirect("/register");
 
   const created = await createUser({ ...parsed.data, role: "owner" });

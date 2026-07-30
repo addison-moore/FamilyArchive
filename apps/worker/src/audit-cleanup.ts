@@ -6,7 +6,7 @@ import type pino from "pino";
 
 const QUEUE = "audit-cleanup";
 
-/** Delete audit entries past the configured retention (PRD §22.3). */
+/** Delete audit entries past the configured retention. */
 async function cleanup(logger: pino.Logger): Promise<void> {
   const days = getEnv().AUDIT_RETENTION_DAYS;
   if (days <= 0) return; // default: keep forever

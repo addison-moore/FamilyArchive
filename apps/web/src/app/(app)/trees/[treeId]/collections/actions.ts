@@ -30,7 +30,7 @@ function parseCollectionForm(formData: FormData) {
   });
 }
 
-/** Create a collection (editor+, PRD §16). */
+/** Create a collection (editor+). */
 export async function createCollectionAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const { user } = await requireMemberRole(treeId, "editor");
@@ -93,7 +93,7 @@ export async function deleteCollectionAction(formData: FormData): Promise<void> 
   redirect(`/trees/${treeId}/collections`);
 }
 
-/** Cover image (PRD §16.2) — must be an image already in the collection. */
+/** Cover image — must be an image already in the collection. */
 export async function setCollectionCoverAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const collectionId = String(formData.get("collectionId") ?? "");
@@ -119,7 +119,7 @@ export async function setCollectionCoverAction(formData: FormData): Promise<void
   revalidatePath(`/trees/${treeId}/collections/${collectionId}`);
 }
 
-/** Add media to a collection (contributor+, PRD §8.4). */
+/** Add media to a collection (contributor+). */
 export async function addMediaToCollectionAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const collectionId = String(formData.get("collectionId") ?? "");

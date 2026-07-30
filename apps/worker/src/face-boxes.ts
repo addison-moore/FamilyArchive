@@ -1,4 +1,4 @@
-/** Face box in relative coordinates (PRD §17.5) — media-size independent. */
+/** Face box in relative coordinates — media-size independent. */
 export interface FaceBox {
   x: number;
   y: number;

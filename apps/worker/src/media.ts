@@ -182,7 +182,7 @@ async function processMedia(
       outputs = await processVideo(sourcePath, workDir);
     } else if (media.mediaType === "pdf") {
       outputs = await processPdf(sourcePath, workDir, job);
-    } // audio and other types: no derivatives (PRD §25.2)
+    } // audio and other types: no derivatives
 
     for (const output of outputs) {
       const key = derivativeKey(treeId, mediaId, output.fileName);
@@ -219,11 +219,11 @@ async function processMedia(
     await recomputeInstanceUsage();
     logger.info({ mediaId, derivatives: outputs.length }, "media processed");
 
-    // Documents and PDFs continue into OCR (PRD §18.1, §26.4).
+    // Documents and PDFs continue into OCR.
     if (isOcrEligible(media.mediaType)) {
       await ocrQueue.add("ocr", { treeId, mediaId });
     }
-    // Photos continue into face detection (PRD §17.2, §26.4).
+    // Photos continue into face detection.
     if (isFaceDetectionEligible(media.mediaType, media.mimeType)) {
       await facesQueue.add("detect", { treeId, mediaId });
     }

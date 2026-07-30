@@ -13,7 +13,7 @@ import { thumbUrls } from "@/lib/media";
 import { listPeople } from "@/lib/people";
 import { searchArchive, type SearchResults } from "@/lib/search";
 
-/** Archive search (PRD §19): grouped results, filters, branch scope. */
+/** Archive search: grouped results, filters, branch scope. */
 export default async function SearchPage({
   params,
   searchParams,

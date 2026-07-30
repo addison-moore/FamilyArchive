@@ -44,8 +44,8 @@ function parentType(child: GedcomIndividual | undefined, famXref: string): Relat
 }
 
 /**
- * Import a GEDCOM file (PRD §14.3 as amended): either into an existing archive
- * (`targetTreeId` set — the import becomes a provenance source, §10.4) or into
+ * Import a GEDCOM file: either into an existing archive
+ * (`targetTreeId` set — the import becomes a provenance source) or into
  * a brand-new archive. Runs in one transaction; the caller has already checked
  * permission (archive admin, or archive-creation rights respectively).
  */
@@ -88,7 +88,7 @@ export async function importGedcom(
       await tx.insert(treeMemberships).values({ treeId, userId: user.id, role: "admin" });
     }
 
-    // Provenance record (PRD §10.4) — both new-archive and into-archive imports.
+    // Provenance record — both new-archive and into-archive imports.
     const sourceRows = await tx
       .insert(sources)
       .values({
@@ -102,7 +102,7 @@ export async function importGedcom(
     const sourceId = sourceRows[0]?.id;
     if (!sourceId) throw new Error("Failed to record import source");
 
-    // Places: find-or-create within the archive (PRD §20.2; shared across sources).
+    // Places: find-or-create within the archive (shared across sources).
     const placeIdByName = new Map<string, string>();
     const resolvePlace = async (raw: string | null | undefined): Promise<string | null> => {
       const displayName = raw?.trim();
@@ -168,7 +168,7 @@ export async function importGedcom(
       }
     }
 
-    // Relationships from FAM records (PRD §13.2 mapping).
+    // Relationships from FAM records.
     for (const family of parsed.families) {
       const parentXrefs = [family.husbandXref, family.wifeXref].filter(
         (x): x is string => x !== null,

@@ -133,7 +133,7 @@ export async function createPersonAction(formData: FormData): Promise<void> {
     });
   }
 
-  // Non-blocking duplicate warning (PRD §14.7): the person is created either way.
+  // Non-blocking duplicate warning: the person is created either way.
   const similar = newId
     ? await findSimilarPeople(treeId, form.fields.fullName, form.birth.year, newId)
     : [];
@@ -172,7 +172,7 @@ export async function updatePersonAction(formData: FormData): Promise<void> {
   redirect(`${peoplePath(treeId)}/${personId}`);
 }
 
-/** Soft delete (PRD §28.2, CLAUDE.md): the row is kept, flagged, and filtered out. */
+/** Soft delete: the row is kept, flagged, and filtered out. */
 export async function deletePersonAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const personId = String(formData.get("personId") ?? "");
@@ -225,7 +225,7 @@ export async function removePersonNameAction(formData: FormData): Promise<void> 
 
 /**
  * Add a relationship from a person's profile. `direction` gives the anchor
- * person's perspective; parent edges are stored parent→child (PRD §13.2).
+ * person's perspective; parent edges are stored parent→child.
  */
 export async function addRelationshipAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");

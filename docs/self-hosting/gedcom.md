@@ -1,7 +1,7 @@
 # GEDCOM Import and Export
 
 FamilyArchive can import and export GEDCOM 5.5 / 5.5.1 files so your family data
-is never locked in (PRD §5.5).
+is never locked in.
 
 ## Import
 

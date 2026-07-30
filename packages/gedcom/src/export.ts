@@ -59,7 +59,7 @@ function pushEvent(lines: string[], tag: string, event: ExportEvent | null): voi
 }
 
 /**
- * Generate a minimal GEDCOM 5.5.1 file (PRD §14.5). Structured data only —
+ * Generate a minimal GEDCOM 5.5.1 file. Structured data only —
  * preserved raw metadata is not re-emitted in v1. HUSB/WIFE roles follow
  * gender when unambiguous; otherwise parents fill HUSB then WIFE positionally
  * (a GEDCOM 5.5.1 format limitation, noted in the docs).

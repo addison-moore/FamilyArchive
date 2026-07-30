@@ -12,7 +12,7 @@ import { and, eq, isNull, or } from "drizzle-orm";
 
 import type { PersonRow } from "@/lib/people";
 
-/** Which record's value survives, per field group (PRD §10.5). */
+/** Which record's value survives, per field group. */
 export interface MergeFieldChoices {
   fullName: "survivor" | "other";
   gender: "survivor" | "other";
@@ -35,7 +35,7 @@ function pickText(
 }
 
 /**
- * Merge `other` into `survivor` (PRD §10.5), in one transaction:
+ * Merge `other` into `survivor`, in one transaction:
  * every reference re-points to the survivor, provenance (incl. raw GEDCOM) is
  * preserved in the survivor's metadata, and the other record is soft-deleted
  * with a pointer back. Manual and human-driven — no auto-matching.

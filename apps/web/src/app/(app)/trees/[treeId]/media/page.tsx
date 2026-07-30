@@ -18,7 +18,7 @@ import { resolveView } from "@/lib/branch";
 import { listMedia, taggedPersonIdsByMedia, thumbUrls } from "@/lib/media";
 import { listPeople } from "@/lib/people";
 
-/** Media library grid (PRD §15.3, §29.3): all/my-uploads, type, tag, person filters. */
+/** Media library grid: all/my-uploads, type, tag, person filters. */
 export default async function MediaPage({
   params,
   searchParams,
@@ -50,7 +50,7 @@ export default async function MediaPage({
     listPeople(treeId),
   ]);
 
-  // Branch scope (PRD §10.6): hide media tagged exclusively with out-of-branch
+  // Branch scope: hide media tagged exclusively with out-of-branch
   // people; untagged media belongs to the whole archive and stays visible.
   let mediaList = allMedia;
   if (view.branchIds) {

@@ -2,8 +2,7 @@ name: CI
 
 # Static checks + unit tests run on every push and PR. The smoke job needs a
 # full compose build (ffmpeg/Tesseract/MediaPipe layers), so it runs only on
-# main pushes, release tags, and manual dispatch (testing-improvements plan,
-# Open Question 2).
+# main pushes, release tags, and manual dispatch.
 
 on:
   push:

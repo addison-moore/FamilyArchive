@@ -19,7 +19,7 @@ function treePath(treeId: string, extra?: Record<string, string>): string {
   return `/trees/${treeId}${query ? `?${query}` : ""}`;
 }
 
-/** Personal preference (PRD §7.5) — any member can set their own starting person. */
+/** Personal preference — any member can set their own starting person. */
 export async function setStartingPersonAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const personId = String(formData.get("personId") ?? "");
@@ -48,7 +48,7 @@ const quickAddSchema = z.object({
 });
 
 /**
- * Canvas quick-add (PRD §11.4): create a new person AND the relationship to the
+ * Canvas quick-add: create a new person AND the relationship to the
  * anchor person in one step. Linking existing people lives on the profile page.
  */
 export async function quickAddRelativeAction(formData: FormData): Promise<void> {

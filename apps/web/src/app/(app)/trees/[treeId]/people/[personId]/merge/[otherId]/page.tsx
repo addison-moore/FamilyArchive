@@ -76,7 +76,7 @@ function ChoiceRow({
   );
 }
 
-/** Side-by-side compare & merge (PRD §10.5). The left person survives. */
+/** Side-by-side compare & merge. The left person survives. */
 export default async function MergePage({
   params,
   searchParams,

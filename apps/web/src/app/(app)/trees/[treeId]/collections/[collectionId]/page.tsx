@@ -21,7 +21,7 @@ import {
   updateCollectionAction,
 } from "../actions";
 
-/** Collection detail (PRD §16.3): cover, title, description, date range, media grid. */
+/** Collection detail: cover, title, description, date range, media grid. */
 export default async function CollectionPage({
   params,
   searchParams,

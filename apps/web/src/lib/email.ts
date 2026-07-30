@@ -19,7 +19,7 @@ function getEmailQueue(): Queue<EmailJob> {
   return queue;
 }
 
-/** Invite links must still work without SMTP (PRD §9.3) — callers branch on this. */
+/** Invite links must still work without SMTP — callers branch on this. */
 export function smtpConfigured(): boolean {
   const env = getEnv();
   return Boolean(env.SMTP_HOST && env.SMTP_FROM);

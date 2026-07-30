@@ -1,4 +1,4 @@
-/** Face detection jobs (PRD §17, §26.4). */
+/** Face detection jobs. */
 
 export const FACES_QUEUE = "faces";
 

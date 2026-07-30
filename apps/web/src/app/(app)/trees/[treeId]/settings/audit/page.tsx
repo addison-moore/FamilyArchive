@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 
 import { Card } from "@/components/form";
 
-/** Admin-only audit view (PRD §22). Retention is instance-configured (§22.3). */
+/** Admin-only audit view. Retention is instance-configured. */
 export default async function AuditPage({ params }: { params: Promise<{ treeId: string }> }) {
   const { treeId } = await params;
   try {

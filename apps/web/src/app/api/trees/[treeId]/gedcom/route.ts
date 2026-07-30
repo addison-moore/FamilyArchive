@@ -2,7 +2,7 @@ import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
 
 import { generateGedcom } from "@familyarchive/gedcom";
 
-/** GEDCOM export (PRD §14.5, §5.5) — any tree member may export. */
+/** GEDCOM export — any tree member may export. */
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ treeId: string }> },

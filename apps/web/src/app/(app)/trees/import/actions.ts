@@ -16,7 +16,7 @@ export async function importGedcomAction(formData: FormData): Promise<void> {
   const user = await requireUser();
   const target = String(formData.get("target") ?? "new");
 
-  // Permission per PRD §14.3 (amended): archive admin to import into it,
+  // Permission: archive admin to import into it,
   // archive-creation rights for a new one.
   if (target === "new") {
     if (!(await canCreateTrees(user))) {

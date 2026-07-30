@@ -99,7 +99,7 @@ function extractNotes(record: GedcomNode, noteRecords: Map<string, string>): str
   return notes;
 }
 
-/** Parse a GEDCOM file into individuals, families, and preserved raw records (PRD §14.2). */
+/** Parse a GEDCOM file into individuals, families, and preserved raw records. */
 export function parseGedcom(text: string): ParsedGedcom {
   const warnings: string[] = [];
   const roots = buildNodeTree(text, warnings);

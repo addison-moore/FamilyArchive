@@ -219,7 +219,7 @@ function familyPath(junction: Point, children: CanvasNode[], busY: number): stri
 /**
  * The full connector edge set for the canvas. Paths are precomputed in flow
  * coordinates from the laid-out nodes — valid only while nodes cannot move
- * (nodesDraggable is off, PRD §11.5 keeps drag out of v1).
+ * (nodesDraggable is off; drag-editing is out of scope for v1).
  *
  * Family edges come first so couple edges' junction dots paint over the stem
  * joints (same SVG layer, DOM order).

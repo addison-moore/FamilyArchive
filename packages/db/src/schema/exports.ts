@@ -4,7 +4,7 @@ import { users } from "./auth";
 import { trees } from "./trees";
 
 /**
- * Archive export bundles (PRD §5.5 portability, §3 amendment 2026-07-09).
+ * Archive export bundles (portability).
  * One live bundle per archive: creating a new export replaces the previous
  * one, and completed bundles expire after EXPORT_RETENTION_DAYS (worker
  * cleanup deletes the storage object and this row).

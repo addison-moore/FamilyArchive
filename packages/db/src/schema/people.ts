@@ -16,9 +16,9 @@ import { sources } from "./sources";
 import { trees } from "./trees";
 
 /**
- * People, alternate names, places, and relationships (PRD §12, §13, §20, §28).
+ * People, alternate names, places, and relationships.
  * People are soft-deleted (deleted_at); queries must filter it out and always
- * scope by tree_id (PRD §31.2).
+ * scope by tree_id.
  */
 
 export const places = pgTable(
@@ -52,10 +52,10 @@ export const people = pgTable(
       .notNull()
       .references(() => trees.id, { onDelete: "cascade" }),
     fullName: text("full_name").notNull(),
-    /** Text, not a PG enum, so display options can evolve without migrations (PRD §12.3). */
+    /** Text, not a PG enum, so display options can evolve without migrations. */
     gender: text("gender").$type<Gender>().notNull().default("unknown"),
     genderCustom: text("gender_custom"),
-    // Date parts (PRD §12.4): exact, partial, approximate, or unknown (all null).
+    // Date parts: exact, partial, approximate, or unknown (all null).
     birthYear: integer("birth_year"),
     birthMonth: integer("birth_month"),
     birthDay: integer("birth_day"),
@@ -68,9 +68,9 @@ export const people = pgTable(
     deathPlaceId: text("death_place_id").references(() => places.id, { onDelete: "set null" }),
     biography: text("biography"),
     notes: text("notes"),
-    /** References media_items once that table lands in M6; plain column until then (PRD §12.5). */
+    /** Profile photo. Plain column (no FK) — media_items lives in another schema file and would create a circular import. */
     profileMediaId: text("profile_media_id"),
-    /** Import provenance (PRD §10.4); null for people created in the app. */
+    /** Import provenance; null for people created in the app. */
     sourceId: text("source_id").references(() => sources.id, { onDelete: "set null" }),
     metadata: jsonb("metadata").notNull().default({}),
     createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
@@ -81,7 +81,7 @@ export const people = pgTable(
   },
   (table) => [
     index("people_tree_idx").on(table.treeId, table.deletedAt),
-    // Full-text search over person text (PRD §19.2); expression must match lib/search.ts.
+    // Full-text search over person text; expression must match lib/search.ts.
     index("people_text_search_idx").using(
       "gin",
       sql`to_tsvector('english', coalesce(${table.fullName}, '') || ' ' || coalesce(${table.biography}, '') || ' ' || coalesce(${table.notes}, ''))`,
@@ -123,7 +123,7 @@ export const relationships = pgTable(
       .references(() => people.id, { onDelete: "cascade" }),
     type: text("type").$type<RelationshipType>().notNull(),
     notes: text("notes"),
-    /** Import provenance (PRD §10.4); null for relationships created in the app. */
+    /** Import provenance; null for relationships created in the app. */
     sourceId: text("source_id").references(() => sources.id, { onDelete: "set null" }),
     metadata: jsonb("metadata").notNull().default({}),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),

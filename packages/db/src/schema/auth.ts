@@ -3,9 +3,9 @@ import { integer, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-co
 
 /**
  * Auth.js (NextAuth v5) tables per the official Drizzle adapter schema, with
- * FamilyArchive additions: `passwordHash` for email/password auth (PRD §9.1) and
+ * FamilyArchive additions: `passwordHash` for email/password auth and
  * created/updated timestamps. Tree-scoped tables (trees, memberships, invites)
- * land in Milestone 2.
+ * live in trees.ts.
  */
 
 export const users = pgTable("users", {
@@ -17,12 +17,12 @@ export const users = pgTable("users", {
   emailVerified: timestamp("email_verified", { mode: "date" }),
   image: text("image"),
   passwordHash: text("password_hash"),
-  /** Instance-level role; the first registered user becomes "owner" (PRD §8.1, §30.4). */
+  /** Instance-level role; the first registered user becomes "owner". */
   role: text("role").$type<GlobalRole>().notNull().default("user"),
   /** UI theme preference ("light" | "dark"); light by default. */
   theme: text("theme").notNull().default("light"),
   /**
-   * Preferred landing tree (PRD §7.2). Plain column, no FK: a circular
+   * Preferred landing tree. Plain column, no FK: a circular
    * users↔trees reference isn't worth it — access is re-checked on every
    * redirect, so a stale value just falls back to the tree list.
    */

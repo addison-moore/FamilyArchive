@@ -1,10 +1,10 @@
-/** Roles and permission ordering (PRD §8). */
+/** Roles and permission ordering. */
 
-/** Instance-level role. The Owner has full instance control (PRD §8.1). */
+/** Instance-level role. The Owner has full instance control. */
 export const GLOBAL_ROLES = ["owner", "user"] as const;
 export type GlobalRole = (typeof GLOBAL_ROLES)[number];
 
-/** Per-tree roles, most privileged first (PRD §8.3). */
+/** Per-tree roles, most privileged first. */
 export const TREE_ROLES = ["admin", "editor", "contributor", "viewer"] as const;
 export type TreeRole = (typeof TREE_ROLES)[number];
 

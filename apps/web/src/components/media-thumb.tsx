@@ -13,7 +13,7 @@ const TYPE_ICONS: Record<string, string> = {
 };
 
 /**
- * Grid tile. Prefers the generated thumbnail (M7); falls back to the scaled
+ * Grid tile. Prefers the generated thumbnail; falls back to the scaled
  * original for images that haven't processed yet, else a labeled type card.
  */
 export function MediaThumb({

@@ -60,9 +60,9 @@ export function personLifespan(person: PersonRow): string | null {
 }
 
 /**
- * Person summary sidebar (PRD §11.3): photo, name, dates, key relationships,
- * biography preview, permission-aware actions. Used on the People page now and
- * mounted beside the tree canvas in Milestone 4.
+ * Person summary sidebar: photo, name, dates, key relationships,
+ * biography preview, permission-aware actions. Used on the People page and
+ * mounted beside the tree canvas.
  */
 export function PersonSummary({
   treeId,

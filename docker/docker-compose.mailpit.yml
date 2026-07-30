@@ -1,4 +1,4 @@
-# Test-only SMTP sink (testing-improvements plan): captures outbound mail so
+# Test-only SMTP sink: captures outbound mail so
 # the password-reset spec can follow the emailed link. Never for production.
 #
 #   docker compose -f compose.yaml -f docker/docker-compose.mailpit.yml up -d

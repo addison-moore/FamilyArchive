@@ -1,5 +1,5 @@
 /**
- * Minimal GEDCOM parser/exporter (PRD §14): people, names, birth/death facts,
+ * Minimal GEDCOM parser/exporter: people, names, birth/death facts,
  * parent-child and partner relationships, notes, raw record preservation.
  */
 

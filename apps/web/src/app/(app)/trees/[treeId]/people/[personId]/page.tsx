@@ -156,7 +156,7 @@ export default async function PersonProfilePage({
   const person = await getPerson(treeId, personId);
   if (!person) notFound();
 
-  // Possible-duplicate warning after creation (PRD §14.7); tree-scoped lookups only.
+  // Possible-duplicate warning after creation; tree-scoped lookups only.
   const dupPeople = dupWarning
     ? (
         await Promise.all(

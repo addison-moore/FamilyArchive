@@ -5,9 +5,9 @@ import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
 import { getMediaItem, getStorageDriverFor } from "@/lib/media";
 
 /**
- * Serve an original file (PRD §31.5: authorized route, generated keys, no
+ * Serve an original file (authorized route, generated keys, no
  * public web root). Single-range requests are honored so video/audio can
- * seek (§25).
+ * seek.
  */
 export async function GET(
   request: Request,

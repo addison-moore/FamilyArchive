@@ -6,7 +6,7 @@ import { Card } from "@/components/form";
 import { PersonAvatar, personLifespan } from "@/components/person-summary";
 import { findDuplicatePairs } from "@/lib/duplicates";
 
-/** Possible-duplicates review (PRD §14.7) with merge entry points (PRD §10.5). */
+/** Possible-duplicates review with merge entry points. */
 export default async function DuplicatesPage({ params }: { params: Promise<{ treeId: string }> }) {
   const { treeId } = await params;
   try {

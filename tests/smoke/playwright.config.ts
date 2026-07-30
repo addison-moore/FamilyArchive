@@ -1,7 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
 /**
- * Smoke tests (PRD §32): run against a FRESH FamilyArchive instance —
+ * Smoke tests: run against a FRESH FamilyArchive instance —
  * owner bootstrap and invite-only registration mean a dirty database fails
  * the first step by design.
  *

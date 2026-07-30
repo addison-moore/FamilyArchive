@@ -55,7 +55,7 @@ export async function changeMemberRoleAction(formData: FormData): Promise<void> 
   const { user } = await requireMemberRole(treeId, "admin");
   if (!isTreeRole(role)) return;
 
-  // treeId in the filter keeps the mutation tree-scoped (PRD §31.2).
+  // treeId in the filter keeps the mutation tree-scoped.
   await getDb()
     .update(treeMemberships)
     .set({ role, updatedAt: new Date() })
@@ -187,8 +187,8 @@ export async function revokeInviteAction(formData: FormData): Promise<void> {
   revalidatePath(settingsPath(treeId));
 }
 
-/** Public read-only mode + indexing toggles (admin, PRD §23, §31.3). Audited. */
-/** Kick off a full archive export (admin+, PRD §5.5). */
+/** Public read-only mode + indexing toggles (admin). Audited. */
+/** Kick off a full archive export (admin+). */
 export async function requestArchiveExportAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const { user } = await requireMemberRole(treeId, "admin");

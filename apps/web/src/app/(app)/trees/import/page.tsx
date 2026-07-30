@@ -17,7 +17,7 @@ export default async function ImportGedcomPage({
     getAccessibleTrees(user),
     canCreateTrees(user),
   ]);
-  // Importing into an archive requires admin on it (PRD §14.3 amended).
+  // Importing into an archive requires admin on it.
   const adminArchives = accessible.filter((tree) => tree.role === "admin");
   if (!mayCreate && adminArchives.length === 0) redirect("/trees");
   const { error } = await searchParams;

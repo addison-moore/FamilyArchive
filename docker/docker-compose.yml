@@ -126,7 +126,7 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
-  # Optional S3-compatible storage for local setups (PRD §24.4):
+  # Optional S3-compatible storage for local setups:
   # docker compose --profile minio up -d
   minio:
     image: minio/minio:latest

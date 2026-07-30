@@ -2,7 +2,7 @@
 
 export const HEARTBEAT_QUEUE = "heartbeat";
 
-/** Outbound email jobs (PRD §26.4 "Email send"). */
+/** Outbound email jobs. */
 export const EMAIL_QUEUE = "email";
 
 export interface EmailJob {

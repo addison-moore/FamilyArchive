@@ -12,9 +12,8 @@ import { startTextWorkers } from "./text-jobs";
 import { startUsageReconcile } from "./usage";
 
 /**
- * FamilyArchive job worker. Current consumers: heartbeat (M1 plumbing check) and
- * email send (M2 invites). Media processing, OCR, face detection, and GEDCOM jobs
- * land in Milestones 5–9 (PRD §26.4).
+ * FamilyArchive job worker: heartbeat (plumbing check), email delivery, media
+ * processing, OCR/AI text jobs, and face detection.
  */
 
 const logger = pino({ name: "familyarchive-worker" });

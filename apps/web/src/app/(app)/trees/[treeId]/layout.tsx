@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 
 import { getAccessibleTrees } from "@/lib/trees";
 
-/** Tree-level navigation (PRD §7.3). */
+/** Tree-level navigation. */
 const ACTIVE_NAV = [
   { label: "Tree", path: "" },
   { label: "People", path: "people" },
@@ -18,7 +18,7 @@ const ACTIVE_NAV = [
   { label: "Suggestions", path: "suggestions" },
 ] as const;
 
-/** Search-engine indexing is opt-in even for public archives (PRD §23.3). */
+/** Search-engine indexing is opt-in even for public archives. */
 export async function generateMetadata({
   params,
 }: {
@@ -50,7 +50,7 @@ export default async function TreeLayout({
   if (!tree) notFound();
 
   // Members get their role; anonymous visitors get read-only access to public
-  // archives (PRD §23) and a login redirect everywhere else.
+  // archives and a login redirect everywhere else.
   let role: string;
   let accessibleTrees: { id: string; name: string }[];
   if (user) {

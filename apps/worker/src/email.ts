@@ -5,8 +5,8 @@ import nodemailer from "nodemailer";
 import type pino from "pino";
 
 /**
- * Email send jobs (PRD §26.4). The web app only enqueues when SMTP is configured
- * (PRD §9.3 — invite links still work without it); if a job arrives anyway, it
+ * Email send jobs. The web app only enqueues when SMTP is configured
+ * (invite links still work without it); if a job arrives anyway, it
  * fails with a clear error and BullMQ's retry/backoff applies.
  */
 export function startEmailWorker(connection: ConnectionOptions, logger: pino.Logger): Worker {

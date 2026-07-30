@@ -20,7 +20,7 @@ export interface S3DriverOptions {
   forcePathStyle?: boolean;
 }
 
-/** S3-compatible driver (PRD §24.3) — AWS S3, MinIO, R2, etc. */
+/** S3-compatible driver — AWS S3, MinIO, R2, etc. */
 export class S3StorageDriver implements StorageDriver {
   private readonly client: S3Client;
   private readonly bucket: string;

@@ -60,7 +60,7 @@ async function tesseract(imagePath: string, languages: string): Promise<string> 
   return stdout.trim();
 }
 
-/** OCR job (PRD §18.2–18.3): Tesseract over the original image or 300 dpi PDF pages. */
+/** OCR job: Tesseract over the original image or 300 dpi PDF pages. */
 async function runOcr(job: Job<OcrJob>, logger: pino.Logger): Promise<void> {
   const { mediaId, treeId } = job.data;
   const db = getDb();
@@ -188,7 +188,7 @@ async function callProvider(config: AiConfig, text: string): Promise<string> {
 }
 
 /**
- * AI OCR-cleanup job (PRD §18.4): explicit-only, requires admin-configured
+ * AI OCR-cleanup job: explicit-only, requires admin-configured
  * provider, writes to transcription_text only when it is empty so raw OCR and
  * manual transcriptions are never overwritten.
  */

@@ -1,4 +1,4 @@
-/** Person and relationship vocabulary (PRD §12–§13). */
+/** Person and relationship vocabulary. */
 
 export const GENDERS = ["male", "female", "nonbinary", "unknown", "custom"] as const;
 export type Gender = (typeof GENDERS)[number];
@@ -16,7 +16,7 @@ export function isGender(value: unknown): value is Gender {
 }
 
 /**
- * Directional parent→child relationship types (PRD §13.2). `from` is the parent,
+ * Directional parent→child relationship types. `from` is the parent,
  * `to` is the child. Child links are these edges read from the child's side.
  */
 export const PARENT_RELATIONSHIP_TYPES = [
@@ -29,7 +29,7 @@ export const PARENT_RELATIONSHIP_TYPES = [
 ] as const;
 export type ParentRelationshipType = (typeof PARENT_RELATIONSHIP_TYPES)[number];
 
-/** Symmetric partner relationship types (PRD §13.2); stored once, read from both sides. */
+/** Symmetric partner relationship types; stored once, read from both sides. */
 export const PARTNER_RELATIONSHIP_TYPES = [
   "spouse",
   "divorced_spouse",
@@ -69,7 +69,7 @@ export function isRelationshipType(value: unknown): value is RelationshipType {
   return isParentRelationshipType(value) || isPartnerRelationshipType(value);
 }
 
-/** Kinds for alternate names (PRD §12.2). Free-form-ish; these drive the UI select. */
+/** Kinds for alternate names. Free-form-ish; these drive the UI select. */
 export const PERSON_NAME_KINDS = ["maiden", "nickname", "also_known_as"] as const;
 export type PersonNameKind = (typeof PERSON_NAME_KINDS)[number];
 

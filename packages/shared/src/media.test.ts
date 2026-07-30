@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { isImageMime, isMediaType, UPLOAD_MIME_TYPES } from "./media";
 
-describe("UPLOAD_MIME_TYPES (PRD §31.5 allowlist)", () => {
+describe("UPLOAD_MIME_TYPES (allowlist)", () => {
   it("maps every allowlisted MIME to a valid media type and clean extension", () => {
     for (const [mime, entry] of Object.entries(UPLOAD_MIME_TYPES)) {
       expect(isMediaType(entry.mediaType), mime).toBe(true);

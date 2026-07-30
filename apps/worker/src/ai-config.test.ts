@@ -19,7 +19,7 @@ afterEach(() => {
   process.env = ORIGINAL_ENV;
 });
 
-describe("aiConfig (PRD §31.4 — external AI disabled by default)", () => {
+describe("aiConfig — external AI disabled by default", () => {
   it("is null with no provider configured", async () => {
     const aiConfig = await loadAiConfig({});
     expect(aiConfig()).toBeNull();

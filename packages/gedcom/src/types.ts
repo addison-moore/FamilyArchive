@@ -33,7 +33,7 @@ export interface GedcomIndividual {
   notes: string[];
   /** FAMC links: families this person is a child in, with optional PEDI. */
   childInFamilies: { famXref: string; pedigree: string | null }[];
-  /** Full raw record for lossless preservation (PRD §14.6). */
+  /** Full raw record for lossless preservation. */
   raw: GedcomNode;
 }
 

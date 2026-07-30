@@ -3,7 +3,7 @@ import { AuthorizationError, requireMemberRole } from "@familyarchive/auth";
 import { latestExport, requestArchiveExport } from "@/lib/export";
 
 /**
- * Archive export (PRD §5.5, §3 amendment 2026-07-09). Admin+ only — the bundle
+ * Archive export. Admin+ only — the bundle
  * contains every member's contributions and all original files. REST (not a
  * server action) so external tooling can drive exports too.
  */

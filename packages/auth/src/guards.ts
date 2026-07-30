@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { auth } from "./nextauth";
 
 /**
- * Server-side authorization guards (PRD §8, §31.2). Roles are always read fresh
+ * Server-side authorization guards. Roles are always read fresh
  * from the database — the JWT only carries the user id — so role changes take
  * effect immediately. Every server action and tree-scoped page must go through
  * these.
@@ -43,7 +43,7 @@ export async function requireOwner(): Promise<SessionUser> {
 
 /**
  * The caller's effective role on a tree, or null when they have no access.
- * The instance Owner can perform all admin actions on every tree (PRD §8.1),
+ * The instance Owner can perform all admin actions on every tree,
  * so owners resolve to "admin" everywhere.
  */
 export async function getTreeRole(user: SessionUser, treeId: string): Promise<TreeRole | null> {
@@ -56,7 +56,7 @@ export async function getTreeRole(user: SessionUser, treeId: string): Promise<Tr
   return rows[0]?.role ?? null;
 }
 
-/** True when the archive is in explicit public read-only mode (PRD §23). */
+/** True when the archive is in explicit public read-only mode. */
 export async function isTreePublic(treeId: string): Promise<boolean> {
   const rows = await getDb()
     .select({ isPublic: trees.isPublic })
@@ -67,7 +67,7 @@ export async function isTreePublic(treeId: string): Promise<boolean> {
 }
 
 /**
- * Tree access guard (PRD §31.2, §23). Authenticated users get their real role.
+ * Tree access guard. Authenticated users get their real role.
  * Anonymous visitors get the pseudo-role "viewer" — with `user: null` — iff
  * the archive is public AND only viewer access is required; anything above
  * viewer always demands a signed-in member, so all mutations stay locked.
@@ -103,7 +103,7 @@ export async function requireMemberRole(
   return { user, role };
 }
 
-/** Owner, or anyone holding an Admin membership on at least one tree (M2 decision). */
+/** Owner, or anyone holding an Admin membership on at least one tree. */
 export async function canCreateTrees(user: SessionUser): Promise<boolean> {
   if (user.role === "owner") return true;
   const rows = await getDb()

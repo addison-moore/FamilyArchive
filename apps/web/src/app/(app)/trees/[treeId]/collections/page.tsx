@@ -6,7 +6,7 @@ import { buttonClass, Card } from "@/components/form";
 import { listCollections } from "@/lib/collections";
 import { thumbUrls } from "@/lib/media";
 
-/** Collections browsing (PRD §16.3). */
+/** Collections browsing. */
 export default async function CollectionsPage({ params }: { params: Promise<{ treeId: string }> }) {
   const { treeId } = await params;
   const { role } = await requireTreeRole(treeId, "viewer");

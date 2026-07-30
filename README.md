@@ -9,7 +9,7 @@ across your family's history all on your own server.
 
 > **Status:** feature-complete for v1 (0.1.0), undergoing user acceptance
 > testing before the first public release. See `CHANGELOG.md` for what's
-> included and `_plans/` for the milestone history.
+> included.
 
 ## Quickstart
 

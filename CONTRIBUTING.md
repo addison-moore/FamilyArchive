@@ -51,17 +51,17 @@ the storage-quota pass (`QUOTA_SMOKE=1`) and the S3/MinIO driver pass
 
 ## Ground rules
 
-- **The PRD is the source of truth** (`_plans/ProductRequirments.md`). Feature
-  work starts with a plan document in `_plans/` — see `CLAUDE.md` for the
-  workflow and scope discipline (v1 non-goals are off the table).
+- **Discuss scope before building.** Product requirements and feature plans
+  are kept by the maintainer (see `CLAUDE.md` for the workflow); open an issue
+  first so a change is agreed before you invest in it.
 - **Migrations** are generated with `pnpm db:generate` and reviewed by hand;
   never edit an applied migration.
 - **Never use real personal data** in fixtures, tests, or docs — sample
-  families are fictional (PRD §1.5).
+  families are fictional.
 - Keep modules in their packages (GEDCOM logic in `packages/gedcom`, storage
   in `packages/media`, and so on) and match the existing code style.
 - Every archive-scoped query filters by tree id and enforces the caller's
-  role — no exceptions (PRD §31.2).
+  role — no exceptions.
 
 ## Reporting issues
 

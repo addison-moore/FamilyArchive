@@ -33,7 +33,7 @@ function getQueue<T>(name: string): Queue<T> {
   return queue as Queue<T>;
 }
 
-/** Kick off processing for an uploaded/reprocessed media item (PRD §15.5, §26.4). */
+/** Kick off processing for an uploaded/reprocessed media item. */
 export async function enqueueMediaProcessing(treeId: string, mediaId: string): Promise<void> {
   await getQueue<MediaProcessJob>(MEDIA_QUEUE).add("process", { treeId, mediaId });
 }
@@ -54,7 +54,7 @@ export async function enqueueArchiveExport(job: ArchiveExportJob): Promise<void>
   await getQueue<ArchiveExportJob>(EXPORT_QUEUE).add("export", job);
 }
 
-/** AI features render only when the admin configured a provider (PRD §31.4). */
+/** AI features render only when the admin configured a provider. */
 export function aiConfigured(): boolean {
   const env = getEnv();
   return Boolean(env.AI_PROVIDER && env.AI_API_KEY);

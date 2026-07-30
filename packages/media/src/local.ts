@@ -7,8 +7,8 @@ import { pipeline } from "node:stream/promises";
 import type { ByteRange, PutOptions, StorageDriver, StorageObjectStream } from "./storage";
 
 /**
- * Local filesystem driver (PRD §24.2). Files live under a root directory that
- * sits outside the public web root (§31.5); all access goes through authorized
+ * Local filesystem driver. Files live under a root directory that
+ * sits outside the public web root; all access goes through authorized
  * routes. Keys are generated internally, but paths are still confined to the
  * root as defense in depth.
  */
@@ -26,7 +26,7 @@ export class LocalStorageDriver implements StorageDriver {
   async putStream(key: string, data: Readable, options?: PutOptions): Promise<void> {
     const filePath = this.resolve(key);
     await mkdir(path.dirname(filePath), { recursive: true });
-    // "wx" refuses to clobber — originals are written exactly once (§5.6).
+    // "wx" refuses to clobber — originals are written exactly once.
     await pipeline(data, createWriteStream(filePath, { flags: options?.overwrite ? "w" : "wx" }));
   }
 

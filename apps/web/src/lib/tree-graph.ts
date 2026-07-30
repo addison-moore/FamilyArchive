@@ -24,7 +24,7 @@ export interface TreeGraph {
 }
 
 /**
- * Build the visible graph around a starting person (PRD §11.2): ancestors,
+ * Build the visible graph around a starting person: ancestors,
  * descendants, and non-recursive "immediate family context" — partners of
  * everyone shown, co-parents of included children, and the start's siblings.
  * Loads the whole tree's people/edges in two queries; family trees are small.
@@ -156,7 +156,7 @@ export async function buildTreeGraph(
 }
 
 /**
- * The user's starting person for a tree (PRD §7.5): explicit preference when it
+ * The user's starting person for a tree: explicit preference when it
  * still points at a living row, else the earliest-created person, else null.
  */
 export async function resolveStartingPerson(

@@ -11,7 +11,7 @@ import {
 import { deriveFamilies } from "@/lib/tree-families";
 import { GAP, NODE_HEIGHT, NODE_WIDTH, type CanvasEdge, type CanvasNode } from "@/lib/tree-layout";
 
-// All names fictional (PRD §1.5).
+// All names fictional.
 const person = (id: string, x: number, y: number): CanvasNode => ({
   id,
   x,

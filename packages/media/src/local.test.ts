@@ -56,7 +56,7 @@ describe("LocalStorageDriver", () => {
     expect(overshoot.range).toEqual({ start: 0, end: 9 });
   });
 
-  it("refuses to clobber existing files unless overwrite is set (PRD §5.6)", async () => {
+  it("refuses to clobber existing files unless overwrite is set", async () => {
     await put("original", "first");
     await expect(put("original", "second")).rejects.toThrow(/EEXIST/);
     expect(await readAll(await driver.getStream("original"))).toBe("first");

@@ -4,9 +4,8 @@ import { boolean, jsonb, pgTable, text, timestamp, unique } from "drizzle-orm/pg
 import { users } from "./auth";
 
 /**
- * Trees, memberships, and invites (PRD §8–§10). Trees are fully isolated in v1;
- * every domain table added in later milestones references trees.id and every
- * query must filter by it (PRD §31.2).
+ * Trees, memberships, and invites. Trees are fully isolated;
+ * every domain table references trees.id and every query must filter by it.
  */
 
 export const trees = pgTable("trees", {
@@ -15,9 +14,9 @@ export const trees = pgTable("trees", {
     .$defaultFn(() => crypto.randomUUID()),
   name: text("name").notNull(),
   description: text("description"),
-  /** Public read-only mode (PRD §23) — explicit admin opt-in; private by default. */
+  /** Public read-only mode — explicit admin opt-in; private by default. */
   isPublic: boolean("is_public").notNull().default(false),
-  /** Search-engine indexing opt-in for public archives (PRD §23.3). */
+  /** Search-engine indexing opt-in for public archives. */
   allowIndexing: boolean("allow_indexing").notNull().default(false),
   createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
   metadata: jsonb("metadata").notNull().default({}),
@@ -51,11 +50,11 @@ export const invites = pgTable("invites", {
   treeId: text("tree_id")
     .notNull()
     .references(() => trees.id, { onDelete: "cascade" }),
-  /** Role granted on acceptance; invites are tree- and role-scoped (PRD §9.2). */
+  /** Role granted on acceptance; invites are tree- and role-scoped. */
   role: text("role").$type<TreeRole>().notNull(),
-  /** URL token. Multi-use until expiry or revocation; one-time links may come later (PRD §9.2). */
+  /** URL token. Multi-use until expiry or revocation; one-time links may come later. */
   token: text("token").notNull().unique(),
-  /** Address the invite was emailed to, if email delivery was used (PRD §9.3). */
+  /** Address the invite was emailed to, if email delivery was used. */
   email: text("email"),
   createdBy: text("created_by").references(() => users.id, { onDelete: "set null" }),
   expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),

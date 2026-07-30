@@ -6,7 +6,7 @@ import { trees } from "./trees";
 
 /**
  * Per-user, per-tree preferences — currently the preferred starting/root person
- * for the tree view (PRD §7.5). A table rather than a column on
+ * for the tree view. A table rather than a column on
  * tree_memberships because the Owner can access trees without a membership.
  */
 export const userTreePreferences = pgTable(
@@ -24,7 +24,7 @@ export const userTreePreferences = pgTable(
     startingPersonId: text("starting_person_id").references(() => people.id, {
       onDelete: "set null",
     }),
-    /** Default browsing scope (PRD §10.6): "branch" (blood kin of anchor) or "all". */
+    /** Default browsing scope: "branch" (blood kin of anchor) or "all". */
     viewScope: text("view_scope").notNull().default("branch"),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" }).notNull().defaultNow(),

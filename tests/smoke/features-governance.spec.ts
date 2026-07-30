@@ -11,8 +11,8 @@ import {
 } from "./helpers";
 
 /**
- * Branch views, suggestions review, member management, and soft deletes
- * (PRD §8, §10.6, §12, §21). All data fictional (§1.5).
+ * Branch views, suggestions review, member management, and soft deletes.
+ * All data fictional.
  */
 test.describe.configure({ mode: "serial" });
 

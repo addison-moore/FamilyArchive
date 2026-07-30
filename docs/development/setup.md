@@ -63,7 +63,7 @@ docker compose down -v && docker compose up -d --build
 pnpm test:smoke        # BASE_URL=http://host:port to target a non-default address
 ```
 
-The suite covers registration through public mode (PRD §32.2); see
+The suite covers registration through public mode; see
 [CONTRIBUTING.md](../../CONTRIBUTING.md) for the Mailpit email sink and the
 opt-in quota/S3 passes.
 
@@ -83,6 +83,4 @@ opt-in quota/S3 passes.
 
 ## Repository layout
 
-See `CLAUDE.md` and the PRD (`_plans/ProductRequirments.md`) for the monorepo
-structure, conventions, and the milestone plan. Feature work starts with a plan
-document in `_plans/`.
+See `CLAUDE.md` for the monorepo structure and coding conventions.

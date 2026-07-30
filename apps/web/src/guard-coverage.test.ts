@@ -6,7 +6,7 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 /**
- * Guard tripwire (PRD §8, §31.2): authorization is enforced per call site —
+ * Guard tripwire: authorization is enforced per call site —
  * every server action and API handler starts with its own guard call. A new
  * action that forgets its guard line is a privilege escalation; this test
  * fails the build instead.

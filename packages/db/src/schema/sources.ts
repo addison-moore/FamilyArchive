@@ -4,7 +4,7 @@ import { users } from "./auth";
 import { trees } from "./trees";
 
 /**
- * Import provenance (PRD §10.4): each GEDCOM import into an archive becomes a
+ * Import provenance: each GEDCOM import into an archive becomes a
  * source record. Sources are not containers — the imported people and
  * relationships live in the archive graph and reference their source.
  */

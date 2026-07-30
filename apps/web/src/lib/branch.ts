@@ -7,7 +7,7 @@ import { resolveStartingPerson } from "@/lib/tree-graph";
 export type ViewScope = "branch" | "all";
 
 /**
- * "My branch" (PRD §10.6): blood kin of the anchor plus partners as context.
+ * "My branch": blood kin of the anchor plus partners as context.
  * ancestors(anchor) → all descendants of ({anchor} ∪ ancestors) → partners of
  * the included people. Traversal never continues through a partner, so in-law
  * branches stay out. A browsing convenience only — never a privacy boundary.

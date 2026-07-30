@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { derivativeKey, exportKey, originalKey, uploadTempKey } from "./storage";
 
-describe("storage keys (PRD §24.5)", () => {
+describe("storage keys", () => {
   const treeId = "tree-1";
   const mediaId = "media-1";
 

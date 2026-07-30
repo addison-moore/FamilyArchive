@@ -1,6 +1,6 @@
 /**
- * Media storage drivers and helpers (PRD §24). Local filesystem by default;
- * S3-compatible optional. Originals are immutable (PRD §5.6).
+ * Media storage drivers and helpers. Local filesystem by default;
+ * S3-compatible optional. Originals are immutable.
  */
 
 export { LocalStorageDriver } from "./local";

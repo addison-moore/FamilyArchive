@@ -1,4 +1,4 @@
-/** Media vocabulary (PRD §15). */
+/** Media vocabulary. */
 
 export const MEDIA_TYPES = ["photo", "video", "audio", "pdf", "document"] as const;
 export type MediaType = (typeof MEDIA_TYPES)[number];
@@ -15,7 +15,7 @@ export function isMediaType(value: unknown): value is MediaType {
   return typeof value === "string" && (MEDIA_TYPES as readonly string[]).includes(value);
 }
 
-/** Media processing lifecycle (PRD §15.6). The pipeline itself lands in M7. */
+/** Media processing lifecycle states. */
 export const PROCESSING_STATUSES = [
   "pending",
   "processing",
@@ -26,7 +26,7 @@ export const PROCESSING_STATUSES = [
 export type ProcessingStatus = (typeof PROCESSING_STATUSES)[number];
 
 /**
- * Upload allowlist (PRD §31.5): accepted MIME types and the media type each
+ * Upload allowlist: accepted MIME types and the media type each
  * maps to. Extensions are derived from this table, never from user filenames.
  */
 export const UPLOAD_MIME_TYPES: Record<string, { mediaType: MediaType; extension: string }> = {

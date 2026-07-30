@@ -1,20 +1,20 @@
 # FamilyArchive worker (TypeScript job orchestrator).
 # Also used as the one-shot migration runner in docker-compose.
 #
-# Debian-based (not Alpine): MediaPipe ships no musl wheels (PRD §17.4 mandates
-# MediaPipe for face detection).
+# Debian-based (not Alpine): MediaPipe, used for face detection, ships no
+# musl wheels.
 FROM node:22-bookworm-slim
 RUN corepack enable
 
-# Media tooling the worker shells out to (PRD §26.3): ffmpeg for video frames,
-# poppler (pdftoppm) for PDF page previews, Tesseract for OCR (PRD §18.3),
+# Media tooling the worker shells out to: ffmpeg for video frames,
+# poppler (pdftoppm) for PDF page previews, Tesseract for OCR,
 # Liberation fonts so PDFs using base-14 fonts render, Python for MediaPipe.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg poppler-utils tesseract-ocr tesseract-ocr-eng fonts-liberation \
     python3 python3-venv ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# MediaPipe Face Detector (PRD §17.4) in a venv, plus the BlazeFace model.
+# MediaPipe Face Detector in a venv, plus the BlazeFace model.
 # 0.10.18 is the newest release with wheels for both x86_64 and aarch64 Linux.
 RUN python3 -m venv /opt/venv && /opt/venv/bin/pip install --no-cache-dir mediapipe==0.10.18
 ENV PATH="/opt/venv/bin:$PATH"

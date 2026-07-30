@@ -2,7 +2,7 @@ import { Field, inputClass, subtleButtonClass } from "@/components/form";
 import { submitSuggestionAction } from "@/app/(app)/trees/[treeId]/suggestions/actions";
 
 /**
- * "Suggest a correction" form (PRD §21) — rendered for members without direct
+ * "Suggest a correction" form — rendered for members without direct
  * edit access on person profiles, media pages, and the Suggestions page.
  */
 export function SuggestForm({

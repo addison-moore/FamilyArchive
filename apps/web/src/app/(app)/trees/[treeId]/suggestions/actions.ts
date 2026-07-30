@@ -14,7 +14,7 @@ import { getEnv } from "@familyarchive/config";
 
 const TARGET_TYPES = new Set(["person", "media", "tree"]);
 
-/** Submit a suggestion (any member, PRD §21.1/§8.6); admins get emailed (§21.5). */
+/** Submit a suggestion (any member); admins get emailed. */
 export async function submitSuggestionAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const targetType = String(formData.get("targetType") ?? "");
@@ -54,7 +54,7 @@ export async function submitSuggestionAction(formData: FormData): Promise<void> 
       suggestedBy: user.id,
     });
 
-  // Notify archive admins (PRD §21.5) when SMTP is configured.
+  // Notify archive admins when SMTP is configured.
   if (smtpConfigured()) {
     const db = getDb();
     const [treeRows, admins] = await Promise.all([
@@ -89,7 +89,7 @@ export async function submitSuggestionAction(formData: FormData): Promise<void> 
   redirect(`${backPath}?suggested=1`);
 }
 
-/** Accept or reject a suggestion (admin, PRD §21.3–21.4). */
+/** Accept or reject a suggestion (admin). */
 export async function resolveSuggestionAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const suggestionId = String(formData.get("suggestionId") ?? "");

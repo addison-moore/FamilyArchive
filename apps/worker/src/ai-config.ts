@@ -6,7 +6,7 @@ export interface AiConfig {
   model: string;
 }
 
-/** Present only when the admin explicitly configured a provider (PRD §31.4). */
+/** Present only when the admin explicitly configured a provider. */
 export function aiConfig(): AiConfig | null {
   const env = getEnv();
   if (!env.AI_PROVIDER || !env.AI_API_KEY) return null;

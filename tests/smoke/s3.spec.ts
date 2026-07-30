@@ -5,7 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { createArchive, OWNER, samplePng, uploadMedia } from "./helpers";
 
 /**
- * S3 storage-driver checks (PRD §24.3). Opt-in: they need a FRESH stack
+ * S3 storage-driver checks. Opt-in: they need a FRESH stack
  * running on the MinIO-backed override:
  *
  *   docker compose down -v

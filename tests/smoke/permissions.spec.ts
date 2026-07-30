@@ -9,9 +9,9 @@ import {
 import { login, OWNER, samplePng } from "./helpers";
 
 /**
- * Permission-matrix spec (PRD §8, §10, §31.2). Runs after smoke.spec via the
+ * Permission-matrix spec. Runs after smoke.spec via the
  * "permissions" project dependency, so the instance owner already exists.
- * All data is fictional (PRD §1.5).
+ * All data is fictional.
  */
 test.describe.configure({ mode: "serial" });
 
@@ -120,7 +120,7 @@ test("bootstrap: two archives and one member per role", async ({ browser }) => {
   otherMediaId = ((await otherUpload.json()) as { mediaId: string }).mediaId;
 });
 
-test("media upload requires contributor or above (PRD §8.3)", async () => {
+test("media upload requires contributor or above", async () => {
   for (const role of ["editor", "contributor"] as const) {
     const response = await uploadMedia(api(role), probeTreeId, `${role}-upload.png`);
     expect(response.status(), `${role} upload`).toBe(201);
@@ -131,7 +131,7 @@ test("media upload requires contributor or above (PRD §8.3)", async () => {
   expect(anonymous.status()).toBe(403);
 });
 
-test("archive export requires admin (PRD §5.5)", async () => {
+test("archive export requires admin", async () => {
   for (const role of ["editor", "contributor", "viewer"] as const) {
     const post = await api(role).post(`/api/trees/${probeTreeId}/export`, { data: {} });
     expect(post.status(), `${role} export start`).toBe(403);
@@ -195,7 +195,7 @@ test("anonymous visitors are redirected to login on a private archive", async ()
   await page.close();
 });
 
-test("members of one archive cannot touch another (PRD §10 isolation)", async () => {
+test("members of one archive cannot touch another (isolation)", async () => {
   const editor = api("editor");
 
   const peoplePage = await pages.editor.goto(`/trees/${otherTreeId}/people`);
@@ -216,7 +216,7 @@ test("members of one archive cannot touch another (PRD §10 isolation)", async (
 
 test("media ids cannot be reached through another archive's tree path", async () => {
   // Even the instance owner (admin everywhere) must get a 404 when the
-  // tree/media pairing is wrong — media lookups are tree-scoped (PRD §31.2).
+  // tree/media pairing is wrong — media lookups are tree-scoped.
   const mismatched = await ownerPage.request.get(
     `/api/trees/${probeTreeId}/media/${otherMediaId}/original`,
   );

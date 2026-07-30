@@ -63,7 +63,7 @@ const UNION_SIZE = 10;
 const UNION_RANKSEP = 40;
 
 /**
- * Layered layout (PRD §11.1 "simple, readable"):
+ * Layered layout:
  *
  * 1. Family units (tree-families) become invisible dagre "union" nodes:
  *    parent → union → child replaces direct parent→child edges. Dagre's

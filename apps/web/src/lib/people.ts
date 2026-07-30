@@ -57,7 +57,7 @@ export interface RelationshipGraph {
   parents: RelatedPerson[];
   children: RelatedPerson[];
   partners: RelatedPerson[];
-  /** Inferred: other children of this person's parents (PRD §13.2). */
+  /** Inferred: other children of this person's parents. */
   siblings: PersonRow[];
 }
 

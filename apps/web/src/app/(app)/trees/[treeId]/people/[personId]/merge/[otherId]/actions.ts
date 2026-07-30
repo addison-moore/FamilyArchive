@@ -18,7 +18,7 @@ function choice(
   return "survivor";
 }
 
-/** Manual person merge (PRD §10.5) — editor+, explicit typed confirmation. */
+/** Manual person merge — editor+, explicit typed confirmation. */
 export async function mergePeopleAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const survivorId = String(formData.get("survivorId") ?? "");

@@ -1,8 +1,8 @@
-"""MediaPipe face detection (PRD §17.4).
+"""MediaPipe face detection.
 
 Called by the TypeScript worker:  python3 detect_faces.py <image.png>
-Prints a JSON array of face boxes with coordinates normalized to 0–1
-(PRD §17.5) plus the detector confidence.
+Prints a JSON array of face boxes with coordinates normalized to 0–1,
+plus the detector confidence.
 """
 
 import json

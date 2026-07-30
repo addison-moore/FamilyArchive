@@ -20,7 +20,7 @@ interface DraftBox {
 const CLICK_BOX_FRACTION = 0.22;
 
 /**
- * Facebook-style photo tagging (PRD §17.1). Face boxes stay invisible until
+ * Facebook-style photo tagging. Face boxes stay invisible until
  * the photo is hovered; clicking a detected box assigns a person; clicking
  * directly on an untagged face creates a new box there — no modes, no
  * drawing. Read-only for viewers.

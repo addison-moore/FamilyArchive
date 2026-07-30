@@ -34,7 +34,7 @@ error.
 | `METRICS_TOKEN`        | —             | Enables `GET /api/admin/usage` (bearer auth) for external tooling                        |
 | `S3_*`                 | —             | S3-compatible storage; see [storage.md](storage.md) and the `.env` template              |
 
-## SMTP (used from Milestone 2, optional)
+## SMTP (optional)
 
 `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`. Without SMTP,
 invite links can still be created and shared manually.

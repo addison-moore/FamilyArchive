@@ -2,7 +2,7 @@ import { deflateSync } from "node:zlib";
 
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 
-/** All smoke data is fictional (PRD §1.5). */
+/** All smoke data is fictional. */
 export const OWNER = {
   name: "Smoke Owner",
   email: "smoke-owner@example.test",
@@ -105,7 +105,7 @@ export function samplePdf(lines: string[]): Buffer {
 /**
  * Portrait with a detectable face for the face-detection job. Downloaded at
  * runtime from MediaPipe's Apache-2.0 test assets so the repository ships no
- * real-person photo (PRD §1.5).
+ * real-person photo.
  */
 export async function fetchPortrait(): Promise<Buffer> {
   const response = await fetch("https://storage.googleapis.com/mediapipe-assets/portrait.jpg");

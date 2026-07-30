@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { ViewScope } from "@/lib/branch";
 
 /**
- * "My branch / Everyone" toggle (PRD §10.6). URL-param based; the stored
+ * "My branch / Everyone" toggle. URL-param based; the stored
  * preference supplies the default. A convenience filter, never a permission.
  */
 export function ScopeToggle({

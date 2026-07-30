@@ -1,7 +1,7 @@
 import { auditLogs, getDb } from "@familyarchive/db";
 
 /**
- * Audit trail writer (PRD §22, §31.6). Fire-and-forget from the caller's
+ * Audit trail writer. Fire-and-forget from the caller's
  * perspective — an audit failure must never break the user action, so errors
  * are swallowed after logging to stderr.
  */

@@ -24,7 +24,7 @@ const credentialsSchema = z.object({
 });
 
 /**
- * Auth.js (NextAuth v5): email/password only in v1 (PRD §9.1). JWT sessions —
+ * Auth.js (NextAuth v5): email/password only in v1. JWT sessions —
  * required with the Credentials provider. The token carries only the user id;
  * roles are read fresh from the database by the guards in ./guards.ts.
  */

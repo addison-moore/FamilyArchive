@@ -1,6 +1,6 @@
 /**
- * Client-side branch visibility for the tree canvas (PRD §11.1 "simple,
- * readable" at imported-tree scale). The server ships the full reachable
+ * Client-side branch visibility for the tree canvas, kept simple and
+ * readable even at imported-tree scale. The server ships the full reachable
  * graph (buildTreeGraph); the client decides which branches are open and lays
  * out only those. Everything here is pure and serializer-friendly.
  */

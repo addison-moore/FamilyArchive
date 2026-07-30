@@ -33,10 +33,10 @@ function likePattern(q: string): string {
 }
 
 /**
- * Archive-wide search (PRD §19): Postgres FTS (websearch_to_tsquery) over text
+ * Archive-wide search: Postgres FTS (websearch_to_tsquery) over text
  * bodies — expressions match the GIN indexes from migrations 0006/0009 — plus
  * ILIKE for proper nouns (names, titles, places, tags) where stemming misses.
- * Results grouped by type (§19.4); optional branch scoping (§10.6) is applied
+ * Results grouped by type; optional branch scoping is applied
  * by the caller for people/media via `branchIds`.
  */
 export async function searchArchive(
@@ -49,7 +49,7 @@ export async function searchArchive(
   const pattern = likePattern(q);
   const tsQuery = sql`websearch_to_tsquery('english', ${q})`;
 
-  // --- People (§19.2: names, alternate names, biographies, notes, places) ---
+  // --- People (names, alternate names, biographies, notes, places) ---
   const peopleTextVector = sql`to_tsvector('english', coalesce(${people.fullName}, '') || ' ' || coalesce(${people.biography}, '') || ' ' || coalesce(${people.notes}, ''))`;
   const peopleConditions: SQL[] = [
     eq(people.treeId, treeId),
@@ -77,7 +77,7 @@ export async function searchArchive(
         .limit(RESULT_LIMIT);
   if (branchIds) peopleResults = peopleResults.filter((p) => branchIds.has(p.id));
 
-  // --- Media (§19.2: titles, captions, tags, people tags, OCR, transcription) ---
+  // --- Media (titles, captions, tags, people tags, OCR, transcription) ---
   const mediaTextVector = sql`to_tsvector('english', coalesce(${mediaItems.title}, '') || ' ' || coalesce(${mediaItems.description}, ''))`;
   const ocrVector = sql`to_tsvector('english', coalesce(${mediaItems.ocrText}, ''))`;
   const transcriptionVector = sql`to_tsvector('english', coalesce(${mediaItems.transcriptionText}, ''))`;

@@ -17,7 +17,7 @@ const MONTHS: Record<string, number> = {
 const MONTH_NAMES = Object.keys(MONTHS);
 
 /**
- * Parse a GEDCOM DATE value into date parts (PRD §12.4 mapping):
+ * Parse a GEDCOM DATE value into date parts:
  * exact/partial dates parse directly; ABT/EST/CAL mark approximate;
  * BEF/AFT/BET keep the first year found and mark approximate.
  * Returns null when no year can be extracted (raw value is still preserved).

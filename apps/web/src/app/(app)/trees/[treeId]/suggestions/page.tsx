@@ -15,7 +15,7 @@ const STATUS_BADGE: Record<string, string> = {
   rejected: "bg-danger-soft text-danger",
 };
 
-/** Suggestions (PRD §21): review queue for admins, own submissions for others. */
+/** Suggestions: review queue for admins, own submissions for others. */
 export default async function SuggestionsPage({
   params,
   searchParams,
@@ -29,7 +29,7 @@ export default async function SuggestionsPage({
   const isAdmin = treeRoleAtLeast(role, "admin");
 
   if (!user) {
-    // Public visitors cannot suggest or view suggestions (PRD §4.6).
+    // Public visitors cannot suggest or view suggestions.
     return (
       <Card>
         <p className="text-sm text-archive-700">Sign in to view and submit suggestions.</p>

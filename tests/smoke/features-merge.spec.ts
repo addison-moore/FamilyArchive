@@ -3,9 +3,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { createArchive, login, OWNER, SAMPLE_GEDCOM } from "./helpers";
 
 /**
- * Import-into-existing-archive and person merge (PRD §10, §14). The manual
+ * Import-into-existing-archive and person merge. The manual
  * "Wilhelmina Fairweather" collides with the GEDCOM's, so the import flags a
- * duplicate pair and the merge consolidates it. All data fictional (§1.5).
+ * duplicate pair and the merge consolidates it. All data fictional.
  */
 test.describe.configure({ mode: "serial" });
 

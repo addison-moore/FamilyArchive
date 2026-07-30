@@ -1,8 +1,8 @@
 # Storage Configuration
 
-FamilyArchive stores original media files immutably (PRD §5.6): uploads are
+FamilyArchive stores original media files immutably: uploads are
 hashed, written once under a generated key, and never modified. Thumbnails and
-other derivatives (from Milestone 7 on) are stored separately.
+other derivatives are stored separately.
 
 ## Local filesystem (default)
 

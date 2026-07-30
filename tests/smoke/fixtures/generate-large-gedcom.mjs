@@ -1,5 +1,5 @@
 /**
- * Regenerates large-family.ged: a fully fictional (PRD §1.5) ~600-person
+ * Regenerates large-family.ged: a fully fictional ~600-person
  * family around hub "Cornelius Hartleigh" — a complete 6-generation ancestor
  * pedigree above him and 5 generations of descendants (3 children per couple)
  * below — used to exercise auto-collapse and branch expansion on the tree

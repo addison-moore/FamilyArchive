@@ -98,7 +98,7 @@ export async function updateMediaAction(formData: FormData): Promise<void> {
   redirect(mediaPath(treeId, mediaId));
 }
 
-/** Soft delete (PRD §15, CLAUDE.md). The original file stays in storage (§5.6). */
+/** Soft delete. The original file stays in storage. */
 export async function deleteMediaAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
@@ -124,7 +124,7 @@ export async function deleteMediaAction(formData: FormData): Promise<void> {
   redirect(`/trees/${treeId}/media`);
 }
 
-/** Tags: contributor+ may tag any media (PRD §8.4). */
+/** Tags: contributor+ may tag any media. */
 export async function addMediaTagAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
@@ -169,7 +169,7 @@ export async function removeMediaTagAction(formData: FormData): Promise<void> {
   revalidatePath(mediaPath(treeId, mediaId));
 }
 
-/** People tags: contributor+ (PRD §8.4 "tag people in media"). */
+/** People tags: contributor+. */
 export async function addMediaPersonAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
@@ -206,7 +206,7 @@ export async function removeMediaPersonAction(formData: FormData): Promise<void>
   revalidatePath(mediaPath(treeId, mediaId));
 }
 
-/** Retry a failed job or regenerate derivatives (editor+, PRD §15.6/§26.5). */
+/** Retry a failed job or regenerate derivatives (editor+). */
 export async function reprocessMediaAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
@@ -237,7 +237,7 @@ async function markTextJobQueued(mediaId: string, section: "ocr" | "ai" | "faces
   await getDb().update(mediaItems).set({ metadata }).where(eq(mediaItems.id, mediaId));
 }
 
-/** Run/re-run OCR (editor+, PRD §18.2). */
+/** Run/re-run OCR (editor+). */
 export async function runOcrAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
@@ -250,7 +250,7 @@ export async function runOcrAction(formData: FormData): Promise<void> {
   revalidatePath(mediaPath(treeId, mediaId));
 }
 
-/** Manual transcription (PRD §18, M8): same permission as metadata editing. */
+/** Manual transcription: same permission as metadata editing. */
 export async function saveTranscriptionAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
@@ -271,7 +271,7 @@ export async function saveTranscriptionAction(formData: FormData): Promise<void>
 
 /**
  * Explicit AI OCR cleanup (editor+). Never implicit: requires the admin-set
- * provider env (PRD §31.4) and an empty transcription (raw OCR is preserved;
+ * provider env and an empty transcription (raw OCR is preserved;
  * the cleaned text lands in transcription_text).
  */
 export async function aiCleanupAction(formData: FormData): Promise<void> {
@@ -294,7 +294,7 @@ export async function aiCleanupAction(formData: FormData): Promise<void> {
   revalidatePath(mediaPath(treeId, mediaId));
 }
 
-/** Run/re-run face detection (editor+, PRD §17.2). */
+/** Run/re-run face detection (editor+). */
 export async function detectFacesAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
@@ -320,7 +320,7 @@ async function getFaceInTree(treeId: string, faceId: string) {
   return rows[0] ?? null;
 }
 
-/** Assign or clear the person on a face box (contributor+, PRD §17.1/§8.4). */
+/** Assign or clear the person on a face box (contributor+). */
 export async function assignFacePersonAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const faceId = String(formData.get("faceId") ?? "");
@@ -349,7 +349,7 @@ export async function assignFacePersonAction(formData: FormData): Promise<void> 
   revalidatePath(mediaPath(treeId, face.mediaId));
 }
 
-/** Remove an incorrect face box (contributor+, PRD §17.1). */
+/** Remove an incorrect face box (contributor+). */
 export async function removeFaceAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const faceId = String(formData.get("faceId") ?? "");
@@ -361,7 +361,7 @@ export async function removeFaceAction(formData: FormData): Promise<void> {
   revalidatePath(mediaPath(treeId, face.mediaId));
 }
 
-/** Add a manually drawn face box (contributor+, PRD §17.1 "add missing boxes"). */
+/** Add a manually drawn face box (contributor+). */
 export async function addFaceBoxAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
@@ -396,7 +396,7 @@ export async function addFaceBoxAction(formData: FormData): Promise<void> {
   revalidatePath(mediaPath(treeId, mediaId));
 }
 
-/** Assign as a person's profile photo (editor+, PRD §8.4/§12.5). */
+/** Assign as a person's profile photo (editor+). */
 export async function setProfilePhotoAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");

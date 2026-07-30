@@ -57,7 +57,7 @@ async function setFacesState(
 }
 
 /**
- * Face detection job (PRD §17): normalize the image with sharp, run the
+ * Face detection job: normalize the image with sharp, run the
  * MediaPipe Python script, and replace unassigned auto-detected boxes.
  * Person-assigned and manual boxes always survive a re-run.
  */
@@ -85,7 +85,7 @@ async function detectFaces(job: Job<FaceDetectJob>, logger: pino.Logger): Promis
     await pipeline(object.stream, createWriteStream(sourcePath));
 
     // Normalized PNG input: EXIF-rotated, bounded size; coordinates stay
-    // valid for the original because they are relative (§17.5).
+    // valid for the original because they are relative.
     const detectPath = path.join(workDir, "detect.png");
     await sharp(sourcePath, { failOn: "error" })
       .rotate()

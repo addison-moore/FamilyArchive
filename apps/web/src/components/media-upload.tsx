@@ -13,7 +13,7 @@ interface UploadState {
   duplicateOf?: string;
 }
 
-/** Multi-file uploader with per-file progress (PRD §15.5). */
+/** Multi-file uploader with per-file progress. */
 export function MediaUpload({ treeId, accept }: { treeId: string; accept: string }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);

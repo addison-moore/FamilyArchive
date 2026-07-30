@@ -12,8 +12,8 @@ import {
 
 /**
  * Collections, media-detail actions (tags, person tagging, face assignment,
- * transcription, profile photo), and authorized media serving with ranges
- * (PRD §15, §16, §17, §19, §25). All data fictional (§1.5).
+ * transcription, profile photo), and authorized media serving with ranges.
+ * All data fictional.
  */
 test.describe.configure({ mode: "serial" });
 

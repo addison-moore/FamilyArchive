@@ -23,7 +23,7 @@ const MODE_LABELS: Record<TreeViewMode, string> = {
   descendants: "Descendants",
 };
 
-/** Default tree page: the interactive family tree (PRD §7.4, §11). */
+/** Default tree page: the interactive family tree. */
 export default async function TreePage({
   params,
   searchParams,

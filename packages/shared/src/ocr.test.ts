@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { isOcrEligible } from "./ocr";
 
-describe("isOcrEligible (PRD §18.1)", () => {
+describe("isOcrEligible", () => {
   it("targets PDFs and scanned documents only", () => {
     expect(isOcrEligible("pdf")).toBe(true);
     expect(isOcrEligible("document")).toBe(true);

@@ -3,7 +3,7 @@ import { bigint, integer, jsonb, pgTable, text, timestamp, unique } from "drizzl
 import { mediaItems } from "./media";
 
 /**
- * Generated derivatives of immutable originals (PRD §5.6, §24.5): thumbnails,
+ * Generated derivatives of immutable originals: thumbnails,
  * PDF page previews, video frame grabs. Regenerable — rows and objects are
  * overwritten on reprocess.
  */

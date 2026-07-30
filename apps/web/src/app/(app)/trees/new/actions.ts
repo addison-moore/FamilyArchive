@@ -36,7 +36,7 @@ export async function createTreeAction(formData: FormData): Promise<void> {
       })
       .returning({ id: trees.id });
     if (!tree) throw new Error("Failed to create tree");
-    // Creator becomes Admin of the new tree (M2 decision).
+    // Creator becomes Admin of the new tree.
     await tx.insert(treeMemberships).values({ treeId: tree.id, userId: user.id, role: "admin" });
     return tree.id;
   });

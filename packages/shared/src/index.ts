@@ -1,6 +1,6 @@
 /**
  * Shared types and utilities used across FamilyArchive apps and packages.
- * Grows as milestones land; keep entries generic (no app- or DB-specific code).
+ * Keep entries generic (no app- or DB-specific code).
  */
 
 /** Nominal typing helper for entity IDs (e.g. `Brand<string, "TreeId">`). */
