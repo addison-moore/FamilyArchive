@@ -220,6 +220,23 @@ export function collapseBranch(
   return { ...collapsed, [id]: { ...collapsed[id], [direction]: true } };
 }
 
+/**
+ * Do two collapse maps render the same tree? Only truthy flags reach
+ * `computeVisibleSet`, so an explicit `false` — which `expandBranch` writes to
+ * record a branch the user opened — counts as equal to an absent one.
+ *
+ * Compared by content, never identity: `defaultCollapseMap` is rebuilt whenever
+ * the graph payload object is, which happens on every soft navigation even when
+ * nothing about the tree changed.
+ */
+export function sameCollapseView(a: CollapseMap, b: CollapseMap): boolean {
+  for (const id of new Set([...Object.keys(a), ...Object.keys(b)])) {
+    if (!!a[id]?.up !== !!b[id]?.up) return false;
+    if (!!a[id]?.down !== !!b[id]?.down) return false;
+  }
+  return true;
+}
+
 /** The visible people and the edges among them, ready for layout. */
 export function visibleSubgraph(
   payload: TreeGraphPayload,
