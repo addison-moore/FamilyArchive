@@ -67,3 +67,9 @@ tests/smoke/playwright-report/
 
 # Plans are private (local-only, never committed)
 _plans/
+
+# Claude
+.claude/
+
+CLAUDE.md
+AGENTS.md

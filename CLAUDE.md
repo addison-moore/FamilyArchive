@@ -17,8 +17,8 @@ work follows the planning workflow below.
 
 ## Planning Workflow (required)
 
-Every feature or milestone starts with a plan document. Do not begin implementation
-without one.
+Every major feature or milestone starts with a plan document. Do not begin implementation
+without one. Minor changes, visual tweaks, bug fixes, small changes to the UI, etc, don't require a plan document.
 
 1. Before implementing a feature/milestone, create `_plans/<feature-name>/PLAN.md`
    (kebab-case folder names, e.g. `_plans/milestone-1-foundation/PLAN.md`).
