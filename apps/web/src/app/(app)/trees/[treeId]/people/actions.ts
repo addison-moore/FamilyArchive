@@ -1,6 +1,6 @@
 "use server";
 
-import { requireMemberRole } from "@familyarchive/auth";
+import { requireMemberRole, requireTreeRole } from "@familyarchive/auth";
 import { getDb, people, personNames, relationships } from "@familyarchive/db";
 import {
   isGender,
@@ -8,6 +8,7 @@ import {
   isPartnerRelationshipType,
   isPersonNameKind,
   isRelationshipType,
+  parsePageSize,
   validateDateParts,
   type DateParts,
 } from "@familyarchive/shared";
@@ -19,6 +20,7 @@ import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { findSimilarPeople } from "@/lib/duplicates";
 import { getPerson, resolvePlaceId } from "@/lib/people";
+import { savePeoplePageSize } from "@/lib/preferences";
 
 function peoplePath(treeId: string): string {
   return `/trees/${treeId}/people`;
@@ -95,6 +97,41 @@ function personValues(form: ParsedPersonForm) {
     deathDay: form.death.day,
     deathApprox: form.death.approx,
   };
+}
+
+/**
+ * Personal preference — any viewer can set their own rows-per-page, and it is
+ * remembered for future sessions. Anonymous visitors on a public archive have
+ * no account to store it against, so their choice rides in the URL instead.
+ * Always returns to the first page: the old page number rarely survives a
+ * resize meaningfully.
+ */
+export async function setPeoplePageSizeAction(formData: FormData): Promise<void> {
+  const treeId = String(formData.get("treeId") ?? "");
+  const { user } = await requireTreeRole(treeId, "viewer");
+  const size = parsePageSize(formData.get("size"));
+
+  const params = new URLSearchParams();
+  const query = String(formData.get("q") ?? "").trim();
+  if (query) params.set("q", query);
+  const scope = String(formData.get("scope") ?? "");
+  if (scope === "all" || scope === "branch") params.set("scope", scope);
+  const selected = String(formData.get("selected") ?? "");
+  if (selected) params.set("selected", selected);
+
+  if (size) {
+    if (user) {
+      await savePeoplePageSize(user.id, treeId, size);
+      // The redirect target is often the URL we came from, so the list has to
+      // be rebuilt explicitly for the new size to show.
+      revalidatePath(peoplePath(treeId));
+    } else {
+      params.set("size", String(size));
+    }
+  }
+
+  const search = params.toString();
+  redirect(search ? `${peoplePath(treeId)}?${search}` : peoplePath(treeId));
 }
 
 export async function createPersonAction(formData: FormData): Promise<void> {

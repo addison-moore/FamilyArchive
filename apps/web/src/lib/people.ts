@@ -4,7 +4,7 @@ import {
   isPartnerRelationshipType,
   type RelationshipType,
 } from "@familyarchive/shared";
-import { and, asc, eq, ilike, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, count, eq, ilike, inArray, isNull, or, type SQL } from "drizzle-orm";
 
 export type PersonRow = typeof people.$inferSelect;
 export type PersonNameRow = typeof personNames.$inferSelect;
@@ -18,6 +18,50 @@ export async function listPeople(treeId: string, query?: string): Promise<Person
     .from(people)
     .where(and(...conditions))
     .orderBy(asc(people.fullName));
+}
+
+/** Filters shared by the People list's count and page queries. */
+export interface PeopleFilter {
+  /** Case-insensitive substring match on the full name. */
+  query?: string;
+  /** Restrict to a branch view's person ids; null/undefined means the whole tree. */
+  ids?: Set<string> | null;
+}
+
+function peopleFilterConditions(treeId: string, filter: PeopleFilter): SQL[] {
+  const conditions: SQL[] = [eq(people.treeId, treeId), isNull(people.deletedAt)];
+  if (filter.query) conditions.push(ilike(people.fullName, `%${filter.query}%`));
+  if (filter.ids) conditions.push(inArray(people.id, [...filter.ids]));
+  return conditions;
+}
+
+/** How many people match — the total the pager pages through. */
+export async function countPeople(treeId: string, filter: PeopleFilter = {}): Promise<number> {
+  if (filter.ids?.size === 0) return 0;
+  const rows = await getDb()
+    .select({ value: count() })
+    .from(people)
+    .where(and(...peopleFilterConditions(treeId, filter)));
+  return rows[0]?.value ?? 0;
+}
+
+/**
+ * One page of matching people, ordered by name. Sorting breaks ties on id so
+ * that a name shared by two people can't shuffle rows between pages.
+ */
+export async function listPeoplePage(
+  treeId: string,
+  filter: PeopleFilter,
+  page: { limit: number; offset: number },
+): Promise<PersonRow[]> {
+  if (filter.ids?.size === 0) return [];
+  return getDb()
+    .select()
+    .from(people)
+    .where(and(...peopleFilterConditions(treeId, filter)))
+    .orderBy(asc(people.fullName), asc(people.id))
+    .limit(page.limit)
+    .offset(page.offset);
 }
 
 export async function getPerson(treeId: string, personId: string): Promise<PersonRow | null> {

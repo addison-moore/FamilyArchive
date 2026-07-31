@@ -12,6 +12,7 @@ export function assertNever(value: never): never {
 }
 
 export * from "./roles";
+export * from "./pagination";
 export * from "./jobs";
 export * from "./people";
 export * from "./dates";

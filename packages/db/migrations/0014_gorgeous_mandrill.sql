@@ -1,0 +1,1 @@
+ALTER TABLE "user_tree_preferences" ADD COLUMN "people_page_size" integer DEFAULT 50 NOT NULL;
