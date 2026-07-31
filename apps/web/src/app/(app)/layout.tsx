@@ -5,6 +5,8 @@ import Link from "next/link";
 import { revalidatePath } from "next/cache";
 import type { ReactNode } from "react";
 
+import { Dropdown } from "@/components/dropdown";
+
 /**
  * Authenticated app shell. Anonymous visitors are allowed through so public
  * archives can render — every page/action enforces its own access;
@@ -21,15 +23,24 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             Family<span className="text-accent-600">Archive</span>
           </Link>
           {user ? (
-            <details className="group relative ml-auto">
-              <summary className="cursor-pointer list-none rounded-md border border-archive-100 px-3 py-1.5 text-sm text-archive-700 hover:bg-archive-50">
-                {user.name ?? user.email}
-                {user.role === "owner" && (
-                  <span className="ml-2 rounded bg-archive-100 px-1.5 py-0.5 text-xs">owner</span>
-                )}
-              </summary>
+            <Dropdown
+              className="group relative ml-auto min-w-0"
+              summaryClassName="flex cursor-pointer list-none items-center gap-2 rounded-md border border-archive-100 px-3 py-1.5 text-sm text-archive-700 hover:bg-archive-50"
+              summary={
+                <>
+                  <span className="max-w-[14rem] truncate">{user.name ?? user.email}</span>
+                  {user.role === "owner" && (
+                    <span className="shrink-0 rounded bg-archive-100 px-1.5 py-0.5 text-xs">
+                      owner
+                    </span>
+                  )}
+                </>
+              }
+            >
               <div className="absolute right-0 z-10 mt-1 w-48 rounded-md border border-archive-100 bg-surface p-1 shadow-md">
-                <div className="px-3 py-2 text-xs text-archive-700/70">{user.email}</div>
+                <div className="truncate px-3 py-2 text-xs text-archive-700/70" title={user.email}>
+                  {user.email}
+                </div>
                 <Link
                   href="/trees"
                   className="block rounded px-3 py-2 text-sm no-underline hover:bg-archive-50"
@@ -72,7 +83,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
                   </button>
                 </form>
               </div>
-            </details>
+            </Dropdown>
           ) : (
             <Link
               href="/login"
