@@ -67,7 +67,13 @@ function QuickAddForm({
   );
 }
 
-/** Node actions rendered under the person summary sidebar. */
+/**
+ * Node actions for the selected person, rendered alongside the person summary.
+ *
+ * The auto-fit grid is what lets this sit in either tree layout without a mode
+ * prop: in the narrow sidebar the tracks collapse to a single column, and in
+ * the wide layout's full-width strip they spread into a row.
+ */
 export function TreeNodeActions({
   treeId,
   personId,
@@ -83,7 +89,7 @@ export function TreeNodeActions({
 }) {
   const canEdit = treeRoleAtLeast(role, "editor");
   return (
-    <div className="mt-4 space-y-2.5">
+    <div className="grid grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] items-start gap-2.5">
       {!isStart && (
         <form action={setStartingPersonAction}>
           <input type="hidden" name="treeId" value={treeId} />

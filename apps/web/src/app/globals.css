@@ -55,21 +55,6 @@
   --color-success-strong: #2f9e53;
 }
 
-/* React Flow chrome (zoom controls, selection) follows the theme. */
-.react-flow__controls {
-  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12);
-}
-.react-flow__controls button {
-  background: var(--color-surface);
-  border-bottom: 1px solid var(--color-archive-100);
-}
-.react-flow__controls button:hover {
-  background: var(--color-archive-100);
-}
-.react-flow__controls button svg {
-  fill: var(--color-archive-700);
-}
-
 /* Edge-anchor handles are not interactive (nodes aren't connectable) — hide
    the dots so person cards stay clean. */
 .react-flow__handle {

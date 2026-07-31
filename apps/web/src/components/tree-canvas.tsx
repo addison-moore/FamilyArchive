@@ -2,16 +2,17 @@
 
 import {
   Background,
-  Controls,
   Handle,
   Position,
   ReactFlow,
+  ReactFlowProvider,
+  useReactFlow,
+  useStore,
   type Node,
   type NodeProps,
-  type ReactFlowInstance,
 } from "@xyflow/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { edgeTypes } from "@/components/tree-edges";
 import { buildConnectorEdges, type ConnectorFlowEdge } from "@/lib/tree-connectors";
@@ -23,6 +24,7 @@ import {
   defaultCollapseMap,
   expandBranch,
   hiddenBeyond,
+  sameCollapseView,
   visibleSubgraph,
   type CollapseDirection,
   type CollapseMap,
@@ -30,6 +32,8 @@ import {
 } from "@/lib/tree-visibility";
 
 import "@xyflow/react/dist/style.css";
+
+const FIT_VIEW_OPTIONS = { padding: 0.2, maxZoom: 1 };
 
 /** Branch toggle shown on a node edge: an expand pill with a hidden count, a
  * hover-revealed collapse control, or nothing. */
@@ -190,19 +194,180 @@ function PersonNode({ id, data }: NodeProps<PersonFlowNode>) {
 
 const nodeTypes = { person: PersonNode };
 
-export function TreeCanvas({
+/** Every control in the cluster shares this box so the group reads as one
+ *  segmented control. `flex`/`hidden` stay out of it: an element must never
+ *  carry both, since their precedence comes from Tailwind's own ordering
+ *  rather than the order written here. */
+const controlButtonClass =
+  "h-8 w-8 shrink-0 cursor-pointer items-center justify-center border-l border-archive-100 " +
+  "text-archive-700 first:border-l-0 hover:bg-archive-100 disabled:cursor-not-allowed " +
+  "disabled:opacity-40 disabled:hover:bg-transparent";
+
+function ControlIcon({ children }: { children: ReactNode }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
+
+/**
+ * The canvas's whole control surface, unified at the bottom right: zoom out,
+ * zoom in, fit, wide, full screen.
+ *
+ * Zoom is read from the React Flow store here rather than in TreeCanvas so a
+ * pan/zoom gesture only re-renders these five buttons — subscribing higher up
+ * would re-render the node graph on every frame.
+ */
+function CanvasControls({
+  wide,
+  onToggleWide,
+  maximized,
+  onToggleMaximized,
+}: {
+  wide: boolean;
+  onToggleWide: () => void;
+  maximized: boolean;
+  onToggleMaximized: () => void;
+}) {
+  const { zoomIn, zoomOut, fitView } = useReactFlow();
+  const zoom = useStore((state) => state.transform[2]);
+  const minZoom = useStore((state) => state.minZoom);
+  const maxZoom = useStore((state) => state.maxZoom);
+
+  // `shrink-0` below is load-bearing. `overflow-hidden` makes the group a
+  // scroll container, which zeroes its automatic minimum size — so on a narrow
+  // canvas the rail would shrink it and clip its own trailing buttons,
+  // including the only way out of full screen on a touch device (no Esc key).
+  // The status pill carries `min-w-0` and wraps instead.
+  return (
+    <div
+      role="group"
+      aria-label="Tree canvas controls"
+      className="pointer-events-auto flex shrink-0 items-stretch overflow-hidden rounded-md border border-archive-100 bg-surface-raised shadow-sm"
+    >
+      <button
+        type="button"
+        onClick={() => void zoomOut({ duration: 200 })}
+        disabled={zoom <= minZoom}
+        title="Zoom out"
+        aria-label="Zoom out"
+        className={`flex ${controlButtonClass}`}
+      >
+        <ControlIcon>
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </ControlIcon>
+      </button>
+      <button
+        type="button"
+        onClick={() => void zoomIn({ duration: 200 })}
+        disabled={zoom >= maxZoom}
+        title="Zoom in"
+        aria-label="Zoom in"
+        className={`flex ${controlButtonClass}`}
+      >
+        <ControlIcon>
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </ControlIcon>
+      </button>
+      <button
+        type="button"
+        onClick={() => void fitView({ ...FIT_VIEW_OPTIONS, duration: 300 })}
+        title="Fit tree to view"
+        aria-label="Fit tree to view"
+        className={`flex ${controlButtonClass}`}
+      >
+        {/* Corner brackets — deliberately distinct from the diagonal arrows on
+            the full-screen control at the end of the group. */}
+        <ControlIcon>
+          <polyline points="4 9 4 4 9 4" />
+          <polyline points="15 4 20 4 20 9" />
+          <polyline points="20 15 20 20 15 20" />
+          <polyline points="9 20 4 20 4 15" />
+        </ControlIcon>
+      </button>
+      {/* Below xl the sidebar already sits under the canvas, so widening would
+          be a no-op — the control only exists where it changes something. */}
+      {!maximized && (
+        <button
+          type="button"
+          onClick={onToggleWide}
+          title={wide ? "Restore sidebar beside the tree" : "Expand tree to full width"}
+          aria-label={wide ? "Restore sidebar beside the tree" : "Expand tree to full width"}
+          aria-pressed={wide}
+          className={`hidden xl:flex ${controlButtonClass}`}
+        >
+          {wide ? (
+            <ControlIcon>
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <polyline points="7 8 11 12 7 16" />
+              <polyline points="17 8 13 12 17 16" />
+            </ControlIcon>
+          ) : (
+            <ControlIcon>
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <polyline points="7 8 3 12 7 16" />
+              <polyline points="17 8 21 12 17 16" />
+            </ControlIcon>
+          )}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onToggleMaximized}
+        title={maximized ? "Exit full screen (Esc)" : "Full screen"}
+        aria-label={maximized ? "Exit full screen" : "Full screen"}
+        aria-pressed={maximized}
+        className={`flex ${controlButtonClass}`}
+      >
+        {maximized ? (
+          <ControlIcon>
+            <polyline points="4 14 10 14 10 20" />
+            <polyline points="20 10 14 10 14 4" />
+            <line x1="14" y1="10" x2="21" y2="3" />
+            <line x1="3" y1="21" x2="10" y2="14" />
+          </ControlIcon>
+        ) : (
+          <ControlIcon>
+            <polyline points="15 3 21 3 21 9" />
+            <polyline points="9 21 3 21 3 15" />
+            <line x1="21" y1="3" x2="14" y2="10" />
+            <line x1="3" y1="21" x2="10" y2="14" />
+          </ControlIcon>
+        )}
+      </button>
+    </div>
+  );
+}
+
+function TreeCanvasInner({
   treeId,
   graph,
   selectedId,
+  wide,
+  onToggleWide,
 }: {
   treeId: string;
   graph: TreeGraphPayload;
   selectedId: string | null;
+  wide: boolean;
+  onToggleWide: () => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [maximized, setMaximized] = useState(false);
-  const flowRef = useRef<ReactFlowInstance<PersonFlowNode, ConnectorFlowEdge> | null>(null);
+  const { fitView } = useReactFlow<PersonFlowNode, ConnectorFlowEdge>();
 
   const adjacency = useMemo(() => buildAdjacency(graph), [graph]);
   const defaults = useMemo(() => defaultCollapseMap(graph, adjacency), [graph, adjacency]);
@@ -219,9 +384,9 @@ export function TreeCanvas({
     [graph, visible],
   );
 
-  const refit = () => {
-    setTimeout(() => flowRef.current?.fitView({ padding: 0.2, maxZoom: 1, duration: 300 }), 60);
-  };
+  const refit = useCallback(() => {
+    setTimeout(() => void fitView({ ...FIT_VIEW_OPTIONS, duration: 300 }), 60);
+  }, [fitView]);
 
   const onToggleBranch = useCallback(
     (personId: string, direction: CollapseDirection, expand: boolean) => {
@@ -232,18 +397,24 @@ export function TreeCanvas({
       );
       refit();
     },
-    [adjacency],
+    [adjacency, refit],
   );
 
-  // Re-fit after the container changes size, and let Escape exit full screen.
-  const toggleMaximized = () => {
-    setMaximized((current) => !current);
-    setTimeout(() => flowRef.current?.fitView({ padding: 0.2, maxZoom: 1 }), 60);
-  };
+  // Both view toggles resize the container, so re-fit once the new layout has
+  // painted. Skipped on mount, where ReactFlow's own `fitView` prop covers it.
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+    refit();
+  }, [wide, maximized, refit]);
+
   useEffect(() => {
     if (!maximized) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") toggleMaximized();
+      if (event.key === "Escape") setMaximized(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -281,7 +452,11 @@ export function TreeCanvas({
 
   const total = graph.people.length;
   const anyCollapsed = visible.size < total;
-  const canReset = Object.keys(defaults).length > 0 && collapsed !== defaults;
+  // Content comparison, not `collapsed !== defaults`: `defaults` is re-memoised
+  // whenever the graph payload object changes, and the server hands over a fresh
+  // payload on every soft navigation — so identity would offer "Reset view"
+  // after any node click even with the view still sitting at the defaults.
+  const canReset = Object.keys(defaults).length > 0 && !sameCollapseView(collapsed, defaults);
 
   return (
     <div
@@ -291,88 +466,53 @@ export function TreeCanvas({
           : "relative h-[70vh] min-h-[420px] rounded-xl border border-archive-100 bg-surface shadow-sm"
       }
     >
-      <button
-        type="button"
-        onClick={toggleMaximized}
-        title={maximized ? "Exit full screen (Esc)" : "Full screen"}
-        aria-label={maximized ? "Exit full screen" : "Full screen"}
-        className="absolute top-3 right-3 z-10 rounded-md border border-archive-100 bg-surface-raised p-2 text-archive-700 shadow-sm hover:bg-archive-100"
-      >
-        {/* Diagonal in/out arrows — deliberately distinct from the corner-bracket
-            "fit view" icon in React Flow's controls at the bottom left. */}
-        {maximized ? (
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="4 14 10 14 10 20" />
-            <polyline points="20 10 14 10 14 4" />
-            <line x1="14" y1="10" x2="21" y2="3" />
-            <line x1="3" y1="21" x2="10" y2="14" />
-          </svg>
-        ) : (
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <polyline points="15 3 21 3 21 9" />
-            <polyline points="9 21 3 21 3 15" />
-            <line x1="21" y1="3" x2="14" y2="10" />
-            <line x1="3" y1="21" x2="10" y2="14" />
-          </svg>
-        )}
-      </button>
-      <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-archive-100 bg-surface-raised px-3 py-1.5 text-xs text-archive-700 shadow-sm">
-        <span>
-          Showing {visible.size} of {total} people
-        </span>
-        {anyCollapsed && (
-          <button
-            type="button"
-            onClick={() => {
-              setCollapsed({});
-              refit();
-            }}
-            className="font-medium text-accent-600 hover:underline"
-          >
-            Expand all
-          </button>
-        )}
-        {canReset && (
-          <button
-            type="button"
-            onClick={() => {
-              setCollapsed(defaults);
-              refit();
-            }}
-            className="font-medium text-accent-600 hover:underline"
-          >
-            Reset view
-          </button>
-        )}
+      {/* One bottom rail: visibility status on the left, controls on the right.
+          Sharing a flex row is what keeps them from overlapping on a narrow
+          canvas, which a centred status pill could not guarantee. */}
+      <div className="pointer-events-none absolute inset-x-3 bottom-3 z-10 flex items-end justify-between gap-2">
+        <div className="pointer-events-auto flex min-w-0 items-center gap-2 rounded-full border border-archive-100 bg-surface-raised px-3 py-1.5 text-xs text-archive-700 shadow-sm">
+          <span>
+            Showing {visible.size} of {total} people
+          </span>
+          {anyCollapsed && (
+            <button
+              type="button"
+              onClick={() => {
+                setCollapsed({});
+                refit();
+              }}
+              className="font-medium text-accent-600 hover:underline"
+            >
+              Expand all
+            </button>
+          )}
+          {canReset && (
+            <button
+              type="button"
+              onClick={() => {
+                setCollapsed(defaults);
+                refit();
+              }}
+              className="font-medium text-accent-600 hover:underline"
+            >
+              Reset view
+            </button>
+          )}
+        </div>
+        <CanvasControls
+          wide={wide}
+          onToggleWide={onToggleWide}
+          maximized={maximized}
+          onToggleMaximized={() => setMaximized((current) => !current)}
+        />
       </div>
       <ReactFlow
-        onInit={(instance) => {
-          flowRef.current = instance;
-        }}
         nodes={flowNodes}
         edges={flowEdges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        fitViewOptions={{ padding: 0.2, maxZoom: 1 }}
+        fitViewOptions={FIT_VIEW_OPTIONS}
         minZoom={0.15}
         proOptions={{ hideAttribution: true }}
         nodesDraggable={false}
@@ -384,8 +524,23 @@ export function TreeCanvas({
         }}
       >
         <Background gap={24} color="var(--color-archive-100)" />
-        <Controls showInteractive={false} />
       </ReactFlow>
     </div>
+  );
+}
+
+export function TreeCanvas(props: {
+  treeId: string;
+  graph: TreeGraphPayload;
+  selectedId: string | null;
+  wide: boolean;
+  onToggleWide: () => void;
+}) {
+  // The provider lets the control cluster live outside <ReactFlow> — as a
+  // sibling overlay — while still reaching the viewport helpers and store.
+  return (
+    <ReactFlowProvider>
+      <TreeCanvasInner {...props} />
+    </ReactFlowProvider>
   );
 }

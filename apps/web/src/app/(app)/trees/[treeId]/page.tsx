@@ -4,8 +4,8 @@ import Link from "next/link";
 
 import { buttonClass, Card, FormError } from "@/components/form";
 import { PersonSummary, personLifespan } from "@/components/person-summary";
-import { TreeCanvas } from "@/components/tree-canvas";
 import { TreeNodeActions } from "@/components/tree-node-actions";
+import { TreeWorkspace } from "@/components/tree-workspace";
 import { profilePhotoUrl } from "@/lib/media";
 import { getPerson, getRelationshipGraph } from "@/lib/people";
 import {
@@ -136,11 +136,11 @@ export default async function TreePage({
         <span className="text-sm text-archive-700/70">starting from {startPerson.fullName}</span>
       </div>
 
-      <div className="flex flex-col gap-6 xl:flex-row">
-        <div className="min-w-0 flex-1">
-          <TreeCanvas treeId={treeId} graph={payload} selectedId={selectedPerson.id} />
-        </div>
-        <div className="w-full xl:w-96 xl:shrink-0">
+      <TreeWorkspace
+        treeId={treeId}
+        graph={payload}
+        selectedId={selectedPerson.id}
+        summary={
           <PersonSummary
             treeId={treeId}
             person={selectedPerson}
@@ -148,7 +148,9 @@ export default async function TreePage({
             role={role}
             photoUrl={selectedPhotoUrl}
           />
-          {user && (
+        }
+        actions={
+          user && (
             <TreeNodeActions
               treeId={treeId}
               personId={selectedPerson.id}
@@ -156,9 +158,9 @@ export default async function TreePage({
               mode={mode}
               role={role}
             />
-          )}
-        </div>
-      </div>
+          )
+        }
+      />
     </div>
   );
 }
