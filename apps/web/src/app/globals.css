@@ -12,7 +12,7 @@
   --color-archive-700: #6b5d4a; /* muted text */
   --color-archive-800: #4e4335; /* body text on tinted banners */
   --color-archive-900: #3d3427; /* headings, primary text */
-  --color-accent-600: #b45309; /* brand accent: links, primary buttons */
+  --color-accent-600: #8a4c32; /* brand accent: links, primary buttons — the app icon's brick */
 
   /* Card/panel background (white in light mode — never use bg-white directly). */
   --color-surface: #ffffff;
@@ -39,7 +39,7 @@
   --color-archive-700: #b3a493;
   --color-archive-800: #cfc3b4;
   --color-archive-900: #ece5da;
-  --color-accent-600: #e08b2d;
+  --color-accent-600: #d18666; /* same brand hue, lightened for dark backgrounds */
 
   --color-surface: #241f19;
   --color-surface-raised: #362e24;

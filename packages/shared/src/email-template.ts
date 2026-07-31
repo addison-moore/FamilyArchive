@@ -10,7 +10,7 @@ const PALETTE = {
   border: "#f3ede2",
   text: "#3d3427",
   muted: "#6b5d4a",
-  accent: "#b45309",
+  accent: "#8a4c32",
 };
 
 function escapeHtml(value: string): string {
