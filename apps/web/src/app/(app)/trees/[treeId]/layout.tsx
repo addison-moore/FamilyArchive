@@ -49,19 +49,27 @@ export default async function TreeLayout({
   const tree = treeRows[0];
   if (!tree) notFound();
 
-  // Members get their role; anonymous visitors get read-only access to public
-  // archives and a login redirect everywhere else.
+  // Members get their role. Non-members — signed in or not — get read-only
+  // access to a public archive; anything else is a 404 for a signed-in visitor
+  // and a login redirect for an anonymous one. Signing in must never take
+  // access away, which it did while the public branch was anonymous-only.
+  const memberRole = user ? await getTreeRole(user, treeId) : null;
   let role: string;
   let accessibleTrees: { id: string; name: string }[];
-  if (user) {
-    const memberRole = await getTreeRole(user, treeId);
-    if (!memberRole) notFound();
+  if (memberRole) {
     role = memberRole;
-    accessibleTrees = await getAccessibleTrees(user);
+    accessibleTrees = await getAccessibleTrees(user!);
   } else {
-    if (!tree.isPublic) redirect("/login");
+    if (!tree.isPublic) {
+      if (user) notFound();
+      redirect("/login");
+    }
     role = "viewer";
-    accessibleTrees = [{ id: tree.id, name: tree.name }];
+    accessibleTrees = user
+      ? [...(await getAccessibleTrees(user)), { id: tree.id, name: tree.name }].filter(
+          (item, index, all) => all.findIndex((other) => other.id === item.id) === index,
+        )
+      : [{ id: tree.id, name: tree.name }];
   }
 
   return (

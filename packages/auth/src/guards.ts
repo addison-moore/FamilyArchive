@@ -26,7 +26,14 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const id = session?.user?.id;
   if (!id) return null;
   const rows = await getDb().select().from(users).where(eq(users.id, id)).limit(1);
-  return rows[0] ?? null;
+  const user = rows[0];
+  if (!user) return null;
+  // A password reset bumps users.updatedAt, so any token stamped before that
+  // was issued against the old credentials and is no longer valid. Sessions
+  // predating the stamp carry no value and are left alone.
+  const stamp = session?.credentialsStamp;
+  if (typeof stamp === "number" && user.updatedAt.getTime() > stamp) return null;
+  return user;
 }
 
 export async function requireUser(): Promise<SessionUser> {
@@ -67,27 +74,34 @@ export async function isTreePublic(treeId: string): Promise<boolean> {
 }
 
 /**
- * Tree access guard. Authenticated users get their real role.
- * Anonymous visitors get the pseudo-role "viewer" — with `user: null` — iff
- * the archive is public AND only viewer access is required; anything above
- * viewer always demands a signed-in member, so all mutations stay locked.
+ * Tree access guard. Members get their real role. Everyone else — anonymous or
+ * signed in — falls back to the pseudo-role "viewer" iff the archive is public
+ * AND only viewer access is required; anything above viewer always demands a
+ * member, so all mutations stay locked.
+ *
+ * The public fallback has to sit below the membership lookup, not only on the
+ * anonymous branch: checking it before the lookup meant a signed-in non-member
+ * was rejected outright, so anonymous visitors could read a public archive that
+ * logged-in users got a 404 for.
  */
 export async function requireTreeRole(
   treeId: string,
   minimum: TreeRole,
 ): Promise<{ user: SessionUser | null; role: TreeRole }> {
   const user = await getSessionUser();
-  if (!user) {
-    if (minimum === "viewer" && (await isTreePublic(treeId))) {
-      return { user: null, role: "viewer" };
+  const role = user ? await getTreeRole(user, treeId) : null;
+  if (role) {
+    if (!treeRoleAtLeast(role, minimum)) {
+      throw new AuthorizationError(`Requires ${minimum} access to this tree`);
     }
-    throw new AuthorizationError("Sign in required");
+    return { user, role };
   }
-  const role = await getTreeRole(user, treeId);
-  if (!role || !treeRoleAtLeast(role, minimum)) {
-    throw new AuthorizationError(`Requires ${minimum} access to this tree`);
+  if (minimum === "viewer" && (await isTreePublic(treeId))) {
+    return { user, role: "viewer" };
   }
-  return { user, role };
+  throw new AuthorizationError(
+    user ? `Requires ${minimum} access to this tree` : "Sign in required",
+  );
 }
 
 /** Like requireTreeRole but never grants anonymous access — for mutations that need a user row. */

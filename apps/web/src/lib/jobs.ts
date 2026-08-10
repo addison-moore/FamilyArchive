@@ -6,11 +6,13 @@ import {
   MEDIA_QUEUE,
   OCR_QUEUE,
   redisConnectionOptions,
+  TREE_CLEANUP_QUEUE,
   type AiCleanupJob,
   type ArchiveExportJob,
   type FaceDetectJob,
   type MediaProcessJob,
   type OcrJob,
+  type TreeCleanupJob,
 } from "@familyarchive/shared";
 import { Queue } from "bullmq";
 
@@ -52,6 +54,11 @@ export async function enqueueFaceDetection(treeId: string, mediaId: string): Pro
 
 export async function enqueueArchiveExport(job: ArchiveExportJob): Promise<void> {
   await getQueue<ArchiveExportJob>(EXPORT_QUEUE).add("export", job);
+}
+
+/** Sweep an archive's stored blobs after its rows have been deleted. */
+export async function enqueueTreeCleanup(job: TreeCleanupJob): Promise<void> {
+  await getQueue<TreeCleanupJob>(TREE_CLEANUP_QUEUE).add("cleanup", job);
 }
 
 /** AI features render only when the admin configured a provider. */

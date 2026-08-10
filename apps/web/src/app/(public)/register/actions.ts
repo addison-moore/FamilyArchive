@@ -3,7 +3,7 @@
 import { isAuthError, signIn } from "@familyarchive/auth";
 import { redirect } from "next/navigation";
 
-import { anyUserExists, createUser, registrationSchema } from "@/lib/users";
+import { createOwnerIfFirst, registrationSchema } from "@/lib/users";
 
 export async function registerOwnerAction(formData: FormData): Promise<void> {
   const parsed = registrationSchema.safeParse({
@@ -16,11 +16,14 @@ export async function registerOwnerAction(formData: FormData): Promise<void> {
     redirect(`/register?error=${encodeURIComponent(message)}`);
   }
 
-  // Owner bootstrap is only available while the instance has no users.
-  if (await anyUserExists()) redirect("/register");
-
-  const created = await createUser({ ...parsed.data, role: "owner" });
-  if (!created) redirect(`/register?error=${encodeURIComponent("Email already registered")}`);
+  // Owner bootstrap is only available while the instance has no users. The
+  // check lives inside the insert's transaction: a separate read first let two
+  // simultaneous registrations both see an empty instance and both become Owner.
+  const result = await createOwnerIfFirst(parsed.data);
+  if (result.status === "exists") redirect("/register");
+  if (result.status === "duplicate") {
+    redirect(`/register?error=${encodeURIComponent("Email already registered")}`);
+  }
 
   try {
     await signIn("credentials", {
