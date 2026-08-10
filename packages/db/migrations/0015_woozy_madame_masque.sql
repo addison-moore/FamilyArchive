@@ -1,0 +1,1 @@
+ALTER TABLE "people" ADD COLUMN "verified" boolean DEFAULT false NOT NULL;

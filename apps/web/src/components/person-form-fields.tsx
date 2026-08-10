@@ -145,6 +145,21 @@ export function PersonFormFields({
           className={inputClass}
         />
       </Field>
+      <label className="flex items-start gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="verified"
+          defaultChecked={person?.verified ?? false}
+          className="mt-0.5"
+        />
+        <span>
+          <span className="font-medium">Verified</span>
+          <span className="block text-archive-700/80">
+            This person has been confirmed against evidence, rather than being a likely match.
+            Verified people are outlined on the tree.
+          </span>
+        </span>
+      </label>
     </>
   );
 }

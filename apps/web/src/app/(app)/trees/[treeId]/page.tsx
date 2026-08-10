@@ -77,6 +77,7 @@ export default async function TreePage({
       fullName: person.fullName,
       lifespan: personLifespan(person),
       generation,
+      verified: person.verified,
     })),
     parentEdges: graph.parentEdges.map((e) => ({
       id: e.id,

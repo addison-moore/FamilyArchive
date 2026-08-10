@@ -114,6 +114,10 @@ export function PersonSummary({
           {personLifespan(person) && (
             <p className="text-sm text-archive-700/80">{personLifespan(person)}</p>
           )}
+          {/* Stated in text, so the tree's border colour is not the only signal. */}
+          {person.verified && (
+            <p className="mt-0.5 text-xs font-medium text-archive-700">✓ Verified</p>
+          )}
         </div>
       </div>
 

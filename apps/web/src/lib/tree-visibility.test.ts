@@ -27,6 +27,7 @@ function buildPayload(perGen: number): TreeGraphPayload {
         fullName: `Person ${g}.${i} Fairweather`,
         lifespan: null,
         generation: g,
+        verified: false,
       });
       if (g > -5) parentEdges.push({ id: `e${g}_${i}`, from: `p${g - 1}_0`, to: `p${g}_${i}` });
     }

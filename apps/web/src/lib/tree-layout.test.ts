@@ -9,6 +9,7 @@ const person = (id: string): TreePersonNode => ({
   fullName: `Test ${id}`,
   lifespan: null,
   generation: 0,
+  verified: false,
 });
 
 let edgeSeq = 0;

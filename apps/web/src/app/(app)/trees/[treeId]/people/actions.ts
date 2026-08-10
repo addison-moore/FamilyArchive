@@ -55,6 +55,8 @@ interface ParsedPersonForm {
   fields: z.infer<typeof personFieldsSchema>;
   birth: DateParts;
   death: DateParts;
+  /** Checkbox, so absent means false — same handling as the date `approx` flags. */
+  verified: boolean;
 }
 
 function parsePersonForm(formData: FormData): ParsedPersonForm | string {
@@ -78,7 +80,7 @@ function parsePersonForm(formData: FormData): ParsedPersonForm | string {
     const dateError = validateDateParts(parts);
     if (dateError) return dateError;
   }
-  return { fields: parsed.data, birth, death };
+  return { fields: parsed.data, birth, death, verified: formData.get("verified") === "on" };
 }
 
 function personValues(form: ParsedPersonForm) {
@@ -96,6 +98,7 @@ function personValues(form: ParsedPersonForm) {
     deathMonth: form.death.month,
     deathDay: form.death.day,
     deathApprox: form.death.approx,
+    verified: form.verified,
   };
 }
 

@@ -18,6 +18,7 @@ export interface CanvasNode {
   fullName: string;
   lifespan: string | null;
   isStart: boolean;
+  verified: boolean;
 }
 
 export interface CanvasEdge {
@@ -190,6 +191,7 @@ export function layoutTreeGraph(graph: LayoutGraph, startPersonId: string): Canv
       fullName: person.fullName,
       lifespan: person.lifespan,
       isStart: person.id === startPersonId,
+      verified: person.verified,
     };
   });
 

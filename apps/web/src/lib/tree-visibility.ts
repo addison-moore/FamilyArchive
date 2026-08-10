@@ -12,6 +12,8 @@ export interface TreePersonNode {
   lifespan: string | null;
   /** Generation relative to the starting person (ancestors < 0). */
   generation: number;
+  /** Confirmed against evidence, rather than a likely match. Outlined on the canvas. */
+  verified: boolean;
 }
 
 /** For parent edges, `from` is the parent and `to` the child. */

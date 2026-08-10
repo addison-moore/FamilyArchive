@@ -70,6 +70,13 @@ export const people = pgTable(
     notes: text("notes"),
     /** Profile photo. Plain column (no FK) — media_items lives in another schema file and would create a circular import. */
     profileMediaId: text("profile_media_id"),
+    /**
+     * Has this person been confirmed against evidence, or are they only a
+     * likely ancestor? A researcher's own confidence marker — deliberately a
+     * flag rather than graded per-relationship confidence, which PRD §35.2
+     * defers past v1. Everyone starts unverified.
+     */
+    verified: boolean("verified").notNull().default(false),
     /** Import provenance; null for people created in the app. */
     sourceId: text("source_id").references(() => sources.id, { onDelete: "set null" }),
     metadata: jsonb("metadata").notNull().default({}),

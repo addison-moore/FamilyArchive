@@ -19,6 +19,7 @@ const person = (id: string, x: number, y: number): CanvasNode => ({
   fullName: `Test ${id}`,
   lifespan: null,
   isStart: false,
+  verified: false,
 });
 
 let edgeSeq = 0;
