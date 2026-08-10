@@ -113,7 +113,13 @@ test("admins can change a member's role, revoke invites, and remove members", as
   const memberRow = ownerPage.locator("li").filter({ hasText: MEMBER.email });
   await memberRow.locator('select[name="role"]').selectOption("editor");
   await memberRow.getByRole("button", { name: "Update" }).click();
-  await expect(memberRow.locator('select[name="role"]')).toHaveValue("editor");
+  // Reload before asserting: selectOption already set this value in the DOM, so
+  // checking it without a round trip proves nothing and — worse — lets the rest
+  // of the test race the server action it never waited for.
+  await ownerPage.reload();
+  await expect(
+    ownerPage.locator("li").filter({ hasText: MEMBER.email }).locator('select[name="role"]'),
+  ).toHaveValue("editor");
 
   // The promotion is live: the member now sees editor affordances.
   await memberPage.goto(`/trees/${treeId}/people?scope=all`);
