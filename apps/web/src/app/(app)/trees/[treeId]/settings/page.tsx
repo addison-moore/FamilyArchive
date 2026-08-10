@@ -330,8 +330,8 @@ export default async function TreeSettingsPage({
             </div>
             {(storage.percent ?? 0) >= 100 ? (
               <p className="mt-3 text-sm text-danger">
-                Storage is full — new uploads are paused. Free up space by removing media, or raise
-                the limit on the server.
+                Storage is full — new uploads are paused. Raise the limit on the server; deleting
+                media does not reclaim space, because originals are preserved.
               </p>
             ) : (
               (storage.percent ?? 0) >= 90 && (

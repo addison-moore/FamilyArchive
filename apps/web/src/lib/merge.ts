@@ -5,10 +5,11 @@ import {
   people,
   personNames,
   relationships,
+  suggestions,
   userTreePreferences,
 } from "@familyarchive/db";
 import { isPartnerRelationshipType } from "@familyarchive/shared";
-import { and, eq, isNull, or } from "drizzle-orm";
+import { and, eq, inArray, isNull, or } from "drizzle-orm";
 
 import type { PersonRow } from "@/lib/people";
 
@@ -51,10 +52,18 @@ export async function mergePeople(
   const db = getDb();
 
   await db.transaction(async (tx) => {
+    // Two rows by id — this used to select every living person in the archive
+    // and filter in JS.
     const rows = await tx
       .select()
       .from(people)
-      .where(and(eq(people.treeId, treeId), isNull(people.deletedAt)));
+      .where(
+        and(
+          eq(people.treeId, treeId),
+          isNull(people.deletedAt),
+          inArray(people.id, [survivorId, otherId]),
+        ),
+      );
     const survivor = rows.find((p) => p.id === survivorId);
     const other = rows.find((p) => p.id === otherId);
     if (!survivor || !other) throw new Error("Person not found in this archive");
@@ -181,6 +190,20 @@ export async function mergePeople(
       .update(userTreePreferences)
       .set({ startingPersonId: survivorId, updatedAt: new Date() })
       .where(eq(userTreePreferences.startingPersonId, otherId));
+    // Suggestions point at people by a plain target_id with no foreign key, so
+    // nothing else re-points them: open suggestions about the merged person
+    // would otherwise resolve to a soft-deleted record and 404 from the review
+    // queue.
+    await tx
+      .update(suggestions)
+      .set({ targetId: survivorId })
+      .where(
+        and(
+          eq(suggestions.treeId, treeId),
+          eq(suggestions.targetType, "person"),
+          eq(suggestions.targetId, otherId),
+        ),
+      );
 
     // 5. Provenance on the survivor; soft-delete the other with a pointer.
     const survivorMeta = { ...(survivor.metadata as Record<string, unknown>) };

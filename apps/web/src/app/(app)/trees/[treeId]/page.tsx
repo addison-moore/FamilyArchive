@@ -36,11 +36,13 @@ export default async function TreePage({
     imported?: string;
     people?: string;
     rels?: string;
+    /** Count of import warnings; the messages live on the source record. */
+    warn?: string;
   }>;
 }) {
   const { treeId } = await params;
   const { user, role } = await requireTreeRole(treeId, "viewer");
-  const { selected, mode: modeRaw, error, imported, people, rels } = await searchParams;
+  const { selected, mode: modeRaw, error, imported, people, rels, warn } = await searchParams;
   const mode: TreeViewMode = isTreeViewMode(modeRaw) ? modeRaw : "both";
 
   const startPerson = await resolveStartingPerson(user?.id ?? null, treeId);
@@ -111,6 +113,11 @@ export default async function TreePage({
       {imported && (
         <div className="mb-4 rounded-md border border-accent-600/30 bg-archive-100/60 px-4 py-3 text-sm text-archive-800">
           GEDCOM import complete: {people ?? "?"} people and {rels ?? "?"} relationships.{" "}
+          {warn && (
+            <span className="text-warn">
+              {warn} warning{warn === "1" ? "" : "s"} were recorded for this import.{" "}
+            </span>
+          )}
           {treeRoleAtLeast(role, "editor") && (
             <Link href={`/trees/${treeId}/duplicates`} className="text-accent-600 hover:underline">
               Review possible duplicates

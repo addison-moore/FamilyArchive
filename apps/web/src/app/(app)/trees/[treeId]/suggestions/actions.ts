@@ -54,36 +54,43 @@ export async function submitSuggestionAction(formData: FormData): Promise<void> 
       suggestedBy: user.id,
     });
 
-  // Notify archive admins when SMTP is configured.
-  if (smtpConfigured()) {
-    const db = getDb();
-    const [treeRows, admins] = await Promise.all([
-      db.select({ name: trees.name }).from(trees).where(eq(trees.id, treeId)).limit(1),
-      db
-        .select({ email: users.email })
-        .from(treeMemberships)
-        .innerJoin(users, eq(treeMemberships.userId, users.id))
-        .where(and(eq(treeMemberships.treeId, treeId), eq(treeMemberships.role, "admin"))),
-    ]);
-    const treeName = treeRows[0]?.name ?? "your archive";
-    const submitter = user.name ?? user.email;
-    for (const admin of admins) {
-      if (admin.email === user.email) continue;
-      const reviewUrl = `${getEnv().APP_URL}/trees/${treeId}/suggestions`;
-      await enqueueEmail({
-        to: admin.email,
-        subject: `New suggestion for "${treeName}" on FamilyArchive`,
-        text:
-          `${submitter} suggested a correction for ${targetLabel} in "${treeName}":\n\n` +
-          `${message}\n\n` +
-          `Review it here:\n${reviewUrl}`,
-        html: renderBrandedEmail({
-          heading: `New suggestion for "${treeName}"`,
-          bodyLines: [`${submitter} suggested a correction for ${targetLabel}:`, `“${message}”`],
-          cta: { label: "Review the suggestion", url: reviewUrl },
-        }),
-      });
+  // Notify archive admins when SMTP is configured. Best-effort: the suggestion
+  // is already committed, so a Valkey hiccup here must not throw away the
+  // user's submission by aborting the action after the write.
+  try {
+    if (smtpConfigured()) {
+      const db = getDb();
+      const [treeRows, admins] = await Promise.all([
+        db.select({ name: trees.name }).from(trees).where(eq(trees.id, treeId)).limit(1),
+        db
+          .select({ email: users.email })
+          .from(treeMemberships)
+          .innerJoin(users, eq(treeMemberships.userId, users.id))
+          .where(and(eq(treeMemberships.treeId, treeId), eq(treeMemberships.role, "admin"))),
+      ]);
+      const treeName = treeRows[0]?.name ?? "your archive";
+      const submitter = user.name ?? user.email;
+      for (const admin of admins) {
+        if (admin.email === user.email) continue;
+        const reviewUrl = `${getEnv().APP_URL}/trees/${treeId}/suggestions`;
+        await enqueueEmail({
+          to: admin.email,
+          subject: `New suggestion for "${treeName}" on FamilyArchive`,
+          text:
+            `${submitter} suggested a correction for ${targetLabel} in "${treeName}":\n\n` +
+            `${message}\n\n` +
+            `Review it here:\n${reviewUrl}`,
+          html: renderBrandedEmail({
+            heading: `New suggestion for "${treeName}"`,
+            bodyLines: [`${submitter} suggested a correction for ${targetLabel}:`, `“${message}”`],
+            cta: { label: "Review the suggestion", url: reviewUrl },
+          }),
+        });
+      }
     }
+  } catch {
+    // Swallowed deliberately — the worker's own failure logging covers delivery,
+    // and the submission itself succeeded.
   }
 
   redirect(`${backPath}?suggested=1`);

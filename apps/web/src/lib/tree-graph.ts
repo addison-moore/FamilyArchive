@@ -23,6 +23,113 @@ export interface TreeGraph {
   partnerEdges: { id: string; fromPersonId: string; toPersonId: string }[];
 }
 
+/** Adjacency the generation walk needs, independent of where the rows came from. */
+export interface GraphAdjacency {
+  /** child → parents */
+  parentsOf: Map<string, string[]>;
+  /** parent → children */
+  childrenOf: Map<string, string[]>;
+  partnersOf: Map<string, string[]>;
+  exists: (personId: string) => boolean;
+}
+
+/**
+ * Assign each reachable person a generation relative to the start (ancestors
+ * negative, descendants positive). Pure, so the traversal rules are testable
+ * without a database.
+ *
+ * Two roles are deliberately distinct. A person can be *included* as context —
+ * a co-parent, a partner, a sibling — or *walked* as part of the descendant
+ * frontier. Conflating them meant a person first met as a co-parent was already
+ * recorded, so the later attempt to reach them as a real child was rejected,
+ * they were never enqueued, and their entire subtree vanished from the canvas
+ * while carrying the wrong generation.
+ */
+export function computeGenerations(
+  graph: GraphAdjacency,
+  startPersonId: string,
+  mode: TreeViewMode,
+): Map<string, number> {
+  const { parentsOf, childrenOf, partnersOf, exists } = graph;
+  const generationOf = new Map<string, number>([[startPersonId, 0]]);
+  // Recorded only as context so far — their generation is a guess that a real
+  // traversal is allowed to correct.
+  const contextOnly = new Set<string>();
+
+  const include = (personId: string, generation: number, asContext = false): boolean => {
+    if (!exists(personId)) return false;
+    if (generationOf.has(personId)) {
+      // Someone first seen as context, now reached by a real walk: take the
+      // true depth and let the walk continue through them.
+      if (!asContext && contextOnly.has(personId)) {
+        generationOf.set(personId, generation);
+        contextOnly.delete(personId);
+        return true;
+      }
+      return false;
+    }
+    generationOf.set(personId, generation);
+    if (asContext) contextOnly.add(personId);
+    return true;
+  };
+
+  // Ancestors: climb parent edges.
+  if (mode !== "descendants") {
+    let frontier = [startPersonId];
+    for (let gen = -1; gen >= -MAX_GENERATIONS && frontier.length > 0; gen--) {
+      const next: string[] = [];
+      for (const id of frontier) {
+        for (const parentId of parentsOf.get(id) ?? []) {
+          if (include(parentId, gen)) next.push(parentId);
+        }
+      }
+      frontier = next;
+    }
+  }
+
+  // Descendants: walk child edges; include co-parents of each child as context.
+  if (mode !== "ancestors") {
+    // Separate from generationOf so a context hit cannot end the walk, and so a
+    // person upgraded from context is still only ever enqueued once.
+    const walked = new Set<string>([startPersonId]);
+    let frontier = [startPersonId];
+    for (let gen = 1; gen <= MAX_GENERATIONS && frontier.length > 0; gen++) {
+      const next: string[] = [];
+      for (const id of frontier) {
+        for (const childId of childrenOf.get(id) ?? []) {
+          include(childId, gen);
+          if (exists(childId) && !walked.has(childId)) {
+            walked.add(childId);
+            next.push(childId);
+          }
+          for (const coParentId of parentsOf.get(childId) ?? []) {
+            include(coParentId, gen - 1, true); // context only — no recursion
+          }
+        }
+      }
+      frontier = next;
+    }
+  }
+
+  // Start's siblings: other children of the start's parents (context only).
+  if (mode === "both") {
+    for (const parentId of parentsOf.get(startPersonId) ?? []) {
+      for (const childId of childrenOf.get(parentId) ?? []) {
+        include(childId, 0, true);
+      }
+    }
+  }
+
+  // Partners of everyone included (context only, same generation).
+  for (const [id, generation] of [...generationOf]) {
+    for (const partnerId of partnersOf.get(id) ?? []) {
+      include(partnerId, generation, true);
+    }
+  }
+
+  return generationOf;
+}
+
 /**
  * Build the visible graph around a starting person: ancestors,
  * descendants, and non-recursive "immediate family context" — partners of
@@ -63,64 +170,14 @@ export async function buildTreeGraph(
     }
   }
 
-  const generationOf = new Map<string, number>();
   if (!peopleById.has(startPersonId)) {
     return { people: [], parentEdges: [], partnerEdges: [] };
   }
-  generationOf.set(startPersonId, 0);
-
-  const include = (personId: string, generation: number): boolean => {
-    if (generationOf.has(personId) || !peopleById.has(personId)) return false;
-    generationOf.set(personId, generation);
-    return true;
-  };
-
-  // Ancestors: climb parent edges.
-  if (mode !== "descendants") {
-    let frontier = [startPersonId];
-    for (let gen = -1; gen >= -MAX_GENERATIONS && frontier.length > 0; gen--) {
-      const next: string[] = [];
-      for (const id of frontier) {
-        for (const parentId of parentsOf.get(id) ?? []) {
-          if (include(parentId, gen)) next.push(parentId);
-        }
-      }
-      frontier = next;
-    }
-  }
-
-  // Descendants: walk child edges; include co-parents of each child as context.
-  if (mode !== "ancestors") {
-    let frontier = [startPersonId];
-    for (let gen = 1; gen <= MAX_GENERATIONS && frontier.length > 0; gen++) {
-      const next: string[] = [];
-      for (const id of frontier) {
-        for (const childId of childrenOf.get(id) ?? []) {
-          if (include(childId, gen)) next.push(childId);
-          for (const coParentId of parentsOf.get(childId) ?? []) {
-            include(coParentId, gen - 1); // context only — no recursion
-          }
-        }
-      }
-      frontier = next;
-    }
-  }
-
-  // Start's siblings: other children of the start's parents (context only).
-  if (mode === "both") {
-    for (const parentId of parentsOf.get(startPersonId) ?? []) {
-      for (const childId of childrenOf.get(parentId) ?? []) {
-        include(childId, 0);
-      }
-    }
-  }
-
-  // Partners of everyone included (context only, same generation).
-  for (const [id, generation] of [...generationOf]) {
-    for (const partnerId of partnersOf.get(id) ?? []) {
-      include(partnerId, generation);
-    }
-  }
+  const generationOf = computeGenerations(
+    { parentsOf, childrenOf, partnersOf, exists: (id) => peopleById.has(id) },
+    startPersonId,
+    mode,
+  );
 
   const included = [...generationOf.keys()];
   const includedSet = new Set(included);

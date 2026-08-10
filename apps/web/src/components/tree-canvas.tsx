@@ -20,7 +20,7 @@ import { layoutTreeGraph } from "@/lib/tree-layout";
 import {
   buildAdjacency,
   collapseBranch,
-  computeVisibleSet,
+  computeVisibility,
   defaultCollapseMap,
   expandBranch,
   hiddenBeyond,
@@ -44,6 +44,7 @@ type PersonNodeData = {
   lifespan: string | null;
   isStart: boolean;
   isSelected: boolean;
+  verified: boolean;
   up: BranchChip;
   down: BranchChip;
   onToggleBranch: (personId: string, direction: CollapseDirection, expand: boolean) => void;
@@ -118,16 +119,23 @@ function PersonNode({ id, data }: NodeProps<PersonFlowNode>) {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("");
+  // Selection keeps its ring, so the border is free to carry the person's own
+  // standing: a verified person stays outlined even while selected. Verified
+  // wins the border outright — the starting person also says so in text below.
+  const borderClass = data.verified
+    ? "border-archive-700"
+    : data.isSelected
+      ? "border-accent-600"
+      : data.isStart
+        ? "border-accent-600/60"
+        : "border-archive-100";
   return (
     // h-[76px] must equal tree-layout's NODE_HEIGHT: connector paths are
     // precomputed from it, so card edges and line endpoints have to agree.
     <div
-      className={`group relative flex h-[76px] w-[190px] items-center gap-2.5 rounded-lg border bg-surface-raised px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md ${
-        data.isSelected
-          ? "border-accent-600 ring-2 ring-accent-600/30"
-          : data.isStart
-            ? "border-accent-600/60"
-            : "border-archive-100"
+      title={data.verified ? `${data.fullName} — verified` : undefined}
+      className={`group relative flex h-[76px] w-[190px] items-center gap-2.5 rounded-lg border bg-surface-raised px-3 py-2.5 shadow-sm transition-shadow hover:shadow-md ${borderClass} ${
+        data.isSelected ? "ring-2 ring-accent-600/30" : ""
       }`}
     >
       <BranchToggle
@@ -375,8 +383,8 @@ function TreeCanvasInner({
   // component stays mounted across those soft navigations), resets on reload.
   const [collapsed, setCollapsed] = useState<CollapseMap>(defaults);
 
-  const visible = useMemo(
-    () => computeVisibleSet(graph, adjacency, collapsed),
+  const { visible, walkedUp, walkedDown } = useMemo(
+    () => computeVisibility(graph, adjacency, collapsed),
     [graph, adjacency, collapsed],
   );
   const canvas = useMemo(
@@ -426,6 +434,12 @@ function TreeCanvasInner({
         const count = hiddenBeyond(adjacency, visible, personId, direction);
         if (count > 0) return { hiddenCount: count };
       }
+      // Only nodes the walk actually consulted can be collapsed. Context-only
+      // nodes — co-parents, siblings, partners — never enter a frontier, so
+      // their flag is written and never read: the chip rendered a real "Hide"
+      // button that changed nothing when clicked.
+      const walked = direction === "up" ? walkedUp : walkedDown;
+      if (!walked.has(personId)) return null;
       const neighbors =
         (direction === "up"
           ? adjacency.parentsOf.get(personId)
@@ -441,12 +455,22 @@ function TreeCanvasInner({
         lifespan: node.lifespan,
         isStart: node.isStart,
         isSelected: node.id === selectedId,
+        verified: node.verified,
         up: chipFor(node.id, "up"),
         down: chipFor(node.id, "down"),
         onToggleBranch,
       },
     }));
-  }, [canvas.nodes, selectedId, collapsed, adjacency, visible, onToggleBranch]);
+  }, [
+    canvas.nodes,
+    selectedId,
+    collapsed,
+    adjacency,
+    visible,
+    walkedUp,
+    walkedDown,
+    onToggleBranch,
+  ]);
 
   const flowEdges = useMemo(() => buildConnectorEdges(canvas.nodes, canvas.edges), [canvas]);
 

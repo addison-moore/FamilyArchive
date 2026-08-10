@@ -2,13 +2,14 @@ import { requireTreeRole } from "@familyarchive/auth";
 import { getDb, mediaPeople, mediaTags, people, tags, users } from "@familyarchive/db";
 import {
   formatDateParts,
+  isBrowserRenderableImage,
   isImageMime,
   isOcrEligible,
   MEDIA_TYPE_LABELS,
   MEDIA_TYPES,
   treeRoleAtLeast,
 } from "@familyarchive/shared";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -96,7 +97,12 @@ export default async function MediaDetailPage({
       .select({ rowId: mediaPeople.id, personId: people.id, fullName: people.fullName })
       .from(mediaPeople)
       .innerJoin(people, eq(mediaPeople.personId, people.id))
-      .where(and(eq(mediaPeople.mediaId, mediaId))),
+      // Soft-deleting a person leaves media_people rows behind, so without the
+      // deletedAt filter deleted people stayed listed as tags on the media —
+      // and disagreed with this page's own "add a tag" list, which excludes them.
+      .where(
+        and(eq(mediaPeople.mediaId, mediaId), eq(people.treeId, treeId), isNull(people.deletedAt)),
+      ),
     media.uploaderId
       ? db
           .select({ name: users.name, email: users.email })
@@ -146,7 +152,11 @@ export default async function MediaDetailPage({
       {/* Stage: the media is the page. Chevrons + arrow keys navigate the library. */}
       <div className="relative overflow-hidden rounded-xl bg-archive-100/40">
         <div className="flex items-center justify-center">
-          {isImageMime(media.mimeType) ? (
+          {/* HEIC and TIFF are accepted on upload but decode in no mainstream
+              browser, and there is no full-size derivative to substitute — so
+              they fall through to the download card rather than a broken <img>
+              with a face-tagging overlay sitting on nothing. */}
+          {isBrowserRenderableImage(media.mimeType) ? (
             <FaceTagger
               imageUrl={url}
               alt={media.title ?? media.originalFilename}
@@ -574,7 +584,7 @@ export default async function MediaDetailPage({
             <summary
               className="cursor-pointer list-none rounded-full border border-dashed border-archive-100 px-3 py-1 text-sm text-archive-700 hover:bg-archive-50"
               title={
-                isImageMime(media.mimeType)
+                isBrowserRenderableImage(media.mimeType)
                   ? "Tag someone — or click their face in the photo"
                   : "Tag someone in this item"
               }

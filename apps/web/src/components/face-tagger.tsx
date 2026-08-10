@@ -161,6 +161,11 @@ export function FaceTagger({
                 )}
               </span>
               <select
+                // The panel stays mounted when the selection moves to another
+                // box, and React ignores a changed defaultValue on an
+                // uncontrolled select — so without this key the dropdown showed
+                // the previous face's person while reviewing box by box.
+                key={selected.id}
                 defaultValue={selected.personId ?? ""}
                 onChange={(event) => {
                   const personId = event.target.value;

@@ -149,6 +149,16 @@ export async function addMediaTagAction(formData: FormData): Promise<void> {
       .onConflictDoNothing()
       .returning({ id: tags.id });
     tagId = inserted[0]?.id;
+    if (!tagId) {
+      // Another request created the same tag between the select and the insert;
+      // onConflictDoNothing returns no row, and the tag was silently dropped.
+      const raced = await db
+        .select({ id: tags.id })
+        .from(tags)
+        .where(and(eq(tags.treeId, treeId), eq(tags.name, name)))
+        .limit(1);
+      tagId = raced[0]?.id;
+    }
   }
   if (tagId) {
     await db.insert(mediaTags).values({ mediaId, tagId }).onConflictDoNothing();

@@ -77,13 +77,37 @@ export function computeVisibleSet(
   adjacency: TreeAdjacency,
   collapsed: CollapseMap,
 ): Set<string> {
+  return computeVisibility(payload, adjacency, collapsed).visible;
+}
+
+export interface Visibility {
+  visible: Set<string>;
+  /**
+   * Ids whose `up` / `down` collapse flag the walk actually consulted — i.e.
+   * the nodes that entered a frontier. People included only as context
+   * (co-parents, siblings, partners) are absent: their flags are writable but
+   * never read, so offering a collapse control on them does nothing.
+   */
+  walkedUp: Set<string>;
+  walkedDown: Set<string>;
+}
+
+/** `computeVisibleSet` plus the frontier membership the canvas needs for chips. */
+export function computeVisibility(
+  payload: TreeGraphPayload,
+  adjacency: TreeAdjacency,
+  collapsed: CollapseMap,
+): Visibility {
   const { parentsOf, childrenOf, partnersOf } = adjacency;
   const visible = new Set<string>([payload.startId]);
+  const walkedUp = new Set<string>();
+  const walkedDown = new Set<string>();
 
   let frontier = [payload.startId];
   while (frontier.length > 0) {
     const next: string[] = [];
     for (const id of frontier) {
+      walkedUp.add(id);
       if (collapsed[id]?.up) continue;
       for (const parentId of parentsOf.get(id) ?? []) {
         if (!visible.has(parentId)) {
@@ -95,14 +119,21 @@ export function computeVisibleSet(
     frontier = next;
   }
 
+  // `walked` is deliberately separate from `visible`: a person shown as a
+  // co-parent must still be walked when the frontier later reaches them as a
+  // real child. Using `visible` as the traversal guard stranded their whole
+  // subtree — the same defect the server-side walk had.
+  const walked = new Set<string>([payload.startId]);
   frontier = [payload.startId];
   while (frontier.length > 0) {
     const next: string[] = [];
     for (const id of frontier) {
+      walkedDown.add(id);
       if (collapsed[id]?.down) continue;
       for (const childId of childrenOf.get(id) ?? []) {
-        if (!visible.has(childId)) {
-          visible.add(childId);
+        visible.add(childId);
+        if (!walked.has(childId)) {
+          walked.add(childId);
           next.push(childId);
         }
         // Co-parents are context only — shown, never recursed into.
@@ -124,7 +155,7 @@ export function computeVisibleSet(
     for (const partnerId of partnersOf.get(id) ?? []) visible.add(partnerId);
   }
 
-  return visible;
+  return { visible, walkedUp, walkedDown };
 }
 
 /**

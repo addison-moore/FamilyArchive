@@ -14,10 +14,17 @@ export async function listCollections(treeId: string): Promise<CollectionSummary
   const rows = await getDb()
     .select({
       collection: collections,
-      mediaCount: count(collectionMedia.mediaId),
+      // Count the media rows, not the membership rows: soft-deleting media
+      // leaves collection_media in place, so counting memberships disagreed
+      // with the collection detail page, which filters deletedAt.
+      mediaCount: count(mediaItems.id),
     })
     .from(collections)
     .leftJoin(collectionMedia, eq(collectionMedia.collectionId, collections.id))
+    .leftJoin(
+      mediaItems,
+      and(eq(mediaItems.id, collectionMedia.mediaId), isNull(mediaItems.deletedAt)),
+    )
     .where(eq(collections.treeId, treeId))
     .groupBy(collections.id)
     .orderBy(desc(collections.createdAt));

@@ -35,7 +35,14 @@ export function TreeWorkspace({
   return (
     <div className={`flex flex-col gap-6 ${wide ? "" : "xl:flex-row"}`}>
       <div className="min-w-0 flex-1">
+        {/* Remount when the starting person changes. Collapse flags are seeded
+            once from the payload's generations, which buildTreeGraph recomputes
+            relative to the new start — carrying them over left the canvas
+            collapsed along meaningless boundaries, sometimes hiding the new
+            start's entire ancestor line. Keyed on startId only, so the flags
+            still survive plain selection clicks and mode switches. */}
         <TreeCanvas
+          key={graph.startId}
           treeId={treeId}
           graph={graph}
           selectedId={selectedId}

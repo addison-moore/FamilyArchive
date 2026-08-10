@@ -103,3 +103,49 @@ describe("sameCollapseView", () => {
     expect(defaultCollapseMap(small, buildAdjacency(small))).toEqual({});
   });
 });
+
+describe("computeVisibleSet", () => {
+  /** Minimal payload from "parent>child" shorthand. */
+  function payloadOf(startId: string, ...edges: string[]): TreeGraphPayload {
+    const ids = new Set<string>();
+    const parentEdges = edges.map((edge, index) => {
+      const [from, to] = edge.split(">") as [string, string];
+      ids.add(from).add(to);
+      return { id: `e${index}`, from, to };
+    });
+    return {
+      startId,
+      people: [...ids].map((id) => ({
+        id,
+        fullName: `Person ${id}`,
+        lifespan: null,
+        generation: 0,
+        verified: false,
+      })),
+      parentEdges,
+      partnerEdges: [],
+    };
+  }
+
+  it("keeps walking a descendant that was first shown as a co-parent", () => {
+    // "partner" is added as kidA's co-parent before the frontier reaches them as
+    // start's own child. Guarding traversal on `visible` used to stop the walk
+    // there, hiding grandkid even though the payload contained them.
+    const payload = payloadOf("me", "me>kidA", "me>partner", "partner>kidA", "partner>grandkid");
+    const visible = computeVisibleSet(payload, buildAdjacency(payload), {});
+    expect(visible.has("grandkid")).toBe(true);
+  });
+
+  it("still stops at a collapsed branch", () => {
+    const payload = payloadOf("me", "me>kid", "kid>grandkid");
+    const visible = computeVisibleSet(payload, buildAdjacency(payload), { kid: { down: true } });
+    expect(visible.has("kid")).toBe(true);
+    expect(visible.has("grandkid")).toBe(false);
+  });
+
+  it("terminates on a cycle", () => {
+    const payload = payloadOf("a", "a>b", "b>c", "c>a");
+    const visible = computeVisibleSet(payload, buildAdjacency(payload), {});
+    expect([...visible].sort()).toEqual(["a", "b", "c"]);
+  });
+});

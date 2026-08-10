@@ -92,7 +92,15 @@ export function MediaUpload({ treeId, accept }: { treeId: string; accept: string
         multiple
         accept={accept}
         className="hidden"
-        onChange={(event) => void onFiles(event.target.files)}
+        onChange={(event) => {
+          // A file input fires `change` only when the selection differs from
+          // its current value, so re-picking the same file after a failed or
+          // finished upload was a silent no-op. onFiles copies the FileList
+          // before its first await, so clearing here is safe.
+          const files = event.target.files;
+          event.target.value = "";
+          void onFiles(files);
+        }}
       />
       <button
         type="button"

@@ -1,4 +1,4 @@
-import { isImageMime, MEDIA_TYPE_LABELS } from "@familyarchive/shared";
+import { isBrowserRenderableImage, MEDIA_TYPE_LABELS } from "@familyarchive/shared";
 import Link from "next/link";
 
 import type { MediaRow } from "@/lib/media";
@@ -26,7 +26,11 @@ export function MediaThumb({
   thumbUrl?: string | null;
 }) {
   const label = media.title || media.originalFilename;
-  const imageSrc = thumbUrl ?? (isImageMime(media.mimeType) ? mediaUrl(treeId, media.id) : null);
+  // Falling back to the original is only safe for formats the browser can
+  // decode: HEIC and TIFF are on the upload allowlist but render nowhere
+  // outside Safari, so before the thumbnail job finishes they showed as broken.
+  const imageSrc =
+    thumbUrl ?? (isBrowserRenderableImage(media.mimeType) ? mediaUrl(treeId, media.id) : null);
   return (
     <Link
       href={`/trees/${treeId}/media/${media.id}`}

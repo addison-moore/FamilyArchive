@@ -1,21 +1,28 @@
 import { requireTreeRole } from "@familyarchive/auth";
 import { getDb, tags } from "@familyarchive/db";
 import {
+  DEFAULT_PAGE_SIZE,
   MEDIA_TYPE_LABELS,
   MEDIA_TYPES,
+  pageCount,
+  parsePageSize,
+  resolvePageNumber,
   treeRoleAtLeast,
   UPLOAD_MIME_TYPES,
 } from "@familyarchive/shared";
 import { asc, eq } from "drizzle-orm";
 import Link from "next/link";
 
+import { setMediaPageSizeAction } from "./actions";
+
 import { Card, inputClass, subtleButtonClass } from "@/components/form";
+import { ListPager } from "@/components/list-pager";
 import { MediaThumb } from "@/components/media-thumb";
 import { MediaUpload } from "@/components/media-upload";
-import { quotaState } from "@/lib/quota";
+import { QUOTA_FULL_MESSAGE, quotaState } from "@/lib/quota";
 import { ScopeToggle } from "@/components/scope-toggle";
 import { resolveView } from "@/lib/branch";
-import { listMedia, taggedPersonIdsByMedia, thumbUrls } from "@/lib/media";
+import { countMedia, listMedia, thumbUrls } from "@/lib/media";
 import { listPeople } from "@/lib/people";
 
 /** Media library grid: all/my-uploads, type, tag, person filters. */
@@ -31,36 +38,47 @@ export default async function MediaPage({
     mine?: string;
     scope?: string;
     collection?: string;
+    page?: string;
+    size?: string;
   }>;
 }) {
   const { treeId } = await params;
   const { user, role } = await requireTreeRole(treeId, "viewer");
-  const { type, tag, person, mine, scope: scopeParam, collection } = await searchParams;
+  const {
+    type,
+    tag,
+    person,
+    mine,
+    scope: scopeParam,
+    collection,
+    page: pageParam,
+    size: sizeParam,
+  } = await searchParams;
 
-  const [view, allMedia, treeTags, peopleList] = await Promise.all([
-    resolveView(user?.id ?? null, treeId, scopeParam),
-    listMedia(treeId, {
-      type,
-      tagId: tag,
-      personId: person,
-      uploaderId: mine && user ? user.id : undefined,
-      collectionId: collection,
-    }),
+  const view = await resolveView(user?.id ?? null, treeId, scopeParam);
+  // Branch scope is part of the query, not a post-filter: applied afterwards it
+  // would interact with paging to produce short pages.
+  const filters = {
+    type,
+    tagId: tag,
+    personId: person,
+    uploaderId: mine && user ? user.id : undefined,
+    collectionId: collection,
+    branchIds: view.branchIds,
+  };
+
+  const size = parsePageSize(sizeParam) ?? DEFAULT_PAGE_SIZE;
+  const total = await countMedia(treeId, filters);
+  const totalPages = pageCount(total, size);
+  const page = resolvePageNumber(pageParam, totalPages);
+
+  // Previously the grid loaded every media row in the archive, then fanned out
+  // two more unbounded id lookups over the result.
+  const [mediaList, treeTags, peopleList] = await Promise.all([
+    listMedia(treeId, filters, { limit: size, offset: (page - 1) * size }),
     getDb().select().from(tags).where(eq(tags.treeId, treeId)).orderBy(asc(tags.name)),
     listPeople(treeId),
   ]);
-
-  // Branch scope: hide media tagged exclusively with out-of-branch
-  // people; untagged media belongs to the whole archive and stays visible.
-  let mediaList = allMedia;
-  if (view.branchIds) {
-    const taggedBy = await taggedPersonIdsByMedia(allMedia.map((m) => m.id));
-    mediaList = allMedia.filter((m) => {
-      const tagged = taggedBy.get(m.id);
-      if (!tagged || tagged.length === 0) return true;
-      return tagged.some((personId) => view.branchIds!.has(personId));
-    });
-  }
 
   const thumbs = await thumbUrls(
     treeId,
@@ -145,8 +163,7 @@ export default async function MediaPage({
         <div className="mb-6">
           {storagePercent >= 100 ? (
             <p className="rounded-lg border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger">
-              Storage is full — new uploads are paused. Free up space by removing media, or ask your
-              administrator to raise the limit.
+              {QUOTA_FULL_MESSAGE}
             </p>
           ) : (
             <>
@@ -180,6 +197,29 @@ export default async function MediaPage({
             />
           ))}
         </div>
+      )}
+
+      {total > 0 && (
+        <ListPager
+          basePath={`/trees/${treeId}/media`}
+          params={{
+            type,
+            tag,
+            person,
+            mine,
+            scope: view.scope === "all" ? "all" : undefined,
+            collection,
+            ...(sizeParam ? { size: String(size) } : {}),
+          }}
+          page={page}
+          totalPages={totalPages}
+          shown={mediaList.length}
+          total={total}
+          size={size}
+          label="items"
+          sizeAction={setMediaPageSizeAction}
+          actionFields={{ treeId }}
+        />
       )}
     </div>
   );

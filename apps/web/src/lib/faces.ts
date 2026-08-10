@@ -1,5 +1,5 @@
 import { getDb, mediaFaces, people } from "@familyarchive/db";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 
 export interface FaceBox {
   id: string;
@@ -28,7 +28,10 @@ export async function listFaces(mediaId: string): Promise<FaceBox[]> {
       personName: people.fullName,
     })
     .from(mediaFaces)
-    .leftJoin(people, eq(mediaFaces.personId, people.id))
+    // Soft-deleting a person never clears media_faces (the FK's "set null"
+    // only fires on a hard delete), so without this filter a deleted person
+    // kept appearing by name on the face overlay.
+    .leftJoin(people, and(eq(mediaFaces.personId, people.id), isNull(people.deletedAt)))
     .where(eq(mediaFaces.mediaId, mediaId))
     .orderBy(asc(mediaFaces.createdAt));
   return rows;

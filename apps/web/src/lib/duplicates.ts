@@ -6,7 +6,8 @@ import type { PersonRow } from "@/lib/people";
 /**
  * Simple duplicate heuristic: same normalized full name, and birth
  * years within 2 of each other or unknown on either side. Non-blocking —
- * surfaced as warnings and a review page; merge is out of scope for v1.
+ * surfaced as warnings and a review page, from which an admin can merge the
+ * pair manually (PRD §10.5).
  */
 
 function normalizeName(name: string): string {
