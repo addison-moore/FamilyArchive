@@ -42,6 +42,32 @@ export function parseGedcomDate(raw: string): GedcomDateParts | null {
     approx = true;
     text = betweenMatch[1];
   }
+  // DATE_PERIOD, the FROM/TO counterpart of BET/AND. Without this the whole
+  // value fell through to the year-salvage branch below.
+  const period = /^FROM\s+(.+?)(?:\s+TO\s+.+)?$/;
+  const periodMatch = text.match(period);
+  if (periodMatch?.[1]) {
+    approx = true;
+    text = periodMatch[1];
+  }
+  const to = /^TO\s+(.+)$/;
+  const toMatch = text.match(to);
+  if (toMatch?.[1]) {
+    approx = true;
+    text = toMatch[1];
+  }
+
+  // A BC/BCE date cannot be represented by these fields, and salvaging the
+  // number below would silently store it as an AD year. The raw value is kept
+  // in metadata either way, so returning null loses nothing recoverable.
+  if (/\bB\.?C\.?(E\.?)?\b/.test(text)) return null;
+
+  // Dual dating ("1 JAN 1750/51"): pre-1752 English records carry both the
+  // Julian and Gregorian year. Keep the first, which is the Julian year the
+  // rest of the record is stated in — otherwise the whole value failed the
+  // shape match and degraded to an approximate year with no month or day.
+  // The second half is written either short ("1750/51") or in full ("1699/1700").
+  text = text.replace(/\b(\d{3,4})\/\d{1,4}\b/, "$1");
 
   let match = text.match(/^(\d{1,2})\s+([A-Z]{3})\s+(\d{3,4})$/);
   if (match && MONTHS[match[2]!]) {

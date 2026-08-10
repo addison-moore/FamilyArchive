@@ -64,6 +64,8 @@ export async function importGedcom(
   const db = getDb();
 
   let relationshipCount = 0;
+  // Parser warnings plus anything the import itself notices.
+  const importWarnings: string[] = [...parsed.warnings];
   const result = await db.transaction(async (tx) => {
     let treeId = options.targetTreeId;
     if (!treeId) {
@@ -155,6 +157,15 @@ export async function importGedcom(
         .returning({ id: people.id });
       const created = rows[0];
       if (!created) throw new Error(`Failed to import ${individual.fullName}`);
+      // A malformed file can repeat an xref. The map keeps the last writer, so
+      // relationships wired to the earlier record silently vanished; warn
+      // instead of losing them without a word.
+      if (personIdByXref.has(individual.xref)) {
+        importWarnings.push(
+          `Duplicate individual id ${individual.xref} ("${individual.fullName}") — ` +
+            `relationships were attached to the last record with that id.`,
+        );
+      }
       personIdByXref.set(individual.xref, created.id);
 
       if (individual.alternateNames.length > 0) {
@@ -183,7 +194,7 @@ export async function importGedcom(
         for (const childXref of family.childXrefs) {
           const childId = personIdByXref.get(childXref);
           if (!childId || childId === parentId) continue;
-          await tx
+          const inserted = await tx
             .insert(relationships)
             .values({
               treeId,
@@ -193,13 +204,17 @@ export async function importGedcom(
               sourceId,
               metadata: { gedcom: { famXref: family.xref } },
             })
-            .onConflictDoNothing();
-          relationshipCount++;
+            .onConflictDoNothing()
+            .returning({ id: relationships.id });
+          // Count what was actually written: onConflictDoNothing silently skips
+          // an edge the file states twice, and counting attempts over-reported
+          // the import to the user.
+          relationshipCount += inserted.length;
         }
       }
 
       if (parentIds.length === 2 && parentIds[0] !== parentIds[1]) {
-        await tx
+        const insertedPartner = await tx
           .insert(relationships)
           .values({
             treeId,
@@ -209,8 +224,9 @@ export async function importGedcom(
             sourceId,
             metadata: { gedcom: { famXref: family.xref } },
           })
-          .onConflictDoNothing();
-        relationshipCount++;
+          .onConflictDoNothing()
+          .returning({ id: relationships.id });
+        relationshipCount += insertedPartner.length;
       }
     }
 
@@ -218,6 +234,9 @@ export async function importGedcom(
       .update(sources)
       .set({
         stats: { people: parsed.individuals.length, relationships: relationshipCount },
+        // Rewritten here rather than at insert time so it also carries warnings
+        // raised during the import itself, not just the parse.
+        metadata: { header: parsed.header, warnings: importWarnings },
       })
       .where(eq(sources.id, sourceId));
 
@@ -229,6 +248,6 @@ export async function importGedcom(
     sourceId: result.sourceId,
     peopleCount: parsed.individuals.length,
     relationshipCount,
-    warnings: parsed.warnings,
+    warnings: importWarnings,
   };
 }

@@ -6,6 +6,7 @@ import {
   requireMemberRole,
   requireUser,
 } from "@familyarchive/auth";
+import { decodeGedcom, UnsupportedGedcomEncodingError } from "@familyarchive/gedcom";
 import { redirect } from "next/navigation";
 
 import { importGedcom } from "@/lib/gedcom-import";
@@ -34,9 +35,20 @@ export async function importGedcomAction(formData: FormData): Promise<void> {
   if (!/\.ged$/i.test(file.name)) return fail("File must have a .ged extension");
   const treeName = String(formData.get("treeName") ?? "").trim() || undefined;
 
+  // Decode from the bytes, honouring the header's `1 CHAR` declaration:
+  // `file.text()` always decodes UTF-8 non-fatally, so an ANSEL or ANSI export
+  // would import with every accented name replaced by U+FFFD, unrecoverably.
+  let text;
+  try {
+    text = decodeGedcom(new Uint8Array(await file.arrayBuffer())).text;
+  } catch (error) {
+    if (error instanceof UnsupportedGedcomEncodingError) return fail(error.message);
+    throw error;
+  }
+
   let result;
   try {
-    result = await importGedcom(user, file.name, await file.text(), {
+    result = await importGedcom(user, file.name, text, {
       treeName,
       targetTreeId: target === "new" ? undefined : target,
     });
@@ -50,5 +62,9 @@ export async function importGedcomAction(formData: FormData): Promise<void> {
     people: String(result.peopleCount),
     rels: String(result.relationshipCount),
   });
+  // Only the count rides in the URL; the messages themselves are persisted on
+  // the import's source record. Previously they were collected and never shown
+  // at all, so a partly-malformed file imported looking completely clean.
+  if (result.warnings.length > 0) params.set("warn", String(result.warnings.length));
   redirect(`/trees/${result.treeId}?${params}`);
 }

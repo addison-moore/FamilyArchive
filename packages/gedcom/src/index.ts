@@ -3,9 +3,13 @@
  * parent-child and partner relationships, notes, raw record preservation.
  */
 
-export const SUPPORTED_GEDCOM_VERSIONS = ["5.5", "5.5.1"] as const;
-
-export { parseGedcom } from "./parse";
+export {
+  decodeGedcom,
+  declaredCharset,
+  UnsupportedGedcomEncodingError,
+  type DecodedGedcom,
+} from "./encoding";
+export { parseGedcom, SUPPORTED_GEDCOM_VERSIONS } from "./parse";
 export { buildGedcom } from "./export";
 export type { ExportEvent, ExportFamily, ExportIndividual } from "./export";
 export { formatGedcomDate, parseGedcomDate } from "./dates";

@@ -76,6 +76,56 @@ describe("parseGedcomDate", () => {
   it("returns null when no year is present", () => {
     expect(parseGedcomDate("UNKNOWN")).toBeNull();
   });
+
+  it("keeps month and day on dual-dated years (1750/51)", () => {
+    // Pre-1752 English records carry the Julian and Gregorian year together.
+    // The shape match used to fail, degrading these to an approximate year.
+    expect(parseGedcomDate("1 JAN 1750/51")).toEqual({
+      year: 1750,
+      month: 1,
+      day: 1,
+      approx: false,
+    });
+    expect(parseGedcomDate("1750/51")).toEqual({
+      year: 1750,
+      month: null,
+      day: null,
+      approx: false,
+    });
+    expect(parseGedcomDate("ABT MAR 1699/1700")).toEqual({
+      year: 1699,
+      month: 3,
+      day: null,
+      approx: true,
+    });
+  });
+
+  it("handles FROM/TO periods like BET/AND", () => {
+    expect(parseGedcomDate("FROM 1901 TO 1905")).toEqual({
+      year: 1901,
+      month: null,
+      day: null,
+      approx: true,
+    });
+    expect(parseGedcomDate("FROM JUN 1912")).toEqual({
+      year: 1912,
+      month: 6,
+      day: null,
+      approx: true,
+    });
+    expect(parseGedcomDate("TO 1905")).toEqual({
+      year: 1905,
+      month: null,
+      day: null,
+      approx: true,
+    });
+  });
+
+  it("refuses BC dates rather than storing them as AD", () => {
+    for (const raw of ["1000 B.C.", "500 BC", "44 BCE", "AD 1000 BC"]) {
+      expect(parseGedcomDate(raw), raw).toBeNull();
+    }
+  });
 });
 
 describe("formatGedcomDate", () => {

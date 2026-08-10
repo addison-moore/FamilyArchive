@@ -7,6 +7,12 @@ import type {
   ParsedGedcom,
 } from "./types";
 
+/**
+ * Versions this parser targets. Lives here rather than in the barrel so
+ * `parseGedcom` can check against it without an import cycle.
+ */
+export const SUPPORTED_GEDCOM_VERSIONS = ["5.5", "5.5.1"] as const;
+
 /** GEDCOM line: LEVEL [XREF] TAG [VALUE]. Tags may be vendor extensions (_UID). */
 const LINE_PATTERN = /^(\d+)\s+(?:(@[^@]+@)\s+)?([A-Za-z0-9_]+)(?:\s(.*))?$/;
 
@@ -63,6 +69,25 @@ function foldContinuations(node: GedcomNode): void {
   node.children = kept;
 }
 
+/**
+ * Reverse the `@@` escape the standard requires for a literal `@` in a value.
+ * Runs after continuation folding, since an escape pair can straddle a CONC
+ * boundary. Pointer values ("@I1@") contain no doubled `@` and pass through.
+ */
+function unescapeValues(node: GedcomNode): void {
+  if (node.value?.includes("@@")) node.value = node.value.replace(/@@/g, "@");
+  for (const c of node.children) unescapeValues(c);
+}
+
+/**
+ * An xref pointer, trimmed. Trailing whitespace on a `1 HUSB @I1@ ` line would
+ * otherwise make the reference miss its record, silently dropping the
+ * relationship and emitting a spurious "references missing individual" warning.
+ */
+function pointer(value: string | null | undefined): string | null {
+  return value?.trim() || null;
+}
+
 function child(node: GedcomNode, tag: string): GedcomNode | undefined {
   return node.children.find((c) => c.tag === tag);
 }
@@ -103,7 +128,10 @@ function extractNotes(record: GedcomNode, noteRecords: Map<string, string>): str
 export function parseGedcom(text: string): ParsedGedcom {
   const warnings: string[] = [];
   const roots = buildNodeTree(text, warnings);
-  for (const root of roots) foldContinuations(root);
+  for (const root of roots) {
+    foldContinuations(root);
+    unescapeValues(root);
+  }
 
   const noteRecords = new Map<string, string>();
   for (const root of roots) {
@@ -131,9 +159,9 @@ export function parseGedcom(text: string): ParsedGedcom {
         death: extractEvent(root, "DEAT"),
         notes: extractNotes(root, noteRecords),
         childInFamilies: root.children
-          .filter((c) => c.tag === "FAMC" && c.value)
+          .filter((c) => c.tag === "FAMC" && pointer(c.value))
           .map((famc) => ({
-            famXref: famc.value!,
+            famXref: pointer(famc.value)!,
             pedigree: child(famc, "PEDI")?.value?.trim().toLowerCase() ?? null,
           })),
         raw: root,
@@ -141,14 +169,29 @@ export function parseGedcom(text: string): ParsedGedcom {
     } else if (root.tag === "FAM" && root.xref) {
       families.push({
         xref: root.xref,
-        husbandXref: child(root, "HUSB")?.value ?? null,
-        wifeXref: child(root, "WIFE")?.value ?? null,
-        childXrefs: childValues(root, "CHIL"),
+        husbandXref: pointer(child(root, "HUSB")?.value),
+        wifeXref: pointer(child(root, "WIFE")?.value),
+        childXrefs: childValues(root, "CHIL").flatMap((v) => {
+          const ref = pointer(v);
+          return ref ? [ref] : [];
+        }),
         married: child(root, "MARR") !== undefined,
         divorced: child(root, "DIV") !== undefined,
         raw: root,
       });
     }
+  }
+
+  // The parser targets 5.5/5.5.1. Anything else (notably GEDCOM 7, which moves
+  // tags around) still parses on a best-effort basis, but the user deserves to
+  // know the file is outside what was tested rather than silently getting a
+  // partial import.
+  const version = header && child(child(header, "GEDC") ?? header, "VERS")?.value?.trim();
+  if (version && !(SUPPORTED_GEDCOM_VERSIONS as readonly string[]).includes(version)) {
+    warnings.push(
+      `GEDCOM version ${version} is outside the supported versions ` +
+        `(${SUPPORTED_GEDCOM_VERSIONS.join(", ")}) — some data may not import correctly.`,
+    );
   }
 
   const knownXrefs = new Set(individuals.map((i) => i.xref));

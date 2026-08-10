@@ -183,3 +183,87 @@ describe("buildGedcom", () => {
     ]);
   });
 });
+
+describe("GEDCOM value escaping and folding", () => {
+  it("round-trips a literal @ through the @@ escape", () => {
+    const note = "Wrote to archive@example.org about the parish records";
+    const out = buildGedcom({
+      individuals: [person("p1", "Arthur Ashford", "male", { notes: [note] })],
+      families: [],
+    });
+    // Unescaped, the @ reads back as the start of an xref pointer.
+    expect(out).toContain("archive@@example.org");
+    expect(parseGedcom(out).individuals[0]?.notes).toEqual([note]);
+  });
+
+  it("keeps every physical line within the 255-character limit", () => {
+    const longNote = "Ashford ".repeat(120).trim();
+    const out = buildGedcom({
+      individuals: [
+        person("p1", "Arthur Ashford", "male", {
+          notes: [longNote],
+          birth: { date: null, place: "Little Wenlock, ".repeat(40).trim() },
+        }),
+      ],
+      families: [],
+    });
+    for (const line of lines(out)) expect(line.length).toBeLessThanOrEqual(255);
+    // Folding is lossless: CONC continuations rejoin on parse.
+    const back = parseGedcom(out).individuals[0];
+    expect(back?.notes).toEqual([longNote]);
+    expect(back?.birth?.place).toBe("Little Wenlock, ".repeat(40).trim());
+  });
+
+  it("does not split an escaped @@ pair across a fold boundary", () => {
+    // Land an "@" near the fold point so a naive split would break the pair.
+    for (let pad = 230; pad < 260; pad++) {
+      const note = `${"x".repeat(pad)}@tail`;
+      const out = buildGedcom({
+        individuals: [person("p1", "A B", "male", { notes: [note] })],
+        families: [],
+      });
+      for (const line of lines(out)) expect(line.length).toBeLessThanOrEqual(255);
+      expect(parseGedcom(out).individuals[0]?.notes, `pad=${pad}`).toEqual([note]);
+    }
+  });
+});
+
+describe("GEDCOM version reporting", () => {
+  const withVersion = (version: string) =>
+    parseGedcom(
+      ["0 HEAD", "1 GEDC", `2 VERS ${version}`, "0 @I1@ INDI", "1 NAME A /B/", "0 TRLR"].join("\n"),
+    ).warnings;
+
+  it("stays quiet on the supported versions", () => {
+    expect(withVersion("5.5.1")).toEqual([]);
+    expect(withVersion("5.5")).toEqual([]);
+  });
+
+  it("warns on a version outside what the parser targets", () => {
+    // GEDCOM 7 moves tags around; it still parses best-effort, but silently
+    // producing a partial import is worse than saying so.
+    expect(withVersion("7.0").join(" ")).toMatch(/7\.0.*outside the supported versions/);
+  });
+});
+
+describe("parser pointer handling", () => {
+  it("tolerates trailing whitespace after an xref pointer", () => {
+    const text = [
+      "0 HEAD",
+      "1 CHAR UTF-8",
+      "0 @I1@ INDI",
+      "1 NAME Arthur /Ashford/",
+      "0 @I2@ INDI",
+      "1 NAME Rose /Ashford/",
+      "0 @F1@ FAM",
+      "1 HUSB @I1@ ",
+      "1 CHIL @I2@  ",
+      "0 TRLR",
+    ].join("\n");
+    const parsed = parseGedcom(text);
+    expect(parsed.families[0]?.husbandXref).toBe("@I1@");
+    expect(parsed.families[0]?.childXrefs).toEqual(["@I2@"]);
+    // The reference resolves, so no "missing individual" warning is raised.
+    expect(parsed.warnings).toEqual([]);
+  });
+});

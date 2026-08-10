@@ -1,5 +1,5 @@
 import { getDb, people, personNames, places, relationships, trees } from "@familyarchive/db";
-import { buildGedcom, type ExportFamily, type ExportIndividual } from "@familyarchive/gedcom";
+import { buildGedcom, type ExportFamily, type ExportIndividual } from "./export";
 import { isParentRelationshipType, isPartnerRelationshipType } from "@familyarchive/shared";
 import { and, asc, eq, isNull } from "drizzle-orm";
 
@@ -86,10 +86,32 @@ export async function generateGedcom(
     notes: [person.biography, person.notes].filter((n): n is string => Boolean(n?.trim())),
   }));
 
+  const content = buildGedcom({
+    individuals,
+    families: buildFamilies(allEdges, alive),
+    sourceName: `${tree.name}.ged`,
+  });
+  const fileName = `${tree.name.replace(/[^a-zA-Z0-9 _-]/g, "").trim() || "tree"}.ged`;
+  return { fileName, content };
+}
+
+/** A relationship edge, narrowed to what family reconstruction needs. */
+export interface FamilyEdge {
+  fromPersonId: string;
+  toPersonId: string;
+  type: string;
+}
+
+/**
+ * Reconstruct FAM records from the relationship graph. Pure and exported so the
+ * grouping rules — which are where the subtle bugs live — are unit-testable
+ * without a database.
+ */
+export function buildFamilies(edges: FamilyEdge[], alive: Set<string>): ExportFamily[] {
   // Group each child's parents into families (max two parents per FAM).
   const parentsByChild = new Map<string, { parentId: string; type: string }[]>();
   const partnerKindByPair = new Map<string, PartnerKind>();
-  for (const edge of allEdges) {
+  for (const edge of edges) {
     if (!alive.has(edge.fromPersonId) || !alive.has(edge.toPersonId)) continue;
     if (isParentRelationshipType(edge.type)) {
       parentsByChild.set(edge.toPersonId, [
@@ -123,16 +145,40 @@ export async function generateGedcom(
     if (pedigree) family.childPedigree![childId] = pedigree;
   };
 
-  for (const [childId, parentLinks] of parentsByChild) {
-    const pedigree = parentLinks
-      .map((link) => PEDIGREE_BY_TYPE[link.type])
-      .find((p): p is string => Boolean(p));
+  for (const [childId, allParentLinks] of parentsByChild) {
+    // One person can hold more than one parent edge to the same child (the
+    // unique constraint is on (tree, from, to, type)), e.g. biological_parent
+    // and step_parent. Undeduplicated, a two-row set became a FAM of ["A","A"]
+    // and exported the same xref as both HUSB and WIFE.
+    const linkByParent = new Map<string, (typeof allParentLinks)[number]>();
+    for (const link of allParentLinks) {
+      const existing = linkByParent.get(link.parentId);
+      // Keep whichever edge carries a pedigree, so dedupe never drops it.
+      if (!existing || (!PEDIGREE_BY_TYPE[existing.type] && PEDIGREE_BY_TYPE[link.type])) {
+        linkByParent.set(link.parentId, link);
+      }
+    }
+    const parentLinks = [...linkByParent.values()];
+    const pedigreeOf = (id: string) => PEDIGREE_BY_TYPE[linkByParent.get(id)!.type];
+
+    /**
+     * PEDI describes one parent-child link, not a family. Emitting a single
+     * aggregate value stamped "adopted" onto a family of biological parents,
+     * and re-import then downgraded the biological link. When the parents in a
+     * prospective FAM disagree, split them into single-parent families so each
+     * keeps its own pedigree.
+     */
+    const addParentSet = (ids: string[]) => {
+      const pedigrees = ids.map(pedigreeOf);
+      if (pedigrees.every((p) => p === pedigrees[0])) {
+        addChildToFamily(ids, childId, pedigrees[0]);
+      } else {
+        for (const id of ids) addChildToFamily([id], childId, pedigreeOf(id));
+      }
+    };
+
     if (parentLinks.length <= 2) {
-      addChildToFamily(
-        parentLinks.map((l) => l.parentId),
-        childId,
-        pedigree,
-      );
+      addParentSet(parentLinks.map((l) => l.parentId));
     } else {
       // 3+ parents (step/foster constellations): pair up partnered parents,
       // remaining parents get single-parent FAMs.
@@ -145,12 +191,11 @@ export async function generateGedcom(
         if (partner) {
           remaining.delete(a);
           remaining.delete(partner);
-          addChildToFamily([a, partner], childId, pedigree);
+          addParentSet([a, partner]);
         }
       }
       for (const single of remaining) {
-        const link = parentLinks.find((l) => l.parentId === single)!;
-        addChildToFamily([single], childId, PEDIGREE_BY_TYPE[link.type]);
+        addChildToFamily([single], childId, pedigreeOf(single));
       }
     }
   }
@@ -162,11 +207,5 @@ export async function generateGedcom(
     }
   }
 
-  const content = buildGedcom({
-    individuals,
-    families: [...familyByKey.values()],
-    sourceName: `${tree.name}.ged`,
-  });
-  const fileName = `${tree.name.replace(/[^a-zA-Z0-9 _-]/g, "").trim() || "tree"}.ged`;
-  return { fileName, content };
+  return [...familyByKey.values()];
 }
