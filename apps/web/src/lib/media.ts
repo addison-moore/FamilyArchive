@@ -9,38 +9,19 @@ import {
   mediaTags,
   tags,
 } from "@familyarchive/db";
-import { createStorageDriver, type StorageDriver } from "@familyarchive/media";
+import { storageDriverFromEnv, type StorageDriver } from "@familyarchive/media";
 import { treeRoleAtLeast, type TreeRole } from "@familyarchive/shared";
-import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 
 export type MediaRow = typeof mediaItems.$inferSelect;
 export type TagRow = typeof tags.$inferSelect;
-
-const driverCache = new Map<"local" | "s3", StorageDriver>();
 
 /**
  * Driver by name, so items uploaded before a driver switch keep working:
  * uploads use the configured driver; serving uses the item's stored driver.
  */
 export function getStorageDriverFor(name: "local" | "s3"): StorageDriver {
-  let cached = driverCache.get(name);
-  if (!cached) {
-    const env = getEnv();
-    cached = createStorageDriver({
-      driver: name,
-      localPath: env.MEDIA_LOCAL_PATH,
-      s3: {
-        endpoint: env.S3_ENDPOINT,
-        region: env.S3_REGION,
-        bucket: env.S3_BUCKET,
-        accessKeyId: env.S3_ACCESS_KEY_ID,
-        secretAccessKey: env.S3_SECRET_ACCESS_KEY,
-        forcePathStyle: env.S3_FORCE_PATH_STYLE !== "false",
-      },
-    });
-    driverCache.set(name, cached);
-  }
-  return cached;
+  return storageDriverFromEnv(name, getEnv());
 }
 
 /** The driver new uploads go to. */
@@ -105,23 +86,21 @@ export interface MediaFilters {
   personId?: string;
   uploaderId?: string;
   collectionId?: string;
+  /**
+   * Branch view: keep media tagged with at least one of these people, plus
+   * media tagged with nobody. Applied in SQL rather than after the fact so it
+   * composes with limit/offset — filtering a page in memory would silently
+   * return short pages.
+   */
+  branchIds?: Set<string> | null;
 }
 
-/** Tree-scoped, soft-delete-aware media listing with the library filters. */
-export async function listMedia(treeId: string, filters: MediaFilters): Promise<MediaRow[]> {
-  const db = getDb();
-  const conditions = [eq(mediaItems.treeId, treeId), isNull(mediaItems.deletedAt)];
+/** Shared WHERE for the media listing and its count, so the two cannot drift. */
+function mediaConditions(treeId: string, filters: MediaFilters): SQL[] {
+  const conditions: SQL[] = [eq(mediaItems.treeId, treeId), isNull(mediaItems.deletedAt)];
   if (filters.type)
     conditions.push(eq(mediaItems.mediaType, filters.type as MediaRow["mediaType"]));
   if (filters.uploaderId) conditions.push(eq(mediaItems.uploaderId, filters.uploaderId));
-
-  let query = db.select({ media: mediaItems }).from(mediaItems).$dynamic();
-  if (filters.tagId) {
-    query = query.innerJoin(
-      mediaTags,
-      and(eq(mediaTags.mediaId, mediaItems.id), eq(mediaTags.tagId, filters.tagId)),
-    );
-  }
   if (filters.personId) {
     // Simple people tags OR assigned face boxes both count.
     conditions.push(
@@ -134,8 +113,57 @@ export async function listMedia(treeId: string, filters: MediaFilters): Promise<
       sql`exists (select 1 from collection_media cm where cm.media_id = ${mediaItems.id} and cm.collection_id = ${filters.collectionId})`,
     );
   }
-  const rows = await query.where(and(...conditions)).orderBy(desc(mediaItems.createdAt));
+  if (filters.branchIds) {
+    const ids = [...filters.branchIds];
+    const inBranch =
+      ids.length > 0
+        ? sql`exists (select 1 from media_people mp where mp.media_id = ${mediaItems.id} and mp.person_id in ${ids})
+            or exists (select 1 from media_faces mf where mf.media_id = ${mediaItems.id} and mf.person_id in ${ids})`
+        : sql`false`;
+    // Untagged media belongs to the whole archive and stays visible.
+    conditions.push(
+      sql`(not exists (select 1 from media_people mp where mp.media_id = ${mediaItems.id})
+        and not exists (select 1 from media_faces mf where mf.media_id = ${mediaItems.id} and mf.person_id is not null)
+        or (${inBranch}))`,
+    );
+  }
+  return conditions;
+}
+
+/** Tree-scoped, soft-delete-aware media listing with the library filters. */
+export async function listMedia(
+  treeId: string,
+  filters: MediaFilters,
+  page?: { limit: number; offset: number },
+): Promise<MediaRow[]> {
+  const db = getDb();
+  let query = db.select({ media: mediaItems }).from(mediaItems).$dynamic();
+  if (filters.tagId) {
+    query = query.innerJoin(
+      mediaTags,
+      and(eq(mediaTags.mediaId, mediaItems.id), eq(mediaTags.tagId, filters.tagId)),
+    );
+  }
+  query = query
+    .where(and(...mediaConditions(treeId, filters)))
+    .orderBy(desc(mediaItems.createdAt), desc(mediaItems.id));
+  if (page) query = query.limit(page.limit).offset(page.offset);
+  const rows = await query;
   return rows.map((row) => row.media);
+}
+
+/** Total matching the same filters, for the pager. */
+export async function countMedia(treeId: string, filters: MediaFilters): Promise<number> {
+  const db = getDb();
+  let query = db.select({ value: count() }).from(mediaItems).$dynamic();
+  if (filters.tagId) {
+    query = query.innerJoin(
+      mediaTags,
+      and(eq(mediaTags.mediaId, mediaItems.id), eq(mediaTags.tagId, filters.tagId)),
+    );
+  }
+  const rows = await query.where(and(...mediaConditions(treeId, filters)));
+  return Number(rows[0]?.value ?? 0);
 }
 
 /** Media items where a person is tagged (person profile media tab). */

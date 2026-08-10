@@ -30,6 +30,32 @@ export interface StorageDriver {
   getStream(key: string, range?: ByteRange): Promise<StorageObjectStream>;
   move(fromKey: string, toKey: string): Promise<void>;
   delete(key: string): Promise<void>;
+  /**
+   * Delete every object under a key prefix. Needed when an archive is deleted:
+   * the DB rows holding the storage keys cascade away, so without a prefix
+   * sweep the bytes are unreachable and would sit on disk forever.
+   */
+  deletePrefix(prefix: string): Promise<void>;
+}
+
+/** Everything stored for one archive. */
+export function treePrefix(treeId: string): string {
+  return `trees/${treeId}/`;
+}
+
+/**
+ * A range whose start lies at or past the end of the object. RFC 7233 calls for
+ * a 416 with a `bytes * /total` Content-Range; drivers raise this so the route
+ * layer can answer correctly instead of surfacing a generic 500.
+ */
+export class UnsatisfiableRangeError extends Error {
+  constructor(
+    readonly requestedStart: number,
+    readonly totalSize: number,
+  ) {
+    super(`Range start ${requestedStart} is beyond the object size ${totalSize}`);
+    this.name = "UnsatisfiableRangeError";
+  }
 }
 
 /** Generated object keys. Never derived from user input. */

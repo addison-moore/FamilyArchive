@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { Readable, Transform } from "node:stream";
+import { pipeline } from "node:stream/promises";
 
 import { AuthorizationError, requireMemberRole } from "@familyarchive/auth";
 import { getEnv } from "@familyarchive/config";
@@ -9,12 +10,10 @@ import { UPLOAD_MIME_TYPES } from "@familyarchive/shared";
 import { and, eq, isNull, ne } from "drizzle-orm";
 
 import { recordAudit } from "@/lib/audit";
+import { decodeURIComponentSafe } from "@/lib/http";
 import { enqueueMediaProcessing } from "@/lib/jobs";
 import { getStorageDriver } from "@/lib/media";
-import { maybeNotifyOwners, quotaState } from "@/lib/quota";
-
-const QUOTA_FULL_MESSAGE =
-  "This archive's storage is full. Free up space by removing media, or ask your administrator to raise the limit.";
+import { maybeNotifyOwners, QUOTA_FULL_MESSAGE, quotaState } from "@/lib/quota";
 
 /**
  * Media upload: raw request body streamed through a
@@ -76,7 +75,9 @@ export async function POST(
   }
   const rawName = request.headers.get("x-file-name") ?? "upload";
   // Sanitized for storage as metadata only — never used in storage keys.
-  const originalFilename = decodeURIComponent(rawName)
+  // The decode is the forgiving variant: a client header containing a stray "%"
+  // is malformed input, not a server fault, and must not surface as a 500.
+  const originalFilename = decodeURIComponentSafe(rawName)
     // eslint-disable-next-line no-control-regex
     .replace(/[\u0000-\u001f/\\]/g, "")
     .slice(0, 300);
@@ -130,8 +131,12 @@ export async function POST(
 
   try {
     const body = Readable.fromWeb(request.body as import("stream/web").ReadableStream);
-    body.pipe(tap);
-    await driver.putStream(tempKey, tap);
+    // `body.pipe(tap)` would attach an error listener to the destination only, so
+    // a client abort raised an uncaught exception and left `tap` neither ended
+    // nor destroyed — putStream's internal pipeline never settled and the temp
+    // file, its write handle, and the placeholder row all leaked. `pipeline`
+    // propagates the failure in both directions so the catch below can clean up.
+    await Promise.all([pipeline(body, tap), driver.putStream(tempKey, tap)]);
   } catch (error) {
     await cleanup();
     if (error instanceof Error && error.message === "size-limit") {
@@ -182,12 +187,22 @@ export async function POST(
     );
   }
 
+  // Finalize is guarded too: a failure here (EXDEV, ENOSPC, an S3 CopyObject
+  // error) used to leave the placeholder row behind forever with storageKey ""
+  // and no queued job — a tile stuck on "Preparing…" that also broke every
+  // subsequent export of the archive.
   const finalKey = originalKey(treeId, mediaId, hash, upload.extension);
-  await driver.move(tempKey, finalKey);
-  await db
-    .update(mediaItems)
-    .set({ hash, fileSize: byteCount, storageKey: finalKey, updatedAt: new Date() })
-    .where(eq(mediaItems.id, mediaId));
+  try {
+    await driver.move(tempKey, finalKey);
+    await db
+      .update(mediaItems)
+      .set({ hash, fileSize: byteCount, storageKey: finalKey, updatedAt: new Date() })
+      .where(eq(mediaItems.id, mediaId));
+  } catch {
+    await driver.delete(finalKey).catch(() => {});
+    await cleanup();
+    return Response.json({ error: "Failed to store the uploaded file" }, { status: 500 });
+  }
 
   await adjustInstanceUsage({ originalBytes: byteCount, mediaCount: 1 });
   await maybeNotifyOwners();

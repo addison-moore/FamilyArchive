@@ -1,7 +1,9 @@
 import { Readable } from "node:stream";
 
 import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
+import { UnsatisfiableRangeError } from "@familyarchive/media";
 
+import { contentDisposition } from "@/lib/http";
 import { getMediaItem, getStorageDriverFor } from "@/lib/media";
 
 /**
@@ -35,11 +37,23 @@ export async function GET(
     : undefined;
 
   const driver = getStorageDriverFor(media.storageDriver === "s3" ? "s3" : "local");
-  const object = await driver.getStream(media.storageKey, range);
+  let object;
+  try {
+    object = await driver.getStream(media.storageKey, range);
+  } catch (error) {
+    // A range starting past the end is a client error, not a server fault.
+    if (error instanceof UnsatisfiableRangeError) {
+      return new Response(null, {
+        status: 416,
+        headers: { "Content-Range": `bytes */${error.totalSize}`, "Accept-Ranges": "bytes" },
+      });
+    }
+    throw error;
+  }
   const headers: Record<string, string> = {
     "Content-Type": media.mimeType,
     "Accept-Ranges": "bytes",
-    "Content-Disposition": `inline; filename="${media.originalFilename.replace(/"/g, "")}"`,
+    "Content-Disposition": contentDisposition("inline", media.originalFilename),
     "Cache-Control": "private, max-age=3600",
     "X-Content-Type-Options": "nosniff",
   };

@@ -5,6 +5,17 @@ import { eq } from "drizzle-orm";
 
 import { enqueueEmail, smtpConfigured } from "@/lib/email";
 
+/**
+ * Shown wherever the quota blocks an upload. It deliberately does NOT suggest
+ * deleting media: media deletion is a soft delete (PRD §5.6 keeps originals
+ * immutable and on disk), and `recomputeInstanceUsage` counts soft-deleted rows
+ * on purpose, so nothing a user can do in the app reduces the number. Raising
+ * MEDIA_QUOTA_MB is the only remedy — promising otherwise sent people deleting
+ * their own media to no effect.
+ */
+export const QUOTA_FULL_MESSAGE =
+  "This archive's storage is full and new uploads are paused. Ask your administrator to raise the storage limit.";
+
 export interface QuotaState {
   /** null = no quota configured (unlimited). */
   quotaBytes: number | null;
@@ -65,7 +76,7 @@ export async function maybeNotifyOwners(): Promise<void> {
     level === 100 ? "Your archive's storage is full" : "Your archive's storage is almost full";
   const body =
     level === 100
-      ? `Media storage has reached its ${env.MEDIA_QUOTA_MB} MB limit — new uploads are paused until space is freed or the limit is raised.`
+      ? `Media storage has reached its ${env.MEDIA_QUOTA_MB} MB limit — new uploads are paused until the limit is raised. Deleting media does not reclaim the space: originals are preserved on disk.`
       : `Media storage is at ${percent}% of its ${env.MEDIA_QUOTA_MB} MB limit.`;
   for (const owner of owners) {
     if (!owner.email) continue;

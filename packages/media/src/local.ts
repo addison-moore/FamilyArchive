@@ -4,7 +4,13 @@ import path from "node:path";
 import type { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
-import type { ByteRange, PutOptions, StorageDriver, StorageObjectStream } from "./storage";
+import {
+  UnsatisfiableRangeError,
+  type ByteRange,
+  type PutOptions,
+  type StorageDriver,
+  type StorageObjectStream,
+} from "./storage";
 
 /**
  * Local filesystem driver. Files live under a root directory that
@@ -36,6 +42,11 @@ export class LocalStorageDriver implements StorageDriver {
     if (!range) {
       return { stream: createReadStream(filePath), totalSize: info.size };
     }
+    // Only `end` used to be clamped, so a start past EOF produced start > end and
+    // made createReadStream throw a RangeError — a 500 on an ordinary seek.
+    if (range.start >= info.size) {
+      throw new UnsatisfiableRangeError(range.start, info.size);
+    }
     const end = Math.min(range.end ?? info.size - 1, info.size - 1);
     return {
       stream: createReadStream(filePath, { start: range.start, end }),
@@ -52,5 +63,11 @@ export class LocalStorageDriver implements StorageDriver {
 
   async delete(key: string): Promise<void> {
     await rm(this.resolve(key), { force: true });
+  }
+
+  async deletePrefix(prefix: string): Promise<void> {
+    // resolve() applies the same root confinement as every other operation, so a
+    // crafted prefix cannot turn this into a recursive delete outside the root.
+    await rm(this.resolve(prefix), { recursive: true, force: true });
   }
 }

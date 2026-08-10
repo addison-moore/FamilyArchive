@@ -6,7 +6,7 @@ import { Readable } from "node:stream";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { LocalStorageDriver } from "./local";
-import type { StorageObjectStream } from "./storage";
+import { UnsatisfiableRangeError, type StorageObjectStream } from "./storage";
 
 let root: string;
 let driver: LocalStorageDriver;
@@ -54,6 +54,22 @@ describe("LocalStorageDriver", () => {
     const overshoot = await driver.getStream("clip", { start: 0, end: 99 });
     expect(await readAll(overshoot)).toBe("0123456789");
     expect(overshoot.range).toEqual({ start: 0, end: 9 });
+  });
+
+  it("reports a start past the end as unsatisfiable rather than throwing RangeError", async () => {
+    await put("clip", "0123456789");
+    // Only `end` used to be clamped, so start > end reached createReadStream and
+    // raised a RangeError — surfacing as a 500 on an ordinary media seek.
+    await expect(driver.getStream("clip", { start: 10 })).rejects.toBeInstanceOf(
+      UnsatisfiableRangeError,
+    );
+    await expect(driver.getStream("clip", { start: 500, end: 600 })).rejects.toMatchObject({
+      requestedStart: 500,
+      totalSize: 10,
+    });
+    // The last valid offset still serves a one-byte range.
+    const last = await driver.getStream("clip", { start: 9 });
+    expect(await readAll(last)).toBe("9");
   });
 
   it("refuses to clobber existing files unless overwrite is set", async () => {
