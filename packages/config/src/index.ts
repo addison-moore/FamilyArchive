@@ -48,6 +48,16 @@ const envSchema = z.object({
   // endpoint is disabled entirely when unset.
   METRICS_TOKEN: z.string().min(16).optional(),
 
+  // Honour X-Forwarded-For / X-Real-IP when rate limiting. Off by default:
+  // the headers are trivially spoofed by anyone reaching the app directly, so
+  // only enable this when a reverse proxy you control sets them. Leaving it off
+  // behind a proxy is the safe direction — every request then shares one
+  // apparent address, and only the looser per-IP bound is affected.
+  TRUST_PROXY_HEADERS: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+
   // External AI providers (disabled by default, explicit admin opt-in)
   AI_PROVIDER: z.enum(["openai", "anthropic"]).optional(),
   AI_API_KEY: z.string().optional(),

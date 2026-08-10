@@ -5,7 +5,15 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 
+import { RateLimitedError } from "./errors";
 import { verifyAbsentUser, verifyPassword } from "./password";
+import {
+  clientIp,
+  consumeRateLimit,
+  resetRateLimit,
+  SIGN_IN_PER_EMAIL,
+  SIGN_IN_PER_IP,
+} from "./rate-limit";
 
 declare module "next-auth" {
   interface Session {
@@ -56,10 +64,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => ({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      authorize: async (credentials) => {
+      /**
+       * The rate limit lives here rather than in the login server action
+       * because the action is not the attack surface: a direct POST to
+       * /api/auth/callback/credentials reaches this callback and nothing else.
+       *
+       * Only failures are counted, so an active user is never throttled by
+       * their own successful sign-ins, and the counter is cleared on success.
+       */
+      authorize: async (credentials, request) => {
         const parsed = credentialsSchema.safeParse(credentials);
         if (!parsed.success) return null;
         const email = parsed.data.email.toLowerCase().trim();
+
+        const ip = clientIp(request?.headers ?? new Headers());
+        const emailKey = `signin:email:${email}`;
+        const ipKey = `signin:ip:${ip}`;
+        const [byEmail, byIp] = await Promise.all([
+          consumeRateLimit(emailKey, SIGN_IN_PER_EMAIL),
+          ip === "unknown"
+            ? Promise.resolve({ allowed: true, retryAfterSeconds: 0 })
+            : consumeRateLimit(ipKey, SIGN_IN_PER_IP),
+        ]);
+        if (!byEmail.allowed || !byIp.allowed) {
+          // Refused before the bcrypt verify, which is the expensive part an
+          // attacker is trying to make us do.
+          throw new RateLimitedError(Math.max(byEmail.retryAfterSeconds, byIp.retryAfterSeconds));
+        }
+
         const rows = await getDb().select().from(users).where(eq(users.email, email)).limit(1);
         const user = rows[0];
         if (!user?.passwordHash) {
@@ -72,6 +104,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => ({
         }
         const valid = await verifyPassword(parsed.data.password, user.passwordHash);
         if (!valid) return null;
+        await Promise.all([resetRateLimit(emailKey), resetRateLimit(ipKey)]);
         return { id: user.id, email: user.email, name: user.name, image: user.image };
       },
     }),

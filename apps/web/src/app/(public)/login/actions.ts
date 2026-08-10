@@ -1,6 +1,6 @@
 "use server";
 
-import { isAuthError, signIn } from "@familyarchive/auth";
+import { describeRetryAfter, isAuthError, rateLimitedSeconds, signIn } from "@familyarchive/auth";
 import { redirect } from "next/navigation";
 
 export async function loginAction(formData: FormData): Promise<void> {
@@ -15,7 +15,13 @@ export async function loginAction(formData: FormData): Promise<void> {
     await signIn("credentials", { email, password, redirectTo });
   } catch (error) {
     if (isAuthError(error)) {
-      redirect(`/login?error=1&callbackUrl=${encodeURIComponent(redirectTo)}`);
+      // Distinguish "throttled" from "wrong password" so the user is told to
+      // wait rather than retrying into a limit they cannot see.
+      const wait = rateLimitedSeconds(error);
+      const params = new URLSearchParams({ callbackUrl: redirectTo });
+      params.set("error", wait === null ? "1" : "ratelimited");
+      if (wait !== null) params.set("retry", describeRetryAfter(wait));
+      redirect(`/login?${params}`);
     }
     throw error; // NEXT_REDIRECT on success — must propagate
   }

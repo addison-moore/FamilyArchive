@@ -10,17 +10,28 @@ import { loginAction } from "./actions";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; callbackUrl?: string; reset?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    callbackUrl?: string;
+    reset?: string;
+    retry?: string;
+  }>;
 }) {
   const user = await getSessionUser();
   if (user) redirect("/");
-  const { error, callbackUrl, reset } = await searchParams;
+  const { error, callbackUrl, reset, retry } = await searchParams;
+  const errorMessage =
+    error === "ratelimited"
+      ? `Too many sign-in attempts. Try again ${retry ?? "shortly"}.`
+      : error
+        ? "Invalid email or password."
+        : undefined;
   const freshInstance = !(await anyUserExists());
 
   return (
     <Card>
       <h1 className="mb-4 text-xl font-semibold">Sign in</h1>
-      <FormError message={error ? "Invalid email or password." : undefined} />
+      <FormError message={errorMessage} />
       {reset && !error && (
         <p className="rounded-md border border-archive-100 bg-success-soft px-3 py-2 text-sm text-success-strong">
           Your password has been changed — sign in with the new one.

@@ -12,10 +12,12 @@
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.10.0",
+    "@familyarchive/config": "workspace:*",
     "@familyarchive/db": "workspace:*",
     "@familyarchive/shared": "workspace:*",
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.44.7",
+    "ioredis": "^5.10.1",
     "next-auth": "^5.0.0-beta.29",
     "zod": "^3.25.76"
   },

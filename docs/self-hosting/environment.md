@@ -25,14 +25,36 @@ error.
 
 ## Storage (see [storage.md](storage.md))
 
-| Variable               | Default       | Description                                                                              |
-| ---------------------- | ------------- | ---------------------------------------------------------------------------------------- |
-| `MEDIA_STORAGE_DRIVER` | `local`       | `local` or `s3`                                                                          |
-| `MEDIA_LOCAL_PATH`     | `/data/media` | Media path for the local driver (fixed inside the compose deployment; a bare-metal knob) |
-| `MEDIA_MAX_UPLOAD_MB`  | `500`         | Per-file upload cap                                                                      |
-| `MEDIA_QUOTA_MB`       | `0`           | Total media storage cap (originals + previews); `0` = unlimited                          |
-| `METRICS_TOKEN`        | —             | Enables `GET /api/admin/usage` (bearer auth) for external tooling                        |
-| `S3_*`                 | —             | S3-compatible storage; see [storage.md](storage.md) and the `.env` template              |
+| Variable               | Default       | Description                                                                                |
+| ---------------------- | ------------- | ------------------------------------------------------------------------------------------ |
+| `MEDIA_STORAGE_DRIVER` | `local`       | `local` or `s3`                                                                            |
+| `MEDIA_LOCAL_PATH`     | `/data/media` | Media path for the local driver (fixed inside the compose deployment; a bare-metal knob)   |
+| `MEDIA_MAX_UPLOAD_MB`  | `500`         | Per-file upload cap                                                                        |
+| `MEDIA_QUOTA_MB`       | `0`           | Total media storage cap (originals + previews); `0` = unlimited                            |
+| `METRICS_TOKEN`        | —             | Enables `GET /api/admin/usage` (bearer auth) for external tooling                          |
+| `TRUST_PROXY_HEADERS`  | `false`       | Read `X-Forwarded-For` / `X-Real-IP` when rate limiting; only enable behind your own proxy |
+| `S3_*`                 | —             | S3-compatible storage; see [storage.md](storage.md) and the `.env` template                |
+
+## Rate limiting
+
+Sign-in, password reset and registration are throttled per email address and per
+source address, with counters held in Valkey for a few minutes. There is nothing
+to configure — the limits are fixed — but two things are worth knowing.
+
+`TRUST_PROXY_HEADERS` is off by default, which means every request appears to
+come from the same address and only the looser per-address bound is affected;
+the per-email limit, which is the real protection, works either way. Turn it on
+only when a reverse proxy you control sets the header, because anything that can
+reach the app directly can forge it.
+
+Counters are keyed `ratelimit:*` in Valkey. To clear a lockout early:
+
+```bash
+docker compose exec valkey valkey-cli --scan --pattern 'ratelimit:*' | xargs -r docker compose exec -T valkey valkey-cli del
+```
+
+If Valkey is unavailable the limiter allows the attempt rather than blocking
+sign-in on a degraded instance.
 
 ## SMTP (optional)
 

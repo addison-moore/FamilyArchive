@@ -1,7 +1,16 @@
 "use server";
 
-import { isAuthError, requireUser, signIn } from "@familyarchive/auth";
+import {
+  clientIp,
+  consumeRateLimit,
+  describeRetryAfter,
+  isAuthError,
+  REGISTER_PER_IP,
+  requireUser,
+  signIn,
+} from "@familyarchive/auth";
 import { getDb, treeMemberships } from "@familyarchive/db";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getValidInvite } from "@/lib/invites";
@@ -25,6 +34,17 @@ export async function acceptInviteAction(formData: FormData): Promise<void> {
 export async function registerViaInviteAction(formData: FormData): Promise<void> {
   const token = String(formData.get("token") ?? "");
   const invitePath = `/invite/${encodeURIComponent(token)}`;
+
+  // Bounded per source address: an invite link is a bearer token, so anyone
+  // holding one can create accounts until it expires.
+  const ip = clientIp(await headers());
+  if (ip !== "unknown") {
+    const limit = await consumeRateLimit(`register:ip:${ip}`, REGISTER_PER_IP);
+    if (!limit.allowed) {
+      const message = `Too many attempts. Try again ${describeRetryAfter(limit.retryAfterSeconds)}.`;
+      redirect(`${invitePath}?error=${encodeURIComponent(message)}`);
+    }
+  }
 
   const invite = await getValidInvite(token);
   if (!invite) redirect(invitePath);
