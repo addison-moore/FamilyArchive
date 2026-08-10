@@ -3,14 +3,6 @@
  * Keep entries generic (no app- or DB-specific code).
  */
 
-/** Nominal typing helper for entity IDs (e.g. `Brand<string, "TreeId">`). */
-export type Brand<T, Name extends string> = T & { readonly __brand: Name };
-
-/** Exhaustiveness check for discriminated unions. */
-export function assertNever(value: never): never {
-  throw new Error(`Unexpected value: ${JSON.stringify(value)}`);
-}
-
 export * from "./roles";
 export * from "./pagination";
 export * from "./jobs";

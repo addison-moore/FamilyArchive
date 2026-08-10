@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.10.0",
-    "@familyarchive/config": "workspace:*",
     "@familyarchive/db": "workspace:*",
     "@familyarchive/shared": "workspace:*",
     "bcryptjs": "^3.0.3",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isImageMime, isMediaType, UPLOAD_MIME_TYPES } from "./media";
+import { isBrowserRenderableImage, isImageMime, isMediaType, UPLOAD_MIME_TYPES } from "./media";
 
 describe("UPLOAD_MIME_TYPES (allowlist)", () => {
   it("maps every allowlisted MIME to a valid media type and clean extension", () => {
@@ -29,6 +29,23 @@ describe("isImageMime", () => {
     expect(isImageMime("image/heic")).toBe(true);
     expect(isImageMime("video/mp4")).toBe(false);
     expect(isImageMime("application/pdf")).toBe(false);
+  });
+});
+
+describe("isBrowserRenderableImage", () => {
+  it("excludes the accepted image formats browsers cannot decode", () => {
+    // Both are on the upload allowlist, and neither renders in Chrome/Firefox/Edge.
+    expect(isBrowserRenderableImage("image/heic")).toBe(false);
+    expect(isBrowserRenderableImage("image/tiff")).toBe(false);
+    expect(isBrowserRenderableImage("IMAGE/HEIC")).toBe(false);
+  });
+
+  it("accepts the formats browsers do render, and nothing outside image/*", () => {
+    for (const mime of ["image/jpeg", "image/png", "image/webp", "image/gif"]) {
+      expect(isBrowserRenderableImage(mime), mime).toBe(true);
+    }
+    expect(isBrowserRenderableImage("video/mp4")).toBe(false);
+    expect(isBrowserRenderableImage("application/pdf")).toBe(false);
   });
 });
 

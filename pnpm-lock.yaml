@@ -160,9 +160,6 @@ importers:
       '@auth/drizzle-adapter':
         specifier: ^1.10.0
         version: 1.11.2
-      '@familyarchive/config':
-        specifier: workspace:*
-        version: link:../config
       '@familyarchive/db':
         specifier: workspace:*
         version: link:../db

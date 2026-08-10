@@ -48,7 +48,23 @@ export const UPLOAD_MIME_TYPES: Record<string, { mediaType: MediaType; extension
   "application/pdf": { mediaType: "pdf", extension: "pdf" },
 };
 
-/** True when the browser can render this media type inline as an image. */
+/** True when this is an image of any kind — including ones browsers cannot decode. */
 export function isImageMime(mimeType: string): boolean {
   return mimeType.startsWith("image/");
+}
+
+/**
+ * Image formats accepted on upload that no mainstream browser can decode.
+ * HEIC renders only in Safari; TIFF in none of Chrome, Firefox or Edge.
+ */
+const NON_RENDERABLE_IMAGE_MIMES = new Set(["image/heic", "image/heif", "image/tiff"]);
+
+/**
+ * True when an `<img>` pointed at the original will actually display. The
+ * upload allowlist is deliberately wider than this, and there is no full-size
+ * derivative to fall back on — only a 512px thumbnail — so anything failing
+ * this check has to be offered as a download rather than shown inline.
+ */
+export function isBrowserRenderableImage(mimeType: string): boolean {
+  return isImageMime(mimeType) && !NON_RENDERABLE_IMAGE_MIMES.has(mimeType.toLowerCase());
 }
