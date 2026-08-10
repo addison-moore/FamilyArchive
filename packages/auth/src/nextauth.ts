@@ -5,7 +5,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 
-import { verifyPassword } from "./password";
+import { verifyAbsentUser, verifyPassword } from "./password";
 
 declare module "next-auth" {
   interface Session {
@@ -62,7 +62,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => ({
         const email = parsed.data.email.toLowerCase().trim();
         const rows = await getDb().select().from(users).where(eq(users.email, email)).limit(1);
         const user = rows[0];
-        if (!user?.passwordHash) return null;
+        if (!user?.passwordHash) {
+          // Spend the same work as a real verify. Returning straight away was
+          // measurable — ~210ms for a registered address against ~4ms for an
+          // unknown one — which let anyone enumerate accounts by timing, and
+          // undid the care the password-reset flow takes not to reveal them.
+          await verifyAbsentUser(parsed.data.password);
+          return null;
+        }
         const valid = await verifyPassword(parsed.data.password, user.passwordHash);
         if (!valid) return null;
         return { id: user.id, email: user.email, name: user.name, image: user.image };
