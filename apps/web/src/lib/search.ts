@@ -1,5 +1,5 @@
 import { collections, getDb, mediaItems, people, personNames, places } from "@familyarchive/db";
-import { and, eq, isNull, or, sql, type SQL } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
 
 import type { CollectionRow } from "@/lib/collections";
 import type { MediaRow } from "@/lib/media";
@@ -33,6 +33,26 @@ function likePattern(q: string): string {
 }
 
 /**
+ * Collections overlapping `year`. Built from combinators rather than one raw
+ * `sql` fragment on purpose: `and()` parenthesizes the group it builds but not
+ * the individual conditions inside it, so a fragment whose own top level is an
+ * `or` would bind looser than the surrounding `and` and let its trailing
+ * disjuncts escape the `tree_id` scope — matching collections in every archive
+ * on the instance. Keeping the `or` inside a combinator keeps it parenthesized.
+ */
+export function collectionYearCondition(year: number): SQL {
+  return or(
+    and(
+      isNotNull(collections.startYear),
+      isNotNull(collections.endYear),
+      sql`${year} between ${collections.startYear} and ${collections.endYear}`,
+    )!,
+    eq(collections.startYear, year),
+    eq(collections.endYear, year),
+  )!;
+}
+
+/**
  * Archive-wide search: Postgres FTS (websearch_to_tsquery) over text
  * bodies — expressions match the GIN indexes from migrations 0006/0009 — plus
  * ILIKE for proper nouns (names, titles, places, tags) where stemming misses.
@@ -62,12 +82,18 @@ export async function searchArchive(
     )!,
   ];
   if (filters.personId) peopleConditions.push(eq(people.id, filters.personId));
+  // Branch scope belongs in the query, not after it: filtering the 50 rows the
+  // limit already returned dropped real matches whenever the archive-wide top
+  // 50 were mostly out-of-branch.
+  if (branchIds) {
+    peopleConditions.push(branchIds.size > 0 ? inArray(people.id, [...branchIds]) : sql`false`);
+  }
   if (filters.year !== undefined) {
     peopleConditions.push(
       or(eq(people.birthYear, filters.year), eq(people.deathYear, filters.year))!,
     );
   }
-  let peopleResults = filters.mediaType
+  const peopleResults = filters.mediaType
     ? []
     : await db
         .select()
@@ -75,7 +101,6 @@ export async function searchArchive(
         .where(and(...peopleConditions))
         .orderBy(people.fullName)
         .limit(RESULT_LIMIT);
-  if (branchIds) peopleResults = peopleResults.filter((p) => branchIds.has(p.id));
 
   // --- Media (titles, captions, tags, people tags, OCR, transcription) ---
   const mediaTextVector = sql`to_tsvector('english', coalesce(${mediaItems.title}, '') || ' ' || coalesce(${mediaItems.description}, ''))`;
@@ -138,10 +163,7 @@ export async function searchArchive(
     )!,
   ];
   if (filters.year !== undefined) {
-    collectionConditions.push(
-      sql`(${collections.startYear} is not null and ${collections.endYear} is not null and ${filters.year} between ${collections.startYear} and ${collections.endYear})
-        or ${collections.startYear} = ${filters.year} or ${collections.endYear} = ${filters.year}`,
-    );
+    collectionConditions.push(collectionYearCondition(filters.year));
   }
   const collectionResults = filters.mediaType
     ? []
