@@ -17,6 +17,7 @@ import {
   OCR_QUEUE,
   THUMB_SIZE,
   type FaceDetectJob,
+  type DerivativeKind,
   type MediaProcessJob,
   type OcrJob,
   type ProcessingStatus,
@@ -26,12 +27,13 @@ import { eq } from "drizzle-orm";
 import sharp from "sharp";
 import type pino from "pino";
 
+import { EXEC_LIMITS } from "./exec-limits";
 import { storageDriverFor } from "./storage";
 
 const execFileAsync = promisify(execFile);
 
 interface DerivativeOutput {
-  kind: "thumb" | "pdf_page" | "video_thumb";
+  kind: DerivativeKind;
   page: number;
   fileName: string;
   localPath: string;
@@ -62,17 +64,23 @@ async function processImage(sourcePath: string, workDir: string): Promise<Deriva
 async function processVideo(sourcePath: string, workDir: string): Promise<DerivativeOutput[]> {
   const framePath = path.join(workDir, "frame.png");
   // Grab a frame ~1s in (falls back to the first frame on very short clips).
-  await execFileAsync("ffmpeg", [
-    "-y",
-    "-ss",
-    "1",
-    "-i",
-    sourcePath,
-    "-frames:v",
-    "1",
-    framePath,
-  ]).catch(async () => {
-    await execFileAsync("ffmpeg", ["-y", "-i", sourcePath, "-frames:v", "1", framePath]);
+  await execFileAsync(
+    "ffmpeg",
+    ["-y", "-ss", "1", "-i", sourcePath, "-frames:v", "1", framePath],
+    EXEC_LIMITS,
+  ).catch(async (seekError: Error) => {
+    // Report both attempts: when the retry fails for the same underlying reason,
+    // its message alone is usually the less informative of the two.
+    await execFileAsync(
+      "ffmpeg",
+      ["-y", "-i", sourcePath, "-frames:v", "1", framePath],
+      EXEC_LIMITS,
+    ).catch((firstFrameError: Error) => {
+      throw new Error(
+        `ffmpeg could not extract a frame (seek: ${seekError.message}; first frame: ${firstFrameError.message})`,
+        { cause: firstFrameError },
+      );
+    });
   });
 
   const videoThumbPath = path.join(workDir, "video_thumb.webp");
@@ -97,15 +105,19 @@ async function processPdf(
   job: Job<MediaProcessJob>,
 ): Promise<DerivativeOutput[]> {
   // pdftoppm writes page-NNN.png files; -r 110 keeps previews readable but light.
-  await execFileAsync("pdftoppm", [
-    "-png",
-    "-r",
-    "110",
-    "-l",
-    String(MAX_PDF_PREVIEW_PAGES),
-    sourcePath,
-    path.join(workDir, "page"),
-  ]);
+  await execFileAsync(
+    "pdftoppm",
+    [
+      "-png",
+      "-r",
+      "110",
+      "-l",
+      String(MAX_PDF_PREVIEW_PAGES),
+      sourcePath,
+      path.join(workDir, "page"),
+    ],
+    EXEC_LIMITS,
+  );
   const pageFiles = (await readdir(workDir)).filter((name) => /^page-\d+\.png$/.test(name)).sort();
   if (pageFiles.length === 0) throw new Error("PDF produced no page previews");
 

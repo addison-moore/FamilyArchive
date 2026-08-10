@@ -22,10 +22,10 @@ import { eq } from "drizzle-orm";
 import type pino from "pino";
 
 import { aiConfig, type AiConfig } from "./ai-config";
+import { EXEC_LIMITS } from "./exec-limits";
 import { storageDriverFor } from "./storage";
 
 const execFileAsync = promisify(execFile);
-const EXEC_LIMITS = { maxBuffer: 64 * 1024 * 1024, timeout: 10 * 60 * 1000 };
 
 /** Merge a status blob into metadata.<section> without clobbering other sections. */
 async function setTextJobState(

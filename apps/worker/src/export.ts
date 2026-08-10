@@ -2,7 +2,7 @@ import { once } from "node:events";
 import { statfs } from "node:fs/promises";
 import { Transform } from "node:stream";
 
-import { getEnv } from "@familyarchive/config";
+import { getEnv, smtpConfigured } from "@familyarchive/config";
 import {
   archiveExports,
   auditLogs,
@@ -25,6 +25,7 @@ import {
 } from "@familyarchive/db";
 import { generateGedcom } from "@familyarchive/gedcom";
 import {
+  EMAIL_JOB_OPTIONS,
   EMAIL_QUEUE,
   EXPORT_QUEUE,
   EXPORT_RETENTION_DAYS,
@@ -40,6 +41,8 @@ import { and, eq, inArray, isNull, lt, ne } from "drizzle-orm";
 import type pino from "pino";
 
 import { storageDriverFor } from "./storage";
+
+import { runDaily } from "./scheduling";
 
 const CLEANUP_QUEUE = "export-cleanup";
 /** Headroom demanded beyond the estimated bundle size before assembly starts. */
@@ -200,8 +203,15 @@ async function runExport(job: Job<ArchiveExportJob>, logger: pino.Logger, emailQ
     ),
     places: allPlaces,
     media: allMedia.map((m) => ({ ...m, bundlePath: mediaEntryName(m.id, m.originalFilename) })),
-    mediaPeople: allMediaPeople,
-    mediaFaces: allFaces,
+    // Same filter the relationships get: without it a bundle that excludes
+    // soft-deleted people still carried tags and face boxes pointing at ids
+    // absent from `people`, so the export was not self-consistent.
+    mediaPeople: allMediaPeople.filter((mp) => personIds.has(mp.personId)),
+    // Faces keep their geometry — only the dangling person link is cleared, so
+    // the boxes survive re-import and can be reassigned.
+    mediaFaces: allFaces.map((f) =>
+      f.personId && !personIds.has(f.personId) ? { ...f, personId: null } : f,
+    ),
     tags: allTags,
     mediaTags: allMediaTags,
     collections: allCollections,
@@ -243,21 +253,41 @@ async function runExport(job: Job<ArchiveExportJob>, logger: pino.Logger, emailQ
   // Originals one at a time (waiting for archiver's "entry" event) so we never
   // hold more than one source stream open. Media is already compressed — store.
   let done = 0;
-  for (const media of allMedia) {
-    const source = storageDriverFor(media.storageDriver === "s3" ? "s3" : "local");
-    const object = await source.getStream(media.storageKey);
-    const finished = once(archive, "entry");
-    archive.append(object.stream, {
-      name: mediaEntryName(media.id, media.originalFilename),
-      store: true,
-    });
-    await Promise.race([finished, archiveFailed]);
-    done += 1;
-    await job.updateProgress(Math.round((done / Math.max(allMedia.length, 1)) * 90));
-  }
+  try {
+    for (const media of allMedia) {
+      // A crashed upload finalize can leave a row with no storage key. Skipping
+      // it keeps one broken row from failing every export of the whole archive.
+      if (!media.storageKey) {
+        logger.warn(
+          { treeId, exportId, mediaId: media.id },
+          "skipping media with no storage key — upload never finalized",
+        );
+        done += 1;
+        continue;
+      }
+      const source = storageDriverFor(media.storageDriver === "s3" ? "s3" : "local");
+      const object = await source.getStream(media.storageKey);
+      const finished = once(archive, "entry");
+      archive.append(object.stream, {
+        name: mediaEntryName(media.id, media.originalFilename),
+        store: true,
+      });
+      await Promise.race([finished, archiveFailed]);
+      done += 1;
+      await job.updateProgress(Math.round((done / Math.max(allMedia.length, 1)) * 90));
+    }
 
-  await archive.finalize();
-  await Promise.race([putPromise, archiveFailed]);
+    await archive.finalize();
+    await Promise.race([putPromise, archiveFailed]);
+  } catch (error) {
+    // Without this the ZIP stream stayed open and a truncated bundle was left
+    // at the export's storage key, which the download route would happily serve
+    // once the row was (later) marked complete.
+    archive.destroy();
+    counter.destroy();
+    await targetDriver.delete(row.storageKey).catch(() => {});
+    throw error;
+  }
 
   // The new bundle replaces any previous one for this archive.
   const stale = await db
@@ -288,7 +318,9 @@ async function runExport(job: Job<ArchiveExportJob>, logger: pino.Logger, emailQ
   logger.info({ treeId, exportId, bundleBytes, counts }, "archive export complete");
 
   // Tell the requester (silent no-op without SMTP, matching the web app).
-  if (env.SMTP_HOST && row.requestedBy) {
+  // Checking SMTP_HOST alone was not enough: the sender also needs SMTP_FROM,
+  // so a host-only instance enqueued a notification that could never deliver.
+  if (smtpConfigured() && row.requestedBy) {
     const [requester] = await db.select().from(users).where(eq(users.id, row.requestedBy));
     if (requester?.email) {
       const url = `${env.APP_URL}/trees/${treeId}/settings`;
@@ -334,7 +366,10 @@ async function cleanupExports(logger: pino.Logger): Promise<void> {
 }
 
 export function startExportWorker(connection: ConnectionOptions, logger: pino.Logger): Worker[] {
-  const emailQueue = new Queue(EMAIL_QUEUE, { connection });
+  const emailQueue = new Queue(EMAIL_QUEUE, {
+    connection,
+    defaultJobOptions: EMAIL_JOB_OPTIONS,
+  });
 
   const exportWorker = new Worker<ArchiveExportJob>(
     EXPORT_QUEUE,
@@ -355,14 +390,13 @@ export function startExportWorker(connection: ConnectionOptions, logger: pino.Lo
   cleanupWorker.on("failed", (_job, error) =>
     logger.error({ err: error }, "export cleanup failed"),
   );
-  void (async () => {
-    await cleanupExports(logger).catch((error) =>
-      logger.error({ err: error }, "startup export cleanup failed"),
-    );
-    await cleanupQueue.upsertJobScheduler("export-cleanup-daily", {
-      every: 24 * 60 * 60 * 1000,
-    });
-  })();
+  runDaily(
+    cleanupQueue,
+    "export-cleanup-daily",
+    "export cleanup",
+    () => cleanupExports(logger),
+    logger,
+  );
 
   return [exportWorker, cleanupWorker];
 }

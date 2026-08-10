@@ -80,3 +80,14 @@ export function getEnv(): Env {
   }
   return cached;
 }
+
+/**
+ * True when outbound email can actually be sent. Both variables matter: the
+ * transport needs SMTP_HOST and every send needs a From address, so a
+ * host-only check enqueues jobs that are guaranteed to fail. Shared so the web
+ * app and the worker cannot drift apart on the question again.
+ */
+export function smtpConfigured(): boolean {
+  const env = getEnv();
+  return Boolean(env.SMTP_HOST && env.SMTP_FROM);
+}

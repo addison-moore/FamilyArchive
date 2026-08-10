@@ -111,6 +111,9 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-familyarchive}:${POSTGRES_PASSWORD:-familyarchive}@postgres:5432/${POSTGRES_DB:-familyarchive}
       REDIS_URL: redis://valkey:6379
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env (openssl rand -base64 32)}
+      # The worker links to the app from export-ready emails, so it needs the
+      # public URL too — without it those links point at http://localhost:3000.
+      APP_URL: ${APP_URL:-http://localhost:3000}
       MEDIA_STORAGE_DRIVER: ${MEDIA_STORAGE_DRIVER:-local}
       MEDIA_LOCAL_PATH: /data/media
       MEDIA_MAX_UPLOAD_MB: ${MEDIA_MAX_UPLOAD_MB:-500}

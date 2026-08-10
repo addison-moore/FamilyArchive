@@ -4,6 +4,8 @@ import { Queue, Worker, type ConnectionOptions } from "bullmq";
 import { lt, sql } from "drizzle-orm";
 import type pino from "pino";
 
+import { runDaily } from "./scheduling";
+
 const QUEUE = "audit-cleanup";
 
 /** Delete audit entries past the configured retention. */
@@ -26,12 +28,7 @@ export function startAuditCleanup(connection: ConnectionOptions, logger: pino.Lo
   const worker = new Worker(QUEUE, () => cleanup(logger), { connection });
   worker.on("failed", (_job, error) => logger.error({ err: error }, "audit cleanup failed"));
 
-  void (async () => {
-    await cleanup(logger).catch((error) =>
-      logger.error({ err: error }, "startup audit cleanup failed"),
-    );
-    await queue.upsertJobScheduler("audit-cleanup-daily", { every: 24 * 60 * 60 * 1000 });
-  })();
+  runDaily(queue, "audit-cleanup-daily", "audit cleanup", () => cleanup(logger), logger);
 
   return worker;
 }
