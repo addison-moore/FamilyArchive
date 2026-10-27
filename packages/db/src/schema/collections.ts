@@ -1,4 +1,4 @@
-import { integer, jsonb, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import { index, integer, jsonb, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
 import { mediaItems } from "./media";
@@ -41,5 +41,12 @@ export const collectionMedia = pgTable(
       .references(() => mediaItems.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
-  (table) => [primaryKey({ columns: [table.collectionId, table.mediaId] })],
+  (table) => [
+    primaryKey({ columns: [table.collectionId, table.mediaId] }),
+    // media_id is the primary key's trailing column, so it cannot lead a scan.
+    // `collectionsForMedia` filters on media_id alone and runs on every media
+    // detail render; without this the planner falls back to a sequential scan
+    // of every membership row in the instance.
+    index("collection_media_media_idx").on(table.mediaId),
+  ],
 );

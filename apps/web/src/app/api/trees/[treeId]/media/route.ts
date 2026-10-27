@@ -4,7 +4,7 @@ import { pipeline } from "node:stream/promises";
 
 import { AuthorizationError, requireMemberRole } from "@familyarchive/auth";
 import { getEnv } from "@familyarchive/config";
-import { adjustInstanceUsage, getDb, mediaItems } from "@familyarchive/db";
+import { adjustInstanceUsage, getDb, isUniqueViolation, mediaItems } from "@familyarchive/db";
 import { originalKey, uploadTempKey } from "@familyarchive/media";
 import { UPLOAD_MIME_TYPES } from "@familyarchive/shared";
 import { and, eq, isNull, ne } from "drizzle-orm";
@@ -198,9 +198,30 @@ export async function POST(
       .update(mediaItems)
       .set({ hash, fileSize: byteCount, storageKey: finalKey, updatedAt: new Date() })
       .where(eq(mediaItems.id, mediaId));
-  } catch {
+  } catch (error) {
     await driver.delete(finalKey).catch(() => {});
     await cleanup();
+    // A unique violation here is the database settling a race the SELECT above
+    // cannot see: both requests inserted their placeholder with a null hash, so
+    // neither could observe the other until one of them wrote the real hash.
+    // Report it as the same conflict the pre-check reports, not a server error.
+    if (isUniqueViolation(error)) {
+      const winner = await db
+        .select({ id: mediaItems.id })
+        .from(mediaItems)
+        .where(
+          and(
+            eq(mediaItems.treeId, treeId),
+            eq(mediaItems.hash, hash),
+            isNull(mediaItems.deletedAt),
+          ),
+        )
+        .limit(1);
+      return Response.json(
+        { error: "This file is already in the library", duplicateOf: winner[0]?.id },
+        { status: 409 },
+      );
+    }
     return Response.json({ error: "Failed to store the uploaded file" }, { status: 500 });
   }
 

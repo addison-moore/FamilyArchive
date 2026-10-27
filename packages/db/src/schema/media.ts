@@ -11,6 +11,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 import { users } from "./auth";
@@ -65,7 +66,14 @@ export const mediaItems = pgTable(
   },
   (table) => [
     index("media_items_tree_idx").on(table.treeId, table.deletedAt),
-    index("media_items_hash_idx").on(table.treeId, table.hash),
+    // Unique, not a plain index: duplicate-upload detection is a check then a
+    // write, and only the database can arbitrate between two concurrent
+    // uploads of the same bytes. Partial on both counts — soft-deleted rows are
+    // excluded so a deleted file can be re-uploaded, and placeholder rows
+    // (inserted with a null hash before the stream is read) are exempt.
+    uniqueIndex("media_items_tree_hash_unique")
+      .on(table.treeId, table.hash)
+      .where(sql`deleted_at is null and hash is not null`),
     // Full-text search over media text; expression must match lib/search.ts.
     index("media_items_text_search_idx").using(
       "gin",
