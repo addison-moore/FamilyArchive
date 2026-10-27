@@ -23,6 +23,19 @@ pnpm db:migrate
 pnpm dev
 ```
 
+The dev compose publishes Postgres on `127.0.0.1:5432` and Valkey on
+`127.0.0.1:6379` — loopback only, so neither is reachable from the network.
+If something already holds those ports, set `POSTGRES_HOST_PORT` /
+`VALKEY_HOST_PORT` in `.env` and match them in your `DATABASE_URL` /
+`REDIS_URL`.
+
+`pnpm db:migrate` applies migrations to whatever `DATABASE_URL` is set to, so it
+prints the target first — `user@host:port/database`, never the password. If that
+host is not localhost it asks before doing anything, which is the guard against
+a `.env` left pointing at a shared database. Set `MIGRATE_YES=1` to skip the
+prompt in scripts. Inside the stack migrations run as the one-shot `migrate`
+service, which is never prompted.
+
 ## Full stack from source
 
 The repository's root `compose.yaml` **builds the production images from your
