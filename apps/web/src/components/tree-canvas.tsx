@@ -16,7 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 
 import { edgeTypes } from "@/components/tree-edges";
 import { buildConnectorEdges, type ConnectorFlowEdge } from "@/lib/tree-connectors";
-import { layoutTreeGraph } from "@/lib/tree-layout";
+import { layoutTreeGraph, NODE_HEIGHT, NODE_WIDTH } from "@/lib/tree-layout";
 import {
   buildAdjacency,
   collapseBranch,
@@ -33,7 +33,24 @@ import {
 
 import "@xyflow/react/dist/style.css";
 
-const FIT_VIEW_OPTIONS = { padding: 0.2, maxZoom: 1 };
+/**
+ * Zoom floor for the opening view. Names render at 14px, so this puts them at
+ * roughly 12px on screen — small but comfortably readable. Lower values fit
+ * more of the graph but the labels stop being worth rendering.
+ */
+const READABLE_ZOOM = 0.85;
+
+/**
+ * Opening view. The floor matters more than the fit: an imported archive can
+ * put ~90 visible people across 12,000px of graph, and fitting that into the
+ * canvas lands on React Flow's minimum zoom, where names render around 2px —
+ * technically "the whole tree", practically unreadable. So the opening view
+ * stays legible and is centred on the starting person instead (see openView).
+ */
+const FIT_VIEW_OPTIONS = { padding: 0.12, minZoom: READABLE_ZOOM, maxZoom: 1.1 };
+
+/** The Fit button is an explicit request for the overview, so it may zoom right out. */
+const OVERVIEW_FIT_OPTIONS = { padding: 0.12, maxZoom: 1.1 };
 
 /** Branch toggle shown on a node edge: an expand pill with a hidden count, a
  * hover-revealed collapse control, or nothing. */
@@ -291,7 +308,7 @@ function CanvasControls({
       </button>
       <button
         type="button"
-        onClick={() => void fitView({ ...FIT_VIEW_OPTIONS, duration: 300 })}
+        onClick={() => void fitView({ ...OVERVIEW_FIT_OPTIONS, duration: 300 })}
         title="Fit tree to view"
         aria-label="Fit tree to view"
         className={`flex ${controlButtonClass}`}
@@ -375,7 +392,10 @@ function TreeCanvasInner({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [maximized, setMaximized] = useState(false);
-  const { fitView } = useReactFlow<PersonFlowNode, ConnectorFlowEdge>();
+  // Measured, not assumed: whether the graph fits legibly depends on the real
+  // panel size, which now varies with the sidebar toggle and the viewport.
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const { fitView, setCenter } = useReactFlow<PersonFlowNode, ConnectorFlowEdge>();
 
   const adjacency = useMemo(() => buildAdjacency(graph), [graph]);
   const defaults = useMemo(() => defaultCollapseMap(graph, adjacency), [graph, adjacency]);
@@ -396,6 +416,47 @@ function TreeCanvasInner({
     setTimeout(() => void fitView({ ...FIT_VIEW_OPTIONS, duration: 300 }), 60);
   }, [fitView]);
 
+  /**
+   * Put the viewport somewhere useful without sacrificing legibility.
+   *
+   * `fitView` alone cannot do this: asked to frame a graph far wider than the
+   * canvas it simply zooms out until everything fits, which on an imported
+   * archive means names rendered at a couple of pixels. When the graph will not
+   * fit at a readable zoom, centre on the starting person at that zoom instead
+   * and leave the overview to the Fit button.
+   */
+  const openView = useCallback(
+    (duration = 0) => {
+      const box = canvas.nodes.reduce(
+        (acc, node) => ({
+          minX: Math.min(acc.minX, node.x),
+          maxX: Math.max(acc.maxX, node.x + NODE_WIDTH),
+          minY: Math.min(acc.minY, node.y),
+          maxY: Math.max(acc.maxY, node.y + NODE_HEIGHT),
+        }),
+        { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity },
+      );
+      const view = containerRef.current?.getBoundingClientRect();
+      const start = canvas.nodes.find((node) => node.isStart) ?? canvas.nodes[0];
+      if (!view || !start || canvas.nodes.length === 0) {
+        void fitView({ ...FIT_VIEW_OPTIONS, duration });
+        return;
+      }
+      const fits =
+        (box.maxX - box.minX) * READABLE_ZOOM <= view.width &&
+        (box.maxY - box.minY) * READABLE_ZOOM <= view.height;
+      if (fits) {
+        void fitView({ ...FIT_VIEW_OPTIONS, duration });
+        return;
+      }
+      void setCenter(start.x + NODE_WIDTH / 2, start.y + NODE_HEIGHT / 2, {
+        zoom: READABLE_ZOOM,
+        duration,
+      });
+    },
+    [canvas.nodes, fitView, setCenter],
+  );
+
   const onToggleBranch = useCallback(
     (personId: string, direction: CollapseDirection, expand: boolean) => {
       setCollapsed((current) =>
@@ -408,16 +469,44 @@ function TreeCanvasInner({
     [adjacency, refit],
   );
 
-  // Both view toggles resize the container, so re-fit once the new layout has
-  // painted. Skipped on mount, where ReactFlow's own `fitView` prop covers it.
-  const mountedRef = useRef(false);
+  /**
+   * Own the viewport whenever the canvas box changes — first paint, the sidebar
+   * and full-screen toggles, and plain window resizes.
+   *
+   * One observer for all three, because they are the same event: the container
+   * changed size, so the framing computed for the old size no longer holds.
+   * Without it a resize left the graph translated off-screen and the canvas
+   * looked empty.
+   *
+   * The observer is created once and reads the current `openView` through a
+   * ref. Depending on the callback directly re-created the observer on every
+   * render that changed its identity, and each teardown cleared the pending
+   * timer before it could fire — so the opening view never ran at all.
+   *
+   * `useNodesInitialized` would have been the natural trigger for the first
+   * pass but reports false here even with every node measured and in the DOM.
+   */
+  const openViewRef = useRef(openView);
+  openViewRef.current = openView;
   useEffect(() => {
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-      return;
-    }
-    refit();
-  }, [wide, maximized, refit]);
+    const element = containerRef.current;
+    if (!element) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let first = true;
+    const observer = new ResizeObserver(() => {
+      clearTimeout(timer);
+      // The first callback is the initial observation — the opening view, which
+      // should not animate; later ones are resizes, which should.
+      const duration = first ? 0 : 200;
+      first = false;
+      timer = setTimeout(() => openViewRef.current(duration), 80);
+    });
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      clearTimeout(timer);
+    };
+  }, []);
 
   useEffect(() => {
     if (!maximized) return;
@@ -484,10 +573,16 @@ function TreeCanvasInner({
 
   return (
     <div
+      ref={containerRef}
       className={
         maximized
           ? "fixed inset-0 z-50 bg-surface"
-          : "relative h-[70vh] min-h-[420px] rounded-xl border border-archive-100 bg-surface shadow-sm"
+          : // A definite height, not just a minimum: React Flow's root sizes
+            // itself with height:100%, which resolves to 0 against a parent
+            // whose height comes only from min-height. Below xl the canvas
+            // stacks above the sidebar at a fixed height; from xl it fills the
+            // panel, whose height the page's flex chain makes definite.
+            "relative h-[26rem] w-full xl:h-auto xl:min-h-0 xl:flex-1"
       }
     >
       {/* One bottom rail: visibility status on the left, controls on the right.
@@ -535,7 +630,11 @@ function TreeCanvasInner({
         edges={flowEdges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        fitView
+        // No `fitView` prop on purpose: it is applied during init, after both
+        // our mount effect and onInit, so it would win every race and frame the
+        // graph's centre — leaving the starting person far off-screen on a wide
+        // graph. openView sets the opening viewport instead, once nodes report
+        // they are initialized.
         fitViewOptions={FIT_VIEW_OPTIONS}
         minZoom={0.15}
         proOptions={{ hideAttribution: true }}

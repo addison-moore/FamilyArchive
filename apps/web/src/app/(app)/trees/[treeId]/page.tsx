@@ -108,7 +108,7 @@ export default async function TreePage({
   };
 
   return (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col">
       <FormError message={error} />
       {imported && (
         <div className="mb-4 rounded-md border border-accent-600/30 bg-archive-100/60 px-4 py-3 text-sm text-archive-800">
@@ -125,7 +125,7 @@ export default async function TreePage({
           )}
         </div>
       )}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-3 flex shrink-0 flex-wrap items-center gap-3">
         <div className="flex rounded-md border border-archive-100 bg-surface p-0.5">
           {TREE_VIEW_MODES.map((m) => (
             <Link
