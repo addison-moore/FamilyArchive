@@ -2,9 +2,12 @@ import type { ReactNode } from "react";
 
 /** Small shared form styling primitives (server components). */
 
-export const inputClass =
-  "w-full rounded-md border border-archive-100 bg-surface px-3 py-2 text-sm " +
-  "focus:border-accent-600 focus:outline-none";
+/**
+ * Text inputs, selects and textareas: full width unless the caller adds a width
+ * of its own (`${inputClass} w-56`). The styles are a components-layer class in
+ * globals.css so that width wins; as utilities, `w-full` beat every other one.
+ */
+export const inputClass = "input";
 
 export const buttonClass =
   "rounded-md bg-accent-600 px-4 py-2 text-sm font-medium text-white " +

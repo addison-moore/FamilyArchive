@@ -172,8 +172,10 @@ export default async function TreeLayout({
       </nav>
       {/* The height chain the canvas page relies on: min-h-0 lets a flex child
           shrink below its content so `flex-1` resolves against the viewport
-          instead of the graph's own size. */}
-      <div className="flex min-h-0 flex-1 flex-col px-4 py-6">{children}</div>
+          instead of the graph's own size. `*:w-full` is for the other pages,
+          which centre themselves with mx-auto and a max-w-*: auto margins stop
+          a flex child stretching, so without it they shrink to their content. */}
+      <div className="flex min-h-0 flex-1 flex-col px-4 py-6 *:w-full">{children}</div>
     </>
   );
 }

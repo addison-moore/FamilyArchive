@@ -19,7 +19,7 @@ export default async function CollectionsPage({ params }: { params: Promise<{ tr
   const canEdit = treeRoleAtLeast(role, "editor");
 
   return (
-    <div>
+    <div className="mx-auto max-w-6xl">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold">Collections</h1>
         {canEdit && (

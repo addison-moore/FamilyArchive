@@ -76,7 +76,7 @@ export default async function PeoplePage({
   };
 
   return (
-    <div className="flex flex-col gap-6 lg:flex-row">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 lg:flex-row">
       <div className="min-w-0 flex-1">
         <div className="mb-4 flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-semibold">People</h1>

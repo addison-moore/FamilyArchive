@@ -46,7 +46,7 @@ export default async function CollectionPage({
   const imageMembers = media.filter((m) => isImageMime(m.mimeType));
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6">
       <FormError message={error} />
       <div>
         <h1 className="text-2xl font-semibold">{collection.name}</h1>
