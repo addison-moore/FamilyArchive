@@ -76,7 +76,7 @@ export default async function SearchPage({
     : 0;
 
   return (
-    <div>
+    <div className="mx-auto max-w-6xl">
       <div className="mb-5 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold">Search</h1>
         {user && (
@@ -113,7 +113,7 @@ export default async function SearchPage({
               </option>
             ))}
           </select>
-          <select name="tag" defaultValue={tag ?? ""} className={`${inputClass} w-auto`}>
+          <select name="tag" defaultValue={tag ?? ""} className={`${inputClass} w-auto max-w-56`}>
             <option value="">Any tag</option>
             {treeTags.map((treeTag) => (
               <option key={treeTag.id} value={treeTag.id}>
@@ -121,7 +121,11 @@ export default async function SearchPage({
               </option>
             ))}
           </select>
-          <select name="person" defaultValue={person ?? ""} className={`${inputClass} w-auto`}>
+          <select
+            name="person"
+            defaultValue={person ?? ""}
+            className={`${inputClass} w-auto max-w-56`}
+          >
             <option value="">Anyone</option>
             {peopleList.map((p) => (
               <option key={p.id} value={p.id}>
@@ -129,7 +133,11 @@ export default async function SearchPage({
               </option>
             ))}
           </select>
-          <select name="uploader" defaultValue={uploader ?? ""} className={`${inputClass} w-auto`}>
+          <select
+            name="uploader"
+            defaultValue={uploader ?? ""}
+            className={`${inputClass} w-auto max-w-56`}
+          >
             <option value="">Any uploader</option>
             {uploaders.map((u) => (
               <option key={u.id} value={u.id}>

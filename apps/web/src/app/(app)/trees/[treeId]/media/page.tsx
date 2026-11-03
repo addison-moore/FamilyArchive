@@ -101,7 +101,7 @@ export default async function MediaPage({
   };
 
   return (
-    <div>
+    <div className="mx-auto max-w-6xl">
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold">Media</h1>
         <div className="flex rounded-md border border-archive-100 bg-surface p-0.5 text-sm">
@@ -137,7 +137,7 @@ export default async function MediaPage({
               </option>
             ))}
           </select>
-          <select name="tag" defaultValue={tag ?? ""} className={`${inputClass} w-auto`}>
+          <select name="tag" defaultValue={tag ?? ""} className={`${inputClass} w-auto max-w-56`}>
             <option value="">All tags</option>
             {treeTags.map((treeTag) => (
               <option key={treeTag.id} value={treeTag.id}>
@@ -145,7 +145,11 @@ export default async function MediaPage({
               </option>
             ))}
           </select>
-          <select name="person" defaultValue={person ?? ""} className={`${inputClass} w-auto`}>
+          <select
+            name="person"
+            defaultValue={person ?? ""}
+            className={`${inputClass} w-auto max-w-56`}
+          >
             <option value="">Anyone</option>
             {peopleList.map((p) => (
               <option key={p.id} value={p.id}>

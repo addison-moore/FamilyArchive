@@ -310,7 +310,7 @@ export default async function MediaDetailPage({
                 <form action={addMediaToCollectionAction} className="flex items-center gap-2">
                   <input type="hidden" name="treeId" value={treeId} />
                   <input type="hidden" name="mediaId" value={mediaId} />
-                  <select name="collectionId" required className={`${inputClass} w-auto flex-1`}>
+                  <select name="collectionId" required className={`${inputClass} min-w-0 flex-1`}>
                     <option value="">Add to collection…</option>
                     {joinableCollections.map((collection) => (
                       <option key={collection.id} value={collection.id}>
@@ -365,7 +365,7 @@ export default async function MediaDetailPage({
                     required
                     maxLength={100}
                     placeholder="Add a tag…"
-                    className={`${inputClass} w-auto flex-1`}
+                    className={`${inputClass} min-w-0 flex-1`}
                   />
                   <button type="submit" className={subtleButtonClass}>
                     Add

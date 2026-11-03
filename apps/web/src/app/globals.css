@@ -55,6 +55,17 @@
   --color-success-strong: #2f9e53;
 }
 
+/* Form fields (`inputClass` in components/form.tsx). In the components layer so
+   any utility on the same element overrides it: written as utilities, the
+   default w-full sorted after every other width class, so the w-auto or w-56 a
+   caller added never applied. max-w-full keeps a field that sizes to its
+   content — a select with one long option — inside its container. */
+@layer components {
+  .input {
+    @apply w-full max-w-full rounded-md border border-archive-100 bg-surface px-3 py-2 text-sm focus:border-accent-600 focus:outline-none;
+  }
+}
+
 /* Edge-anchor handles are not interactive (nodes aren't connectable) — hide
    the dots so person cards stay clean. */
 .react-flow__handle {
