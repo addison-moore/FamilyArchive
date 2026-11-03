@@ -1,5 +1,6 @@
 import { getDb, people, personNames, places, relationships } from "@familyarchive/db";
 import {
+  dateSortKey,
   isParentRelationshipType,
   isPartnerRelationshipType,
   type RelationshipType,
@@ -8,6 +9,13 @@ import { and, asc, count, eq, ilike, inArray, isNull, or, type SQL } from "drizz
 
 export type PersonRow = typeof people.$inferSelect;
 export type PersonNameRow = typeof personNames.$inferSelect;
+
+/** A person's birth date as a number that sorts chronologically (see dateSortKey). */
+export function personBirthSortKey(
+  person: Pick<PersonRow, "birthYear" | "birthMonth" | "birthDay">,
+): number | null {
+  return dateSortKey({ year: person.birthYear, month: person.birthMonth, day: person.birthDay });
+}
 
 /** Not-deleted people in a tree, optionally filtered by name, ordered by name. */
 export async function listPeople(treeId: string, query?: string): Promise<PersonRow[]> {
@@ -98,14 +106,88 @@ export interface RelatedPerson {
 }
 
 export interface RelationshipGraph {
+  /** A couple reads in the order their partnership was recorded. */
   parents: RelatedPerson[];
+  /** Eldest first. */
   children: RelatedPerson[];
+  /** In the order their families with this person started. */
   partners: RelatedPerson[];
-  /** Inferred: other children of this person's parents. */
+  /** Inferred: other children of this person's parents, eldest first. */
   siblings: PersonRow[];
 }
 
-/** All relationship groups for one person; soft-deleted people are filtered out. */
+/** The parts of a relationship row that decide the order relatives read in. */
+type FamilyEdge = Pick<typeof relationships.$inferSelect, "type" | "fromPersonId" | "toPersonId">;
+
+/** Sorts eldest first, with people whose birth date is unknown after everyone else. */
+const birthOrder = (person: PersonRow) => personBirthSortKey(person) ?? Number.MAX_SAFE_INTEGER;
+
+/**
+ * Puts one person's relatives in the order the tree canvas shows them. Pure, so
+ * the rules are testable without a database.
+ *
+ * Children and siblings sit eldest first with the undated last and ties in
+ * creation order, so `creationOrder` must hold everyone related in that order, as
+ * buildTreeGraph's people are. Parents and partners follow the canvas's other
+ * rules: a couple reads the way their partnership was recorded, and a remarried
+ * person's partners read in the order their families started, by each one's
+ * eldest child with this person. Anyone these rules leave tied keeps the order
+ * given.
+ *
+ * The canvas can still differ where its layout outranks these rules: it seats an
+ * in-law outside their partner and a remarried parent between partners, keeps
+ * each of a remarried parent's families together, and moves a sibling beside a
+ * partner who also has parents in view.
+ *
+ * `familyEdges` are the rows around the immediate relatives: those from the
+ * parents, and those to the children.
+ */
+export function orderRelatives(
+  { parents, children, partners, siblings }: RelationshipGraph,
+  creationOrder: PersonRow[],
+  familyEdges: FamilyEdge[],
+): RelationshipGraph {
+  const eldestFirst = [...creationOrder].sort((a, b) => birthOrder(a) - birthOrder(b));
+  const birthRank = new Map(eldestFirst.map((person, rank) => [person.id, rank]));
+
+  const parentIds = new Set(parents.map((r) => r.person.id));
+  const firstOfCouple = new Set(
+    familyEdges
+      .filter(
+        (e) =>
+          isPartnerRelationshipType(e.type) &&
+          parentIds.has(e.fromPersonId) &&
+          parentIds.has(e.toPersonId),
+      )
+      .map((e) => e.fromPersonId),
+  );
+  const coupleOrder = (r: RelatedPerson) => (firstOfCouple.has(r.person.id) ? 0 : 1);
+
+  const childIds = new Set(children.map((r) => r.person.id));
+  const familyStart = new Map<string, number>();
+  for (const e of familyEdges) {
+    if (!isParentRelationshipType(e.type) || !childIds.has(e.toPersonId)) continue;
+    const rank = birthRank.get(e.toPersonId)!;
+    familyStart.set(e.fromPersonId, Math.min(rank, familyStart.get(e.fromPersonId) ?? rank));
+  }
+  const familyOrder = (r: RelatedPerson) => familyStart.get(r.person.id) ?? Number.MAX_SAFE_INTEGER;
+
+  return {
+    parents: [...parents].sort((a, b) => coupleOrder(a) - coupleOrder(b)),
+    children: [...children].sort(
+      (a, b) => birthRank.get(a.person.id)! - birthRank.get(b.person.id)!,
+    ),
+    partners: [...partners].sort((a, b) => familyOrder(a) - familyOrder(b)),
+    siblings: [...siblings].sort((a, b) => birthRank.get(a.id)! - birthRank.get(b.id)!),
+  };
+}
+
+/**
+ * All relationship groups for one person; soft-deleted people are filtered out.
+ * Rows are ordered by creation time and then id, as in buildTreeGraph (a GEDCOM
+ * import creates everything in one transaction), so the groups read the same on
+ * every load.
+ */
 export async function getRelationshipGraph(
   treeId: string,
   personId: string,
@@ -119,7 +201,8 @@ export async function getRelationshipGraph(
         eq(relationships.treeId, treeId),
         or(eq(relationships.fromPersonId, personId), eq(relationships.toPersonId, personId)),
       ),
-    );
+    )
+    .orderBy(asc(relationships.createdAt), asc(relationships.id));
 
   const parentEdges = edges.filter(
     (e) => isParentRelationshipType(e.type) && e.toPersonId === personId,
@@ -130,6 +213,7 @@ export async function getRelationshipGraph(
   const partnerEdges = edges.filter((e) => isPartnerRelationshipType(e.type));
 
   const parentIds = parentEdges.map((e) => e.fromPersonId);
+  const childIds = childEdges.map((e) => e.toPersonId);
 
   // Siblings: children of this person's parents, excluding the person.
   const siblingEdges =
@@ -149,10 +233,19 @@ export async function getRelationshipGraph(
     ),
   ];
 
+  // The children's other parents, only needed to put two or more partners in order.
+  const coParentEdges =
+    partnerEdges.length > 1 && childIds.length > 0
+      ? await db
+          .select()
+          .from(relationships)
+          .where(and(eq(relationships.treeId, treeId), inArray(relationships.toPersonId, childIds)))
+      : [];
+
   const relatedIds = [
     ...new Set([
-      ...parentEdges.map((e) => e.fromPersonId),
-      ...childEdges.map((e) => e.toPersonId),
+      ...parentIds,
+      ...childIds,
       ...partnerEdges.map((e) => (e.fromPersonId === personId ? e.toPersonId : e.fromPersonId)),
       ...siblingIds,
     ]),
@@ -169,6 +262,7 @@ export async function getRelationshipGraph(
               isNull(people.deletedAt),
             ),
           )
+          .orderBy(asc(people.createdAt), asc(people.id))
       : [];
   const byId = new Map(relatedPeople.map((p) => [p.id, p]));
 
@@ -177,21 +271,22 @@ export async function getRelationshipGraph(
     return person ? { person, type: edge.type, relationshipId: edge.id } : null;
   };
 
-  return {
-    parents: parentEdges
-      .map((e) => toRelated(e, e.fromPersonId))
-      .filter((x): x is RelatedPerson => x !== null),
-    children: childEdges
-      .map((e) => toRelated(e, e.toPersonId))
-      .filter((x): x is RelatedPerson => x !== null),
-    partners: partnerEdges
-      .map((e) => toRelated(e, e.fromPersonId === personId ? e.toPersonId : e.fromPersonId))
-      .filter((x): x is RelatedPerson => x !== null),
-    siblings: siblingIds
-      .map((id) => byId.get(id))
-      .filter((p): p is PersonRow => p !== undefined)
-      .sort((a, b) => a.fullName.localeCompare(b.fullName)),
-  };
+  return orderRelatives(
+    {
+      parents: parentEdges
+        .map((e) => toRelated(e, e.fromPersonId))
+        .filter((x): x is RelatedPerson => x !== null),
+      children: childEdges
+        .map((e) => toRelated(e, e.toPersonId))
+        .filter((x): x is RelatedPerson => x !== null),
+      partners: partnerEdges
+        .map((e) => toRelated(e, e.fromPersonId === personId ? e.toPersonId : e.fromPersonId))
+        .filter((x): x is RelatedPerson => x !== null),
+      siblings: siblingIds.map((id) => byId.get(id)).filter((p): p is PersonRow => p !== undefined),
+    },
+    relatedPeople,
+    [...siblingEdges, ...coParentEdges],
+  );
 }
 
 /** Find-or-create a place by display name within a tree; null for blank input. */
