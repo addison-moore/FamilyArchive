@@ -96,9 +96,11 @@ export default async function TreeLayout({
     </nav>
   );
 
+  // The wordmark puts the switcher too far along a phone's header for its panel
+  // to fit under it, so below sm the panel anchors to the sticky header instead.
   const archiveSwitcher = (
     <Dropdown
-      className="relative min-w-0 shrink"
+      className="min-w-0 shrink sm:relative"
       summaryClassName="flex cursor-pointer list-none items-center gap-1 rounded-md border border-archive-100 px-2.5 py-1.5 text-sm font-medium hover:bg-archive-50"
       summary={
         <>
@@ -107,7 +109,7 @@ export default async function TreeLayout({
         </>
       }
     >
-      <div className="absolute left-0 z-10 mt-1 w-64 rounded-md border border-archive-100 bg-surface p-1 shadow-md">
+      <div className="absolute left-4 z-10 mt-1 w-64 rounded-md border border-archive-100 bg-surface p-1 shadow-md sm:left-0">
         {accessibleTrees.map((item) => (
           <Link
             key={item.id}
