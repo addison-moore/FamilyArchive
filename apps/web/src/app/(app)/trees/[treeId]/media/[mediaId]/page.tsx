@@ -194,7 +194,10 @@ export default async function MediaDetailPage({
         />
       </div>
 
-      {/* Caption zone: only what a person wrote — plus the discoverability rail. */}
+      {/* Caption zone: only what a person wrote — plus the discoverability rail.
+          A phone has no room for a panel hung from an icon button short of the row's end,
+          so below sm the Info and Edit details aren't positioned and their panels span the
+          screen. */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 space-y-1">
           {media.title && <h1 className="text-xl font-semibold">{media.title}</h1>}
@@ -224,7 +227,7 @@ export default async function MediaDetailPage({
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">
-          <details className="relative">
+          <details className="sm:relative">
             <summary className={`${iconButtonClass} list-none`} title="Info" aria-label="Info">
               <svg
                 width="17"
@@ -239,7 +242,7 @@ export default async function MediaDetailPage({
                 <path d="M12 16v-5M12 8h.01" />
               </svg>
             </summary>
-            <div className="absolute right-0 z-20 mt-2 w-[min(92vw,26rem)] rounded-xl border border-archive-100 bg-surface p-5 shadow-lg">
+            <div className="absolute inset-x-4 z-20 mt-2 rounded-xl border border-archive-100 bg-surface p-5 shadow-lg sm:right-0 sm:left-auto sm:w-[26rem]">
               <dl className="space-y-1.5 text-sm">
                 <div>
                   <dt className="inline font-medium">Type: </dt>
@@ -378,7 +381,7 @@ export default async function MediaDetailPage({
           </details>
 
           {canEdit && (
-            <details className="relative">
+            <details className="sm:relative">
               <summary
                 className={`${iconButtonClass} list-none`}
                 title="Edit details"
@@ -397,7 +400,7 @@ export default async function MediaDetailPage({
                   <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                 </svg>
               </summary>
-              <div className="absolute right-0 z-20 mt-2 w-[min(92vw,28rem)] rounded-xl border border-archive-100 bg-surface p-5 shadow-lg">
+              <div className="absolute inset-x-4 z-20 mt-2 rounded-xl border border-archive-100 bg-surface p-5 shadow-lg sm:right-0 sm:left-auto sm:w-[28rem]">
                 <form action={updateMediaAction} className="space-y-4">
                   <input type="hidden" name="treeId" value={treeId} />
                   <input type="hidden" name="mediaId" value={mediaId} />
@@ -550,8 +553,11 @@ export default async function MediaDetailPage({
         </div>
       </div>
 
-      {/* People are content — chips stay visible; adding collapses into "+ Add". */}
-      <div className="flex flex-wrap items-center gap-2">
+      {/* People are content — chips stay visible; adding collapses into "+ Add".
+          That button lands wherever the chips end, so its panel only hangs from it at xl,
+          where the page's margin leaves room at any position. Below that the panel hangs
+          from this row, and below sm spans the screen like the ones above. */}
+      <div className="flex flex-wrap items-center gap-2 sm:relative">
         {taggedPeople.map((tagged) => (
           <span
             key={tagged.rowId}
@@ -580,7 +586,7 @@ export default async function MediaDetailPage({
           </span>
         ))}
         {canTag && untaggedPeople.length > 0 && (
-          <details className="relative">
+          <details className="xl:relative">
             <summary
               className="cursor-pointer list-none rounded-full border border-dashed border-archive-100 px-3 py-1 text-sm text-archive-700 hover:bg-archive-50"
               title={
@@ -593,7 +599,7 @@ export default async function MediaDetailPage({
             </summary>
             <form
               action={addMediaPersonAction}
-              className="absolute left-0 z-20 mt-2 flex w-72 items-center gap-2 rounded-md border border-archive-100 bg-surface p-2 shadow-lg"
+              className="absolute inset-x-4 z-20 mt-2 flex items-center gap-2 rounded-md border border-archive-100 bg-surface p-2 shadow-lg sm:right-auto sm:left-0 sm:w-72"
             >
               <input type="hidden" name="treeId" value={treeId} />
               <input type="hidden" name="mediaId" value={mediaId} />
