@@ -135,6 +135,12 @@ export function computeGenerations(
  * descendants, and non-recursive "immediate family context" — partners of
  * everyone shown, co-parents of included children, and the start's siblings.
  * Loads the whole tree's people/edges in two queries; family trees are small.
+ *
+ * Both queries are ordered, by creation time and then id (a GEDCOM import
+ * creates everyone in one transaction), and people come back in that order, not
+ * the walk's. The layout breaks its ties by the order it is given, so unordered
+ * rows could lay the same archive out differently from one load to the next, and
+ * walk order differently from one starting person to the next.
  */
 export async function buildTreeGraph(
   treeId: string,
@@ -146,8 +152,13 @@ export async function buildTreeGraph(
     db
       .select()
       .from(people)
-      .where(and(eq(people.treeId, treeId), isNull(people.deletedAt))),
-    db.select().from(relationships).where(eq(relationships.treeId, treeId)),
+      .where(and(eq(people.treeId, treeId), isNull(people.deletedAt)))
+      .orderBy(asc(people.createdAt), asc(people.id)),
+    db
+      .select()
+      .from(relationships)
+      .where(eq(relationships.treeId, treeId))
+      .orderBy(asc(relationships.createdAt), asc(relationships.id)),
   ]);
   const peopleById = new Map(allPeople.map((p) => [p.id, p]));
 
@@ -179,26 +190,23 @@ export async function buildTreeGraph(
     mode,
   );
 
-  const included = [...generationOf.keys()];
-  const includedSet = new Set(included);
   const parentEdges = allEdges.filter(
     (e) =>
       isParentRelationshipType(e.type) &&
-      includedSet.has(e.fromPersonId) &&
-      includedSet.has(e.toPersonId),
+      generationOf.has(e.fromPersonId) &&
+      generationOf.has(e.toPersonId),
   );
   const partnerEdges = allEdges.filter(
     (e) =>
       isPartnerRelationshipType(e.type) &&
-      includedSet.has(e.fromPersonId) &&
-      includedSet.has(e.toPersonId),
+      generationOf.has(e.fromPersonId) &&
+      generationOf.has(e.toPersonId),
   );
 
   return {
-    people: included.map((id) => ({
-      person: peopleById.get(id)!,
-      generation: generationOf.get(id)!,
-    })),
+    people: allPeople
+      .filter((person) => generationOf.has(person.id))
+      .map((person) => ({ person, generation: generationOf.get(person.id)! })),
     parentEdges: parentEdges.map((e) => ({
       id: e.id,
       fromPersonId: e.fromPersonId,
@@ -214,7 +222,8 @@ export async function buildTreeGraph(
 
 /**
  * The user's starting person for a tree: explicit preference when it
- * still points at a living row, else the earliest-created person, else null.
+ * still points at a living row, else the earliest-created person (lowest id
+ * among a GEDCOM import's, which share a creation time), else null.
  */
 export async function resolveStartingPerson(
   userId: string | null,
@@ -241,7 +250,7 @@ export async function resolveStartingPerson(
     .select()
     .from(people)
     .where(and(eq(people.treeId, treeId), isNull(people.deletedAt)))
-    .orderBy(asc(people.createdAt))
+    .orderBy(asc(people.createdAt), asc(people.id))
     .limit(1);
   return fallback[0] ?? null;
 }

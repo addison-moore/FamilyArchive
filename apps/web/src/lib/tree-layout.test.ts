@@ -8,6 +8,7 @@ const person = (id: string): TreePersonNode => ({
   id,
   fullName: `Test ${id}`,
   lifespan: null,
+  birthSortKey: null,
   generation: 0,
   verified: false,
 });
@@ -19,8 +20,9 @@ const graphOf = (
   people: string[],
   parentEdges: [string, string][],
   partnerEdges: [string, string][] = [],
+  births: Record<string, number> = {},
 ) => ({
-  people: people.map(person),
+  people: people.map((id) => ({ ...person(id), birthSortKey: births[id] ?? null })),
   parentEdges: parentEdges.map(([from, to]) => edge(from, to)),
   partnerEdges: partnerEdges.map(([from, to]) => edge(from, to)),
 });
@@ -31,6 +33,40 @@ const centersOf = (canvas: ReturnType<typeof layoutTreeGraph>) =>
 const xInterval = (centers: Map<string, { x: number; y: number }>, ids: string[]) => {
   const xs = ids.map((id) => centers.get(id)!.x);
   return { min: Math.min(...xs), max: Math.max(...xs) };
+};
+
+/** Same row, with nobody seated between them for the partner line to run behind. */
+const expectSideBySide = (canvas: ReturnType<typeof layoutTreeGraph>, a: string, b: string) => {
+  const [left, right] = canvas.nodes
+    .filter((node) => node.id === a || node.id === b)
+    .sort((p, q) => p.x - q.x);
+  expect(left!.y).toBe(right!.y);
+  const between = canvas.nodes.filter(
+    (node) => node.y === left!.y && node.x > left!.x && node.x < right!.x,
+  );
+  expect(between.map((node) => node.id)).toEqual([]);
+};
+
+const rotate = <T>(items: T[], by: number) => {
+  const at = by % items.length;
+  return [...items.slice(at), ...items.slice(0, at)];
+};
+
+const leftToRight = (canvas: ReturnType<typeof layoutTreeGraph>, ids: string[]) =>
+  canvas.nodes
+    .filter((node) => ids.includes(node.id))
+    .sort((a, b) => a.x - b.x)
+    .map((node) => node.id);
+
+const expectApart = (
+  canvas: ReturnType<typeof layoutTreeGraph>,
+  family: string[],
+  other: string[],
+) => {
+  const centers = centersOf(canvas);
+  const a = xInterval(centers, family);
+  const b = xInterval(centers, other);
+  expect(a.max < b.min || b.max < a.min).toBe(true);
 };
 
 describe("layoutTreeGraph (union-aware)", () => {
@@ -182,6 +218,66 @@ describe("layoutTreeGraph (union-aware)", () => {
     expect(aKids.max < bKids.min || bKids.max < aKids.min).toBe(true);
   });
 
+  it("seats in-laws beside their partner when siblings share the row (fails on the pre-group layout)", () => {
+    // mum has two siblings and married dad, who has no parents in view; so did
+    // their son's wife, and their daughter has a partner with no children in
+    // view. Dagre used to rank in-laws on their own and could seat a sibling
+    // between a couple, and a childless partner slid past a sibling to the
+    // next free slot. Every rotation of the input is tried, since dagre's
+    // ordering depends on it.
+    const people = "gma gpa mum aunt uncle dad daughter son wife partner gk1 gk2".split(" ");
+    const parentEdges: [string, string][] = [
+      ["gpa", "mum"],
+      ["gma", "mum"],
+      ["gpa", "aunt"],
+      ["gma", "aunt"],
+      ["gpa", "uncle"],
+      ["gma", "uncle"],
+      ["dad", "daughter"],
+      ["mum", "daughter"],
+      ["dad", "son"],
+      ["mum", "son"],
+      ["son", "gk1"],
+      ["wife", "gk1"],
+      ["son", "gk2"],
+      ["wife", "gk2"],
+    ];
+    const couples: [string, string][] = [
+      ["gpa", "gma"],
+      ["dad", "mum"],
+      ["son", "wife"],
+      ["daughter", "partner"],
+    ];
+    for (let shift = 0; shift < people.length; shift++) {
+      const canvas = layoutTreeGraph(
+        graphOf(rotate(people, shift), rotate(parentEdges, shift), rotate(couples, shift)),
+        "gma",
+      );
+      for (const [a, b] of couples) expectSideBySide(canvas, a, b);
+    }
+  });
+
+  it("seats a couple in their recorded order whoever the view starts from", () => {
+    // Nothing else separates mirror-image seatings here: the recorded
+    // direction does (HUSB before WIFE from GEDCOM), not ids or the start.
+    for (const start of ["mum", "dad", "kid"]) {
+      const others = ["mum", "dad", "kid"].filter((id) => id !== start);
+      const canvas = layoutTreeGraph(
+        graphOf(
+          [start, ...others],
+          [
+            ["mum", "kid"],
+            ["dad", "kid"],
+          ],
+          [["mum", "dad"]],
+        ),
+        start,
+      );
+      const centers = centersOf(canvas);
+      expect(centers.get("mum")!.x).toBeLessThan(centers.get("dad")!.x);
+    }
+  });
+
   it("places a start person with no parent edges and anchors their partner", () => {
     const canvas = layoutTreeGraph(
       graphOf(["start", "spouse"], [], [["start", "spouse"]]),
@@ -195,8 +291,8 @@ describe("layoutTreeGraph (union-aware)", () => {
   });
 
   it("alternates satellite partners around their anchor without overlaps", () => {
-    // kid has two childless partners plus ranked siblings on the same row, so
-    // satellite slots must alternate sides and slide past occupied cards.
+    // kid has two childless partners plus siblings on the same row, so the
+    // partners must flank kid without landing on a sibling.
     const canvas = layoutTreeGraph(
       graphOf(
         ["mom", "dad", "kid", "sib1", "sib2", "aunt1", "aunt2"],
@@ -255,5 +351,247 @@ describe("layoutTreeGraph (union-aware)", () => {
     expect(Math.abs(centers.get("aunt")!.x - centers.get("kid")!.x)).toBeGreaterThanOrEqual(
       NODE_WIDTH,
     );
+  });
+});
+
+describe("layoutTreeGraph (sibling order)", () => {
+  it("seats siblings in birth order however they were supplied (fails on the unsorted layout)", () => {
+    // Three generations, where the sibling with a family below them is not
+    // always the eldest. Dagre's ordering depends on the input, so every
+    // rotation of it is tried.
+    const people = "gpa gma eldest middle youngest inlaw girl boy wife gk1 gk2".split(" ");
+    const parentEdges: [string, string][] = [
+      ["gpa", "eldest"],
+      ["gma", "eldest"],
+      ["gpa", "middle"],
+      ["gma", "middle"],
+      ["gpa", "youngest"],
+      ["gma", "youngest"],
+      ["inlaw", "girl"],
+      ["eldest", "girl"],
+      ["inlaw", "boy"],
+      ["eldest", "boy"],
+      ["boy", "gk1"],
+      ["wife", "gk1"],
+      ["boy", "gk2"],
+      ["wife", "gk2"],
+    ];
+    const couples: [string, string][] = [
+      ["gpa", "gma"],
+      ["inlaw", "eldest"],
+      ["boy", "wife"],
+    ];
+    const births = {
+      gpa: 18880403,
+      gma: 18920000,
+      eldest: 19200600,
+      middle: 19230000,
+      youngest: 19260000,
+      inlaw: 19180000,
+      girl: 19460000,
+      boy: 19490000,
+      wife: 19480000,
+      gk1: 19720000,
+      gk2: 19750000,
+    };
+    for (let shift = 0; shift < people.length; shift++) {
+      const canvas = layoutTreeGraph(
+        graphOf(rotate(people, shift), rotate(parentEdges, shift), rotate(couples, shift), births),
+        "gpa",
+      );
+      expect(leftToRight(canvas, ["middle", "eldest", "youngest"])).toEqual([
+        "eldest",
+        "middle",
+        "youngest",
+      ]);
+      expect(leftToRight(canvas, ["boy", "girl"])).toEqual(["girl", "boy"]);
+      expect(leftToRight(canvas, ["gk2", "gk1"])).toEqual(["gk1", "gk2"]);
+      for (const [a, b] of couples) expectSideBySide(canvas, a, b);
+    }
+  });
+
+  it("keeps birth order when a younger sibling's child is the older cousin (fails without seatSiblings)", () => {
+    // Fed eldest first, dagre's first sweep orders parents by their children, so
+    // youngerChild pulled younger to the left of elder, and with no crossings to
+    // prompt another look it stayed there.
+    const canvas = layoutTreeGraph(
+      graphOf(
+        ["top", "aunt", "parent", "elder", "younger", "elderChild", "youngerChild", "grandchild"],
+        [
+          ["top", "aunt"],
+          ["top", "parent"],
+          ["parent", "elder"],
+          ["parent", "younger"],
+          ["elder", "elderChild"],
+          ["younger", "youngerChild"],
+          ["youngerChild", "grandchild"],
+        ],
+        [],
+        {
+          top: 18400000,
+          aunt: 18700000,
+          parent: 18740000,
+          elder: 19010000,
+          younger: 19030000,
+          elderChild: 19330000,
+          youngerChild: 19270000,
+          grandchild: 19610000,
+        },
+      ),
+      "top",
+    );
+    expect(leftToRight(canvas, ["younger", "elder"])).toEqual(["elder", "younger"]);
+    // Descendants come along, and parents stay centred over their children.
+    expect(leftToRight(canvas, ["youngerChild", "elderChild"])).toEqual([
+      "elderChild",
+      "youngerChild",
+    ]);
+    const centers = centersOf(canvas);
+    const x = (id: string) => centers.get(id)!.x;
+    expect(x("parent")).toBe((x("elder") + x("younger")) / 2);
+    expect(x("top")).toBe((x("aunt") + x("parent")) / 2);
+    expect(x("grandchild")).toBe(x("youngerChild"));
+  });
+
+  it("seats people with no birth date after their dated siblings, in the order supplied", () => {
+    const children = ["undatedB", "born1960", "undatedA", "born1950"];
+    const parentEdges = children.flatMap((child): [string, string][] => [
+      ["mum", child],
+      ["dad", child],
+    ]);
+    const births = { born1950: 19500000, born1960: 19600000 };
+    for (let shift = 0; shift < parentEdges.length; shift++) {
+      for (const start of ["mum", "dad", "undatedA", "born1960"]) {
+        const graph = graphOf(
+          ["mum", "dad", ...children],
+          rotate(parentEdges, shift),
+          [["mum", "dad"]],
+          births,
+        );
+        const canvas = layoutTreeGraph(graph, start);
+        expect(leftToRight(canvas, children)).toEqual([
+          "born1950",
+          "born1960",
+          "undatedB",
+          "undatedA",
+        ]);
+        // The same data lays out the same way every time.
+        expect(layoutTreeGraph(graph, start)).toEqual(canvas);
+      }
+    }
+  });
+
+  it("keeps siblings together with a partner who has parents in view beside them (fails without seatSiblings)", () => {
+    // Dagre sat spouse beside sibling by putting them between the siblings.
+    const canvas = layoutTreeGraph(
+      graphOf(
+        ["parent", "spouseParent", "older", "sibling", "spouse", "niece", "child"],
+        [
+          ["parent", "older"],
+          ["parent", "sibling"],
+          ["spouseParent", "spouse"],
+          ["older", "niece"],
+          ["sibling", "child"],
+          ["spouse", "child"],
+        ],
+        [["sibling", "spouse"]],
+        {
+          parent: 18660000,
+          spouseParent: 18510000,
+          older: 18940800,
+          sibling: 19010000,
+          spouse: 18840000,
+          niece: 19231000,
+          child: 19360800,
+        },
+      ),
+      "parent",
+    );
+    expectSideBySide(canvas, "sibling", "spouse");
+    expectSideBySide(canvas, "sibling", "older");
+  });
+
+  it("puts a couple before birth order when both partners have parents in view", () => {
+    // spouseA and spouseB are cousins, and neither is at the end of their family
+    // by birth. Each moves to the end facing the other; their siblings stay in
+    // order, and the two families stay apart.
+    const people = "gmaA gmaB eldestA spouseA youngestA eldestB spouseB youngestB kid".split(" ");
+    const parentEdges: [string, string][] = [
+      ["gmaA", "eldestA"],
+      ["gmaA", "spouseA"],
+      ["gmaA", "youngestA"],
+      ["gmaB", "eldestB"],
+      ["gmaB", "spouseB"],
+      ["gmaB", "youngestB"],
+      ["spouseA", "kid"],
+      ["spouseB", "kid"],
+    ];
+    const births = {
+      gmaA: 19200000,
+      gmaB: 19220000,
+      eldestA: 19500000,
+      spouseA: 19520000,
+      youngestA: 19550000,
+      eldestB: 19480000,
+      spouseB: 19510000,
+      youngestB: 19560000,
+      kid: 19800000,
+    };
+    for (let shift = 0; shift < people.length; shift++) {
+      const canvas = layoutTreeGraph(
+        graphOf(
+          rotate(people, shift),
+          rotate(parentEdges, shift),
+          [["spouseA", "spouseB"]],
+          births,
+        ),
+        "gmaA",
+      );
+      expectSideBySide(canvas, "spouseA", "spouseB");
+      expectApart(canvas, ["eldestA", "spouseA", "youngestA"], ["eldestB", "spouseB", "youngestB"]);
+      expect(leftToRight(canvas, ["youngestA", "eldestA"])).toEqual(["eldestA", "youngestA"]);
+      expect(leftToRight(canvas, ["youngestB", "eldestB"])).toEqual(["eldestB", "youngestB"]);
+    }
+  });
+
+  it("orders a remarried parent's families separately, without interleaving them", () => {
+    // By birth alone cora would sit between anna and bram.
+    const people = "elias maren ingrid anna bram cora dov".split(" ");
+    const parentEdges: [string, string][] = [
+      ["elias", "anna"],
+      ["maren", "anna"],
+      ["elias", "bram"],
+      ["maren", "bram"],
+      ["elias", "cora"],
+      ["ingrid", "cora"],
+      ["elias", "dov"],
+      ["ingrid", "dov"],
+    ];
+    const births = {
+      elias: 19200000,
+      maren: 19220000,
+      ingrid: 19250000,
+      anna: 19500000,
+      bram: 19540000,
+      cora: 19520000,
+      dov: 19560000,
+    };
+    for (let shift = 0; shift < people.length; shift++) {
+      const canvas = layoutTreeGraph(
+        graphOf(
+          rotate(people, shift),
+          rotate(parentEdges, shift),
+          [
+            ["elias", "maren"],
+            ["elias", "ingrid"],
+          ],
+          births,
+        ),
+        "elias",
+      );
+      expect(leftToRight(canvas, ["bram", "anna"])).toEqual(["anna", "bram"]);
+      expect(leftToRight(canvas, ["dov", "cora"])).toEqual(["cora", "dov"]);
+      expectApart(canvas, ["anna", "bram"], ["cora", "dov"]);
+    }
   });
 });

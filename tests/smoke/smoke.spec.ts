@@ -326,8 +326,9 @@ test("large import auto-collapses the tree and branches expand", async () => {
   await expect(page.getByText(/GEDCOM import complete: 611 people/)).toBeVisible();
   const largeTreeId = new URL(page.url()).pathname.split("/")[2]!;
 
-  // Import order does not set a deterministic starting person (one createdAt
-  // for the whole transaction), so pin the view to the pedigree hub.
+  // Import order does not set a predictable starting person (one createdAt
+  // for the whole transaction, so the lowest random id wins), so pin the view
+  // to the pedigree hub.
   await page.goto(`/trees/${largeTreeId}/search?q=Cornelius&scope=all`);
   const profileHref = await page
     .locator("section")
