@@ -135,6 +135,11 @@ export function computeGenerations(
  * descendants, and non-recursive "immediate family context" — partners of
  * everyone shown, co-parents of included children, and the start's siblings.
  * Loads the whole tree's people/edges in two queries; family trees are small.
+ *
+ * Both queries are ordered, by creation time and then id (a GEDCOM import
+ * creates everyone in one transaction). The layout's ordering follows row
+ * order, through the walk and the edge lists, so unordered rows could lay the
+ * same archive out differently from one load to the next.
  */
 export async function buildTreeGraph(
   treeId: string,
@@ -146,8 +151,13 @@ export async function buildTreeGraph(
     db
       .select()
       .from(people)
-      .where(and(eq(people.treeId, treeId), isNull(people.deletedAt))),
-    db.select().from(relationships).where(eq(relationships.treeId, treeId)),
+      .where(and(eq(people.treeId, treeId), isNull(people.deletedAt)))
+      .orderBy(asc(people.createdAt), asc(people.id)),
+    db
+      .select()
+      .from(relationships)
+      .where(eq(relationships.treeId, treeId))
+      .orderBy(asc(relationships.createdAt), asc(relationships.id)),
   ]);
   const peopleById = new Map(allPeople.map((p) => [p.id, p]));
 
@@ -214,7 +224,8 @@ export async function buildTreeGraph(
 
 /**
  * The user's starting person for a tree: explicit preference when it
- * still points at a living row, else the earliest-created person, else null.
+ * still points at a living row, else the earliest-created person (lowest id
+ * among a GEDCOM import's, which share a creation time), else null.
  */
 export async function resolveStartingPerson(
   userId: string | null,
@@ -241,7 +252,7 @@ export async function resolveStartingPerson(
     .select()
     .from(people)
     .where(and(eq(people.treeId, treeId), isNull(people.deletedAt)))
-    .orderBy(asc(people.createdAt))
+    .orderBy(asc(people.createdAt), asc(people.id))
     .limit(1);
   return fallback[0] ?? null;
 }

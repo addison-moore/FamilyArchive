@@ -26,7 +26,7 @@ export const ADJACENT_GAP_MAX = 200;
 export const DOT_RADIUS = 4;
 /** How far below the row the junction sits when the mid-height line is unusable. */
 const BELOW_ROW_OFFSET = 24;
-/** Same-row tolerance, matching the layout's satellite placement. */
+/** Same-row tolerance: cards on one layout row share a y, so this only absorbs float noise. */
 const SAME_ROW_EPSILON = 8;
 /** ±steps of GAP/2 tried when nudging a non-adjacent couple's dot off a card
  * (6 × 20px clears a full card width from its center). */
@@ -58,7 +58,7 @@ const overlaps = (a: Span, b: Span, margin = 0) =>
   a.start - margin < b.end && a.end + margin > b.start;
 
 /** Occupied x-spans per visual row, for keeping the junction dot off cards.
- * Keyed by card-top y, like the layout's RowOccupancy. */
+ * Keyed by card-top y in half-card-height buckets. */
 type RowIndex = Map<number, Span[]>;
 
 const rowKey = (y: number) => Math.round(y / (NODE_HEIGHT / 2));

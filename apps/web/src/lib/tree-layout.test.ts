@@ -33,6 +33,23 @@ const xInterval = (centers: Map<string, { x: number; y: number }>, ids: string[]
   return { min: Math.min(...xs), max: Math.max(...xs) };
 };
 
+/** Same row, with nobody seated between them for the partner line to run behind. */
+const expectSideBySide = (canvas: ReturnType<typeof layoutTreeGraph>, a: string, b: string) => {
+  const [left, right] = canvas.nodes
+    .filter((node) => node.id === a || node.id === b)
+    .sort((p, q) => p.x - q.x);
+  expect(left!.y).toBe(right!.y);
+  const between = canvas.nodes.filter(
+    (node) => node.y === left!.y && node.x > left!.x && node.x < right!.x,
+  );
+  expect(between.map((node) => node.id)).toEqual([]);
+};
+
+const rotate = <T>(items: T[], by: number) => {
+  const at = by % items.length;
+  return [...items.slice(at), ...items.slice(0, at)];
+};
+
 describe("layoutTreeGraph (union-aware)", () => {
   it("keeps each family's children together when one generation holds two families", () => {
     // Grandparents -> p1 and q1; p1+p2 have three children, q1+q2 have two.
@@ -182,6 +199,66 @@ describe("layoutTreeGraph (union-aware)", () => {
     expect(aKids.max < bKids.min || bKids.max < aKids.min).toBe(true);
   });
 
+  it("seats in-laws beside their partner when siblings share the row (fails on the pre-group layout)", () => {
+    // mum has two siblings and married dad, who has no parents in view; so did
+    // their son's wife, and their daughter has a partner with no children in
+    // view. Dagre used to rank in-laws on their own and could seat a sibling
+    // between a couple, and a childless partner slid past a sibling to the
+    // next free slot. Every rotation of the input is tried, since dagre's
+    // ordering depends on it.
+    const people = "gma gpa mum aunt uncle dad daughter son wife partner gk1 gk2".split(" ");
+    const parentEdges: [string, string][] = [
+      ["gpa", "mum"],
+      ["gma", "mum"],
+      ["gpa", "aunt"],
+      ["gma", "aunt"],
+      ["gpa", "uncle"],
+      ["gma", "uncle"],
+      ["dad", "daughter"],
+      ["mum", "daughter"],
+      ["dad", "son"],
+      ["mum", "son"],
+      ["son", "gk1"],
+      ["wife", "gk1"],
+      ["son", "gk2"],
+      ["wife", "gk2"],
+    ];
+    const couples: [string, string][] = [
+      ["gpa", "gma"],
+      ["dad", "mum"],
+      ["son", "wife"],
+      ["daughter", "partner"],
+    ];
+    for (let shift = 0; shift < people.length; shift++) {
+      const canvas = layoutTreeGraph(
+        graphOf(rotate(people, shift), rotate(parentEdges, shift), rotate(couples, shift)),
+        "gma",
+      );
+      for (const [a, b] of couples) expectSideBySide(canvas, a, b);
+    }
+  });
+
+  it("seats a couple in their recorded order whoever the view starts from", () => {
+    // Nothing else separates mirror-image seatings here: the recorded
+    // direction does (HUSB before WIFE from GEDCOM), not ids or the start.
+    for (const start of ["mum", "dad", "kid"]) {
+      const others = ["mum", "dad", "kid"].filter((id) => id !== start);
+      const canvas = layoutTreeGraph(
+        graphOf(
+          [start, ...others],
+          [
+            ["mum", "kid"],
+            ["dad", "kid"],
+          ],
+          [["mum", "dad"]],
+        ),
+        start,
+      );
+      const centers = centersOf(canvas);
+      expect(centers.get("mum")!.x).toBeLessThan(centers.get("dad")!.x);
+    }
+  });
+
   it("places a start person with no parent edges and anchors their partner", () => {
     const canvas = layoutTreeGraph(
       graphOf(["start", "spouse"], [], [["start", "spouse"]]),
@@ -195,8 +272,8 @@ describe("layoutTreeGraph (union-aware)", () => {
   });
 
   it("alternates satellite partners around their anchor without overlaps", () => {
-    // kid has two childless partners plus ranked siblings on the same row, so
-    // satellite slots must alternate sides and slide past occupied cards.
+    // kid has two childless partners plus siblings on the same row, so the
+    // partners must flank kid without landing on a sibling.
     const canvas = layoutTreeGraph(
       graphOf(
         ["mom", "dad", "kid", "sib1", "sib2", "aunt1", "aunt2"],
