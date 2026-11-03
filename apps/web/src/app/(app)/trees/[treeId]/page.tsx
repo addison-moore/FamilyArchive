@@ -1,5 +1,5 @@
 import { requireTreeRole } from "@familyarchive/auth";
-import { dateSortKey, treeRoleAtLeast } from "@familyarchive/shared";
+import { treeRoleAtLeast } from "@familyarchive/shared";
 import Link from "next/link";
 
 import { buttonClass, Card, FormError } from "@/components/form";
@@ -7,7 +7,7 @@ import { PersonSummary, personLifespan } from "@/components/person-summary";
 import { TreeNodeActions } from "@/components/tree-node-actions";
 import { TreeWorkspace } from "@/components/tree-workspace";
 import { profilePhotoUrl } from "@/lib/media";
-import { getPerson, getRelationshipGraph } from "@/lib/people";
+import { getPerson, getRelationshipGraph, personBirthSortKey } from "@/lib/people";
 import {
   buildTreeGraph,
   isTreeViewMode,
@@ -78,11 +78,7 @@ export default async function TreePage({
       id: person.id,
       fullName: person.fullName,
       lifespan: personLifespan(person),
-      birthSortKey: dateSortKey({
-        year: person.birthYear,
-        month: person.birthMonth,
-        day: person.birthDay,
-      }),
+      birthSortKey: personBirthSortKey(person),
       generation,
       verified: person.verified,
     })),
