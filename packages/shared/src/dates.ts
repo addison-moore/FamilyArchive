@@ -37,6 +37,17 @@ export function validateDateParts(parts: DateParts): string | null {
   return null;
 }
 
+/**
+ * A number that sorts dates chronologically: by year, then month, then day, with
+ * an unknown month or day before the known ones. Approximate dates sort as
+ * stated. Null when the year is unknown.
+ */
+export function dateSortKey(parts: Pick<DateParts, "year" | "month" | "day">): number | null {
+  const { year, month, day } = parts;
+  if (year === null) return null;
+  return year * 10_000 + (month ?? 0) * 100 + (day ?? 0);
+}
+
 /** "May 3, 1892", "May 1892", "1892", "abt. 1892", or null when unknown. */
 export function formatDateParts(parts: DateParts): string | null {
   const { year, month, day, approx } = parts;

@@ -10,6 +10,8 @@ export interface TreePersonNode {
   id: string;
   fullName: string;
   lifespan: string | null;
+  /** Orders siblings on the canvas (see dateSortKey); null when the birth year is unknown. */
+  birthSortKey: number | null;
   /** Generation relative to the starting person (ancestors < 0). */
   generation: number;
   /** Confirmed against evidence, rather than a likely match. Outlined on the canvas. */

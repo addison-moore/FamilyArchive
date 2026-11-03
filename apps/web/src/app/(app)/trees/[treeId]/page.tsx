@@ -1,5 +1,5 @@
 import { requireTreeRole } from "@familyarchive/auth";
-import { treeRoleAtLeast } from "@familyarchive/shared";
+import { dateSortKey, treeRoleAtLeast } from "@familyarchive/shared";
 import Link from "next/link";
 
 import { buttonClass, Card, FormError } from "@/components/form";
@@ -78,6 +78,11 @@ export default async function TreePage({
       id: person.id,
       fullName: person.fullName,
       lifespan: personLifespan(person),
+      birthSortKey: dateSortKey({
+        year: person.birthYear,
+        month: person.birthMonth,
+        day: person.birthDay,
+      }),
       generation,
       verified: person.verified,
     })),

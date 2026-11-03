@@ -26,6 +26,7 @@ function buildPayload(perGen: number): TreeGraphPayload {
         id: `p${g}_${i}`,
         fullName: `Person ${g}.${i} Fairweather`,
         lifespan: null,
+        birthSortKey: null,
         generation: g,
         verified: false,
       });
@@ -119,6 +120,7 @@ describe("computeVisibleSet", () => {
         id,
         fullName: `Person ${id}`,
         lifespan: null,
+        birthSortKey: null,
         generation: 0,
         verified: false,
       })),

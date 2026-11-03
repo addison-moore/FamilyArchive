@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { formatDateParts, formatLifespan, validateDateParts, type DateParts } from "./dates";
+import {
+  dateSortKey,
+  formatDateParts,
+  formatLifespan,
+  validateDateParts,
+  type DateParts,
+} from "./dates";
 
 function parts(year: number | null, month: number | null = null, day: number | null = null) {
   return { year, month, day, approx: false };
@@ -38,6 +44,31 @@ describe("formatDateParts", () => {
     expect(formatDateParts(parts(1892))).toBe("1892");
     expect(formatDateParts({ ...parts(1892), approx: true })).toBe("abt. 1892");
     expect(formatDateParts(UNKNOWN)).toBeNull();
+  });
+});
+
+describe("dateSortKey", () => {
+  it("sorts by year, then month, then day, with unknown parts first", () => {
+    const sorted = [
+      parts(1920, 6, 2),
+      parts(1919, 12, 31),
+      parts(1920),
+      parts(1920, 6),
+      parts(1920, 1, 15),
+    ].sort((a, b) => dateSortKey(a)! - dateSortKey(b)!);
+    expect(sorted).toEqual([
+      parts(1919, 12, 31),
+      parts(1920),
+      parts(1920, 1, 15),
+      parts(1920, 6),
+      parts(1920, 6, 2),
+    ]);
+  });
+
+  it("has no key without a year, and ignores approximation", () => {
+    expect(dateSortKey(UNKNOWN)).toBeNull();
+    const approximate: DateParts = { ...parts(1892), approx: true };
+    expect(dateSortKey(approximate)).toBe(dateSortKey(parts(1892)));
   });
 });
 

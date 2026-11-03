@@ -1,7 +1,7 @@
 import dagre from "@dagrejs/dagre";
 
 import { deriveFamilies } from "@/lib/tree-families";
-import type { TreeGraphPayload } from "@/lib/tree-visibility";
+import type { TreeGraphPayload, TreePersonNode } from "@/lib/tree-visibility";
 
 export const NODE_WIDTH = 190;
 export const NODE_HEIGHT = 76;
@@ -48,6 +48,9 @@ const MAX_PERMUTED_SEATS = 7;
 
 const groupWidth = (size: number) => size * SEAT_PITCH - GAP;
 
+/** Sorts eldest first, with people whose birth date is unknown after everyone else. */
+const birthOrder = (person: TreePersonNode) => person.birthSortKey ?? Number.MAX_SAFE_INTEGER;
+
 /**
  * Layered layout:
  *
@@ -68,7 +71,12 @@ const groupWidth = (size: number) => size * SEAT_PITCH - GAP;
  *    children group under their own family, and stems from different
  *    families don't cross unnecessarily. Union nodes are layout-only and
  *    never emitted.
- * 3. Once dagre has placed the groups, each group's seats are ordered: as
+ * 3. Siblings sit in birth order, with the undated after the dated and ties
+ *    in the order people were supplied. Dagre is fed people and families
+ *    eldest first, then seatSiblings enforces the order inside its ordering
+ *    phase, because crossing minimization can still reverse siblings. Keeping
+ *    a couple together outranks birth order (see seatFamily).
+ * 4. Once dagre has placed the groups, each group's seats are ordered: as
  *    many partners side by side as possible, then the order that keeps each
  *    seat nearest the unions and outside partners it connects to — a child
  *    sits toward their siblings with the in-law outside, a remarried parent
@@ -76,7 +84,7 @@ const groupWidth = (size: number) => size * SEAT_PITCH - GAP;
  *    else decides, a couple sits in the order the partnership was recorded
  *    (HUSB before WIFE from a GEDCOM import), so it does not swap sides when
  *    the start person changes.
- * 4. Groups with nobody in a parent edge and no start person (partner-only
+ * 5. Groups with nobody in a parent edge and no start person (partner-only
  *    context cut off from everyone else) park in a stacked column at the
  *    top-left rather than on top of each other.
  */
@@ -90,8 +98,15 @@ export function layoutTreeGraph(graph: LayoutGraph, startPersonId: string): Canv
     seenPairs.add(key);
     return true;
   });
+  const eldestFirst = [...graph.people].sort((a, b) => birthOrder(a) - birthOrder(b));
+  const birthRank = new Map(eldestFirst.map((person, rank) => [person.id, rank]));
+  // Sorted by child, so each family lists its children eldest first and a
+  // remarried parent's families come in the order they started.
+  const parentEdges = [...graph.parentEdges].sort(
+    (a, b) => birthRank.get(a.to)! - birthRank.get(b.to)!,
+  );
   const edges: CanvasEdge[] = [
-    ...graph.parentEdges.map((e) => ({
+    ...parentEdges.map((e) => ({
       id: e.id,
       source: e.from,
       target: e.to,
@@ -113,7 +128,7 @@ export function layoutTreeGraph(graph: LayoutGraph, startPersonId: string): Canv
   };
   const inParentEdges = new Set<string>();
   const parentsOf = new Map<string, string[]>(); // child -> parents
-  for (const edge of graph.parentEdges) {
+  for (const edge of parentEdges) {
     inParentEdges.add(edge.from);
     inParentEdges.add(edge.to);
     push(parentsOf, edge.to, edge.from);
@@ -136,7 +151,7 @@ export function layoutTreeGraph(graph: LayoutGraph, startPersonId: string): Canv
   }
 
   const groups = groupPartners(
-    graph.people.map((person) => person.id),
+    eldestFirst.map((person) => person.id),
     links,
     parentsOf,
   );
@@ -163,7 +178,22 @@ export function layoutTreeGraph(graph: LayoutGraph, startPersonId: string): Canv
     for (const parentId of family.parents) g.setEdge(nodeIdOf(parentId), unionId);
     for (const childId of family.children) g.setEdge(unionId, nodeIdOf(childId));
   }
-  dagre.layout(g);
+  // Groups with a couple seated across them.
+  const partnerNodes = new Map<string, string[]>();
+  for (const [personId, partners] of links) {
+    for (const partnerId of partners) {
+      if (groupIndexOf.get(partnerId) !== groupIndexOf.get(personId)) {
+        push(partnerNodes, nodeIdOf(personId), nodeIdOf(partnerId));
+      }
+    }
+  }
+  const siblingSets = families.map((family) => family.children.map(nodeIdOf));
+  dagre.layout(g, {
+    customOrder: (layered, order) => {
+      order(layered, {});
+      seatSiblings(layered, siblingSets, partnerNodes);
+    },
+  });
 
   // What each seat is drawn toward: the unions it hangs from or drops to, and
   // partners seated in another group.
@@ -233,8 +263,9 @@ export function layoutTreeGraph(graph: LayoutGraph, startPersonId: string): Canv
  * such partner at all form groups among themselves: a couple at the top of
  * the view, or the start's family in a descendants view.
  *
- * Groups come out in the order of their earliest member, so dagre still sees
- * people in the order the caller supplied them.
+ * Groups with a head come out in their heads' order, so dagre sees siblings in
+ * the order the caller supplied them, and the rest follow in the order of their
+ * earliest member.
  */
 function groupPartners(
   people: string[],
@@ -273,7 +304,136 @@ function groupPartners(
     }
   }
 
-  return [...new Set(people.map((id) => groupOf.get(id)!))];
+  return [...new Set([...heads, ...people].map((id) => groupOf.get(id)!))];
+}
+
+type OrderedNode = dagre.Node<{ rank: number; order: number }>;
+
+/**
+ * Puts each family's children in birth order, as the end of dagre's ordering
+ * phase. Dagre's rows at this point are its layered graph: groups, unions, and
+ * the dummy nodes its edges pass through. Sorting the input is not enough, since
+ * crossing minimization treats siblings as ties and can settle on a sweep that
+ * reversed them.
+ *
+ * Working down from the top, each row follows the row above if that one moved,
+ * which carries a sibling's descendants along with them, and then seats its
+ * families. The row above then follows any seats that changed: dagre stops
+ * centring parents over children whose edges it sees crossing.
+ */
+function seatSiblings(
+  layered: dagre.graphlib.Graph,
+  families: string[][],
+  partnerNodes: Map<string, string[]>,
+): void {
+  const nodeOf = (v: string) => layered.node(v) as OrderedNode;
+  const siblingsOf = new Map<string, Set<string>>();
+  for (const family of families) {
+    for (const v of family) {
+      const siblings = siblingsOf.get(v) ?? new Set<string>();
+      for (const other of family) siblings.add(other);
+      siblingsOf.set(v, siblings);
+    }
+  }
+
+  const rows: string[][] = [];
+  for (const v of layered.nodes()) {
+    const { rank, order } = nodeOf(v);
+    (rows[rank] ??= [])[order] = v;
+  }
+  let moved = false;
+  rows.forEach((placed, rank) => {
+    const above = rows[rank - 1];
+    const aligned =
+      moved && above ? alignRow(placed, above, (v) => layered.predecessors(v)) : placed;
+    let row = aligned;
+    for (const family of families) {
+      const siblings = family.filter((v) => nodeOf(v).rank === rank);
+      if (siblings.length > 1) row = seatFamily(row, siblings, partnerNodes, siblingsOf);
+    }
+    if (above && row.some((v, i) => v !== aligned[i])) {
+      rows[rank - 1] = alignRow(above, row, (v) => layered.successors(v));
+    }
+    moved = row.some((v, i) => v !== placed[i]);
+    rows[rank] = row;
+  });
+  rows.forEach((row) => {
+    row.forEach((v, order) => {
+      nodeOf(v).order = order;
+    });
+  });
+}
+
+/**
+ * `row` reordered by the mean position of each node's neighbors in `fixed`. Ties
+ * keep their order; a node with no neighbors keeps its slot.
+ */
+function alignRow(
+  row: string[],
+  fixed: string[],
+  neighborsOf: (v: string) => string[] | undefined,
+): string[] {
+  const slot = new Map(fixed.map((v, i) => [v, i]));
+  const center = new Map<string, number>();
+  for (const v of row) {
+    const neighbors = neighborsOf(v) ?? [];
+    if (neighbors.length === 0) continue;
+    center.set(v, neighbors.reduce((sum, n) => sum + slot.get(n)!, 0) / neighbors.length);
+  }
+  const sorted = row.filter((v) => center.has(v)).sort((a, b) => center.get(a)! - center.get(b)!);
+  let next = 0;
+  return row.map((v) => (center.has(v) ? sorted[next++]! : v));
+}
+
+/**
+ * Seats one family's children (`siblings`, eldest first) together where the
+ * first of them sits, so families cannot interleave.
+ *
+ * The exception is a couple who both have parents in view, such as cousins. If
+ * only the partner's own siblings, who can make way, sit between the two
+ * families, the sibling with the nearest partner takes that end of the family
+ * out of birth order. One per end, since a second could not sit beside anyone.
+ */
+function seatFamily(
+  row: string[],
+  siblings: string[],
+  partnerNodes: Map<string, string[]>,
+  siblingsOf: Map<string, Set<string>>,
+): string[] {
+  const inFamily = new Set(siblings);
+  const first = row.findIndex((v) => inFamily.has(v));
+  const others = row.filter((v) => !inFamily.has(v));
+  const before = others.slice(0, first);
+  const after = others.slice(first);
+  const gathered = [...before, ...siblings, ...after];
+  const last = first + siblings.length - 1;
+
+  const partnerDistance = (sibling: string, end: number, step: 1 | -1) => {
+    let nearest = Infinity;
+    for (const partner of partnerNodes.get(sibling) ?? []) {
+      const at = gathered.indexOf(partner);
+      const distance = (at - end) * step;
+      if (at < 0 || distance <= 0 || distance >= nearest) continue;
+      const between = step === 1 ? gathered.slice(end + 1, at) : gathered.slice(at + 1, end);
+      if (between.every((other) => siblingsOf.get(partner)?.has(other))) nearest = distance;
+    }
+    return nearest;
+  };
+  const nearestToPartner = (from: string[], end: number, step: 1 | -1) => {
+    const distances = from.map((sibling) => partnerDistance(sibling, end, step));
+    const nearest = Math.min(...distances);
+    return nearest === Infinity ? undefined : from[distances.indexOf(nearest)];
+  };
+
+  const leftmost = nearestToPartner(siblings, first, -1);
+  const rest = siblings.filter((v) => v !== leftmost);
+  const rightmost = nearestToPartner(rest, last, 1);
+  const seated = [
+    ...(leftmost ? [leftmost] : []),
+    ...rest.filter((v) => v !== rightmost),
+    ...(rightmost ? [rightmost] : []),
+  ];
+  return [...before, ...seated, ...after];
 }
 
 /** What seat ordering weighs, built once per layout. */
