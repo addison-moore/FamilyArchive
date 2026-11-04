@@ -37,7 +37,7 @@ test("bootstrap owner and archive on the quota-limited stack", async () => {
 
   await page.goto("/trees/new");
   await page.getByLabel("Name").fill("Quota Test Archive");
-  await page.getByRole("button", { name: "Create tree" }).click();
+  await page.getByRole("button", { name: "Create archive" }).click();
   await page.waitForURL(/\/trees\/[0-9a-f-]{36}/);
   treeId = page.url().match(/\/trees\/([0-9a-f-]{36})/)![1]!;
 });

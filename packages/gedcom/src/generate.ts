@@ -91,7 +91,7 @@ export async function generateGedcom(
     families: buildFamilies(allEdges, alive),
     sourceName: `${tree.name}.ged`,
   });
-  const fileName = `${tree.name.replace(/[^a-zA-Z0-9 _-]/g, "").trim() || "tree"}.ged`;
+  const fileName = `${tree.name.replace(/[^a-zA-Z0-9 _-]/g, "").trim() || "archive"}.ged`;
   return { fileName, content };
 }
 

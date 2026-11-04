@@ -92,7 +92,7 @@ export async function requireTreeRole(
   const role = user ? await getTreeRole(user, treeId) : null;
   if (role) {
     if (!treeRoleAtLeast(role, minimum)) {
-      throw new AuthorizationError(`Requires ${minimum} access to this tree`);
+      throw new AuthorizationError(`Requires ${minimum} access to this archive`);
     }
     return { user, role };
   }
@@ -100,7 +100,7 @@ export async function requireTreeRole(
     return { user, role: "viewer" };
   }
   throw new AuthorizationError(
-    user ? `Requires ${minimum} access to this tree` : "Sign in required",
+    user ? `Requires ${minimum} access to this archive` : "Sign in required",
   );
 }
 
@@ -112,7 +112,7 @@ export async function requireMemberRole(
   const user = await requireUser();
   const role = await getTreeRole(user, treeId);
   if (!role || !treeRoleAtLeast(role, minimum)) {
-    throw new AuthorizationError(`Requires ${minimum} access to this tree`);
+    throw new AuthorizationError(`Requires ${minimum} access to this archive`);
   }
   return { user, role };
 }

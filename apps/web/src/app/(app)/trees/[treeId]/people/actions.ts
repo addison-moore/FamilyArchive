@@ -292,7 +292,7 @@ export async function addRelationshipAction(formData: FormData): Promise<void> {
     getPerson(treeId, personId),
     getPerson(treeId, otherPersonId),
   ]);
-  if (!anchor || !other) return fail("Person not found in this tree");
+  if (!anchor || !other) return fail("Person not found in this archive");
 
   const [fromPersonId, toPersonId] =
     direction === "parent" ? [otherPersonId, personId] : [personId, otherPersonId];

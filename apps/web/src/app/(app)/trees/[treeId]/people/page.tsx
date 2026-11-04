@@ -125,7 +125,7 @@ export default async function PeoplePage({
                 ? `No people match “${q}”.`
                 : canEdit
                   ? "No people yet — add the first family member."
-                  : "No people in this tree yet."}
+                  : "No people in this archive yet."}
             </p>
           </Card>
         ) : (

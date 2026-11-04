@@ -59,7 +59,7 @@ export default async function TreePage({
     return (
       <div className="mx-auto max-w-xl">
         <Card>
-          <h1 className="mb-2 text-xl font-semibold">This tree is empty</h1>
+          <h1 className="mb-2 text-xl font-semibold">This archive is empty</h1>
           <p className="mb-4 text-sm text-archive-700">
             Add the first family member to start building the tree.
           </p>
