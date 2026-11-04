@@ -13,6 +13,7 @@ import {
   subtleButtonClass,
 } from "@/components/form";
 import { Badge, Chevron } from "@/components/ui";
+import { Wordmark } from "@/components/wordmark";
 
 /**
  * The single top bar for the authenticated app.
@@ -30,8 +31,9 @@ export async function AppHeader({ nav, trailing }: { nav?: ReactNode; trailing?:
   return (
     <header className="sticky top-0 z-30 border-b border-archive-100 bg-surface">
       <div className="flex h-14 items-center gap-2 px-4 sm:gap-4">
-        <Link href="/" className="shrink-0 text-lg font-semibold tracking-tight no-underline">
-          Family<span className="text-accent-600">Archive</span>
+        {/* Smaller on phones, where it shares the bar with two menus. */}
+        <Link href="/" className="shrink-0 py-1 no-underline">
+          <Wordmark className="h-4 sm:h-5" />
         </Link>
         {nav}
         {/* An account name can truncate, but "Sign in" has to fit whole. */}

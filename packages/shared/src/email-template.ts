@@ -66,7 +66,7 @@ export function renderBrandedEmail({
 </head>
 <body style="margin:0; padding:0; background:${PALETTE.page};">
   <div style="max-width:560px; margin:0 auto; padding:32px 16px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-    <p style="margin:0 0 18px; font-size:18px; font-weight:700; color:${PALETTE.text};">
+    <p style="margin:0 0 18px; font-family:Georgia,'Times New Roman',serif; font-size:20px; font-weight:700; color:${PALETTE.text};">
       Family<span style="color:${PALETTE.accent};">Archive</span>
     </p>
     <div style="background:${PALETTE.card}; border:1px solid ${PALETTE.border}; border-radius:12px; padding:28px;">

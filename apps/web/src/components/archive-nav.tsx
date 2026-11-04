@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-const linkClass = "rounded-md px-2.5 py-1.5 text-sm whitespace-nowrap no-underline";
+// Tighter at lg, where the links have just joined the bar beside the logo.
+const linkClass =
+  "rounded-md px-2.5 py-1.5 text-sm whitespace-nowrap no-underline lg:px-2 xl:px-2.5";
 
 function NavLinks({ root, items }: { root: string; items: { label: string; href: string }[] }) {
   const pathname = usePathname();
