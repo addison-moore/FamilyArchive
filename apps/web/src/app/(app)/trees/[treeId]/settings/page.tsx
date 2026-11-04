@@ -125,8 +125,11 @@ export default async function TreeSettingsPage({
         <h2 className="mb-4 text-lg font-semibold">Members</h2>
         <ul className="divide-y divide-archive-100">
           {members.map((member) => (
-            <li key={member.membershipId} className="flex flex-wrap items-center gap-3 py-3">
-              <div className="min-w-0 flex-1">
+            <li
+              key={member.membershipId}
+              className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0"
+            >
+              <div className="min-w-48 flex-1">
                 <div className="font-medium">{member.name ?? member.email}</div>
                 <div className="truncate text-sm text-archive-700/70">{member.email}</div>
               </div>
@@ -203,7 +206,7 @@ export default async function TreeSettingsPage({
               className={`${inputClass} w-24`}
             />
           </Field>
-          <Field label="Email to (optional)">
+          <Field label="Email to (optional)" className="min-w-48 flex-1">
             <input
               name="email"
               type="email"
@@ -219,7 +222,10 @@ export default async function TreeSettingsPage({
         {activeInvites.length > 0 && (
           <ul className="mt-6 divide-y divide-archive-100">
             {activeInvites.map((item) => (
-              <li key={item.id} className="flex flex-wrap items-center gap-3 py-3">
+              <li
+                key={item.id}
+                className="flex flex-wrap items-center gap-3 py-3 first:pt-0 last:pb-0"
+              >
                 <div className="min-w-0 flex-1">
                   <div className="text-sm">
                     <span className="rounded bg-archive-100 px-1.5 py-0.5 text-xs">
@@ -255,12 +261,22 @@ export default async function TreeSettingsPage({
         </p>
         <form action={setPublicModeAction} className="space-y-3">
           <input type="hidden" name="treeId" value={treeId} />
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="isPublic" defaultChecked={tree.isPublic} />
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="isPublic"
+              defaultChecked={tree.isPublic}
+              className="mt-0.5"
+            />
             Make this archive publicly viewable
           </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="allowIndexing" defaultChecked={tree.allowIndexing} />
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="allowIndexing"
+              defaultChecked={tree.allowIndexing}
+              className="mt-0.5"
+            />
             Allow search engines to index it (otherwise noindex is sent)
           </label>
           <button type="submit" className={buttonClass}>
@@ -396,8 +412,8 @@ export default async function TreeSettingsPage({
             )}
             <form action={requestArchiveExportAction} className="space-y-3">
               <input type="hidden" name="treeId" value={treeId} />
-              <label className="flex items-center gap-2 text-sm text-archive-700">
-                <input type="checkbox" name="includeDeleted" />
+              <label className="flex items-start gap-2 text-sm">
+                <input type="checkbox" name="includeDeleted" className="mt-0.5" />
                 Also include people and files that were deleted
               </label>
               <button type="submit" className={subtleButtonClass}>
@@ -423,7 +439,7 @@ export default async function TreeSettingsPage({
               name="confirmName"
               required
               placeholder={tree.name}
-              className={`${inputClass} w-64`}
+              className={`${inputClass} sm:w-64`}
             />
             <button type="submit" className={dangerButtonClass}>
               Delete archive

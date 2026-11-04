@@ -62,8 +62,13 @@ import {
 } from "./actions";
 
 const iconButtonClass =
-  "flex h-9 w-9 cursor-pointer items-center justify-center rounded-md border " +
+  "flex size-9.5 cursor-pointer items-center justify-center rounded-md border " +
   "border-archive-100 bg-surface text-archive-700 hover:bg-archive-100";
+
+/** The × on a chip: a 24px target, the size of the chip's text line and its padding. */
+const chipRemoveClass =
+  "flex size-6 items-center justify-center rounded-full text-archive-700/60 " +
+  "hover:bg-danger-soft hover:text-danger";
 
 function formatBytes(bytes: number): string {
   if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
@@ -135,6 +140,9 @@ export default async function MediaDetailPage({
   const canEdit = canEditMedia(user, role, media);
   const canTag = treeRoleAtLeast(role, "contributor");
   const isEditor = treeRoleAtLeast(role, "editor");
+  const chipClass = `flex min-h-7 items-center gap-1 rounded-full py-0.5 pl-3 text-sm ${
+    canTag ? "pr-1" : "pr-3"
+  }`;
   const url = mediaUrl(treeId, mediaId);
   const untaggedPeople = allPeople.filter((p) => !taggedPeople.some((t) => t.personId === p.id));
   const dateText = formatDateParts({
@@ -279,10 +287,7 @@ export default async function MediaDetailPage({
               {memberOf.length > 0 ? (
                 <ul className="mb-2 flex flex-wrap gap-2">
                   {memberOf.map((collection) => (
-                    <li
-                      key={collection.id}
-                      className="flex items-center gap-1.5 rounded-full bg-archive-100 py-1 pr-2 pl-3 text-sm"
-                    >
+                    <li key={collection.id} className={`${chipClass} bg-archive-100`}>
                       <Link
                         href={`/trees/${treeId}/collections/${collection.id}`}
                         className="hover:text-accent-600"
@@ -296,7 +301,7 @@ export default async function MediaDetailPage({
                           <input type="hidden" name="mediaId" value={mediaId} />
                           <button
                             type="submit"
-                            className="text-archive-700/50 hover:text-danger"
+                            className={chipRemoveClass}
                             title="Remove from collection"
                           >
                             ×
@@ -331,10 +336,7 @@ export default async function MediaDetailPage({
               {itemTags.length > 0 && (
                 <ul className="mb-2 flex flex-wrap gap-2">
                   {itemTags.map((tag) => (
-                    <li
-                      key={tag.id}
-                      className="flex items-center gap-1.5 rounded-full bg-archive-100 py-1 pr-2 pl-3 text-sm"
-                    >
+                    <li key={tag.id} className={`${chipClass} bg-archive-100`}>
                       <Link
                         href={`/trees/${treeId}/media?tag=${tag.id}`}
                         className="hover:text-accent-600"
@@ -346,11 +348,7 @@ export default async function MediaDetailPage({
                           <input type="hidden" name="treeId" value={treeId} />
                           <input type="hidden" name="mediaId" value={mediaId} />
                           <input type="hidden" name="tagId" value={tag.id} />
-                          <button
-                            type="submit"
-                            className="text-archive-700/50 hover:text-danger"
-                            title="Remove"
-                          >
+                          <button type="submit" className={chipRemoveClass} title="Remove">
                             ×
                           </button>
                         </form>
@@ -421,51 +419,49 @@ export default async function MediaDetailPage({
                       className={inputClass}
                     />
                   </Field>
-                  <div className="flex flex-wrap items-end gap-3">
-                    <Field label="Type">
-                      <select
-                        name="mediaType"
-                        defaultValue={media.mediaType}
-                        className={`${inputClass} w-auto`}
-                      >
-                        {MEDIA_TYPES.map((mediaType) => (
-                          <option key={mediaType} value={mediaType}>
-                            {MEDIA_TYPE_LABELS[mediaType]}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field label="Year">
-                      <input
-                        name="dateYear"
-                        type="number"
-                        min={1}
-                        max={9999}
-                        defaultValue={media.dateYear ?? ""}
-                        className={`${inputClass} w-24`}
-                      />
-                    </Field>
-                    <Field label="Month">
-                      <input
-                        name="dateMonth"
-                        type="number"
-                        min={1}
-                        max={12}
-                        defaultValue={media.dateMonth ?? ""}
-                        className={`${inputClass} w-20`}
-                      />
-                    </Field>
-                    <Field label="Day">
-                      <input
-                        name="dateDay"
-                        type="number"
-                        min={1}
-                        max={31}
-                        defaultValue={media.dateDay ?? ""}
-                        className={`${inputClass} w-20`}
-                      />
-                    </Field>
-                    <label className="flex items-center gap-1.5 pb-2 text-sm">
+                  <Field label="Type">
+                    <select name="mediaType" defaultValue={media.mediaType} className={inputClass}>
+                      {MEDIA_TYPES.map((mediaType) => (
+                        <option key={mediaType} value={mediaType}>
+                          {MEDIA_TYPE_LABELS[mediaType]}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-3 gap-3">
+                      <Field label="Year">
+                        <input
+                          name="dateYear"
+                          type="number"
+                          min={1}
+                          max={9999}
+                          defaultValue={media.dateYear ?? ""}
+                          className={inputClass}
+                        />
+                      </Field>
+                      <Field label="Month">
+                        <input
+                          name="dateMonth"
+                          type="number"
+                          min={1}
+                          max={12}
+                          defaultValue={media.dateMonth ?? ""}
+                          className={inputClass}
+                        />
+                      </Field>
+                      <Field label="Day">
+                        <input
+                          name="dateDay"
+                          type="number"
+                          min={1}
+                          max={31}
+                          defaultValue={media.dateDay ?? ""}
+                          className={inputClass}
+                        />
+                      </Field>
+                    </div>
+                    <label className="flex items-center gap-2 text-sm">
                       <input type="checkbox" name="dateApprox" defaultChecked={media.dateApprox} />
                       approximate
                     </label>
@@ -559,10 +555,7 @@ export default async function MediaDetailPage({
           from this row, and below sm spans the screen like the ones above. */}
       <div className="flex flex-wrap items-center gap-2 sm:relative">
         {taggedPeople.map((tagged) => (
-          <span
-            key={tagged.rowId}
-            className="flex items-center gap-2 rounded-full border border-archive-100 bg-surface py-1 pr-2 pl-3 text-sm"
-          >
+          <span key={tagged.rowId} className={`${chipClass} border border-archive-100 bg-surface`}>
             <Link
               href={`/trees/${treeId}/people/${tagged.personId}`}
               className="hover:text-accent-600"
@@ -574,11 +567,7 @@ export default async function MediaDetailPage({
                 <input type="hidden" name="treeId" value={treeId} />
                 <input type="hidden" name="mediaId" value={mediaId} />
                 <input type="hidden" name="tagRowId" value={tagged.rowId} />
-                <button
-                  type="submit"
-                  className="text-archive-700/50 hover:text-danger"
-                  title="Remove tag"
-                >
+                <button type="submit" className={chipRemoveClass} title="Remove tag">
                   ×
                 </button>
               </form>

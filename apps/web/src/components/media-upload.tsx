@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
+import { buttonClass } from "@/components/form";
+
 interface UploadState {
   name: string;
   progress: number;
@@ -102,11 +104,7 @@ export function MediaUpload({ treeId, accept }: { treeId: string; accept: string
           void onFiles(files);
         }}
       />
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        className="rounded-md bg-accent-600 px-4 py-2 text-sm font-medium text-white hover:bg-accent-600/90"
-      >
+      <button type="button" onClick={() => inputRef.current?.click()} className={buttonClass}>
         Upload media
       </button>
       {uploads.length > 0 && (

@@ -126,10 +126,13 @@ export default async function MediaPage({
             anchorName={view.anchorName}
           />
         )}
-        <form method="GET" className="ml-auto flex flex-wrap items-center gap-2">
+        <form
+          method="GET"
+          className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center xl:ml-auto"
+        >
           {mine && <input type="hidden" name="mine" value="1" />}
           {view.scope === "all" && <input type="hidden" name="scope" value="all" />}
-          <select name="type" defaultValue={type ?? ""} className={`${inputClass} w-auto`}>
+          <select name="type" defaultValue={type ?? ""} className={`${inputClass} sm:w-auto`}>
             <option value="">All types</option>
             {MEDIA_TYPES.map((mediaType) => (
               <option key={mediaType} value={mediaType}>
@@ -137,7 +140,11 @@ export default async function MediaPage({
               </option>
             ))}
           </select>
-          <select name="tag" defaultValue={tag ?? ""} className={`${inputClass} w-auto max-w-56`}>
+          <select
+            name="tag"
+            defaultValue={tag ?? ""}
+            className={`${inputClass} sm:w-auto sm:max-w-56`}
+          >
             <option value="">All tags</option>
             {treeTags.map((treeTag) => (
               <option key={treeTag.id} value={treeTag.id}>
@@ -148,7 +155,7 @@ export default async function MediaPage({
           <select
             name="person"
             defaultValue={person ?? ""}
-            className={`${inputClass} w-auto max-w-56`}
+            className={`${inputClass} sm:w-auto sm:max-w-56`}
           >
             <option value="">Anyone</option>
             {peopleList.map((p) => (

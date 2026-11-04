@@ -77,7 +77,7 @@ export default async function SearchPage({
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-5 flex flex-wrap items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold">Search</h1>
         {user && (
           <ScopeToggle
@@ -89,7 +89,7 @@ export default async function SearchPage({
         )}
       </div>
 
-      <form method="GET" className="mb-6 space-y-3">
+      <form method="GET" className="mb-6 max-w-4xl space-y-2">
         {view.scope === "all" && <input type="hidden" name="scope" value="all" />}
         <div className="flex gap-2">
           <input
@@ -97,15 +97,15 @@ export default async function SearchPage({
             defaultValue={query}
             required
             minLength={2}
-            placeholder="Search names, places, stories, documents…"
-            className={`${inputClass} max-w-xl`}
+            placeholder="Search names, places, stories…"
+            className={`${inputClass} min-w-0 flex-1`}
           />
           <button type="submit" className={buttonClass}>
             Search
           </button>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <select name="type" defaultValue={type ?? ""} className={`${inputClass} w-auto`}>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          <select name="type" defaultValue={type ?? ""} className={inputClass}>
             <option value="">Any media type</option>
             {MEDIA_TYPES.map((mediaType) => (
               <option key={mediaType} value={mediaType}>
@@ -113,7 +113,7 @@ export default async function SearchPage({
               </option>
             ))}
           </select>
-          <select name="tag" defaultValue={tag ?? ""} className={`${inputClass} w-auto max-w-56`}>
+          <select name="tag" defaultValue={tag ?? ""} className={inputClass}>
             <option value="">Any tag</option>
             {treeTags.map((treeTag) => (
               <option key={treeTag.id} value={treeTag.id}>
@@ -121,11 +121,7 @@ export default async function SearchPage({
               </option>
             ))}
           </select>
-          <select
-            name="person"
-            defaultValue={person ?? ""}
-            className={`${inputClass} w-auto max-w-56`}
-          >
+          <select name="person" defaultValue={person ?? ""} className={inputClass}>
             <option value="">Anyone</option>
             {peopleList.map((p) => (
               <option key={p.id} value={p.id}>
@@ -133,11 +129,7 @@ export default async function SearchPage({
               </option>
             ))}
           </select>
-          <select
-            name="uploader"
-            defaultValue={uploader ?? ""}
-            className={`${inputClass} w-auto max-w-56`}
-          >
+          <select name="uploader" defaultValue={uploader ?? ""} className={inputClass}>
             <option value="">Any uploader</option>
             {uploaders.map((u) => (
               <option key={u.id} value={u.id}>
@@ -152,7 +144,7 @@ export default async function SearchPage({
             max={9999}
             defaultValue={year ?? ""}
             placeholder="Year"
-            className={`${inputClass} w-24`}
+            className={inputClass}
           />
         </div>
       </form>
@@ -200,7 +192,7 @@ export default async function SearchPage({
           {results.media.length > 0 && (
             <section>
               <h2 className="mb-3 text-lg font-semibold">Media ({results.media.length})</h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {results.media.map((m) => (
                   <MediaThumb
                     key={m.id}

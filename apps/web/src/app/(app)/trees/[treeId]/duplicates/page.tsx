@@ -2,7 +2,7 @@ import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { Card } from "@/components/form";
+import { Card, subtleButtonClass } from "@/components/form";
 import { PersonAvatar, personLifespan } from "@/components/person-summary";
 import { findDuplicatePairs } from "@/lib/duplicates";
 
@@ -55,7 +55,7 @@ export default async function DuplicatesPage({ params }: { params: Promise<{ tre
                   </div>
                   <Link
                     href={`/trees/${treeId}/people/${pair.a.id}/merge/${pair.b.id}`}
-                    className="rounded-md border border-archive-100 bg-surface px-3 py-1.5 text-sm text-archive-700 no-underline hover:bg-archive-50"
+                    className={`${subtleButtonClass} no-underline`}
                   >
                     Compare &amp; merge
                   </Link>
