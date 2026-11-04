@@ -15,9 +15,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <main className="flex min-h-0 w-full flex-1 flex-col">{children}</main>
-      <footer className="shrink-0 border-t border-archive-100 py-4 text-center text-xs text-archive-700/60">
-        FamilyArchive — free, open-source, self-hosted family history
-      </footer>
     </div>
   );
 }
