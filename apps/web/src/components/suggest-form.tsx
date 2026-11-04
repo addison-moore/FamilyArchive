@@ -1,4 +1,11 @@
-import { Field, inputClass, subtleButtonClass } from "@/components/form";
+import {
+  disclosureBodyClass,
+  disclosureClass,
+  disclosureSummaryClass,
+  Field,
+  inputClass,
+  subtleButtonClass,
+} from "@/components/form";
 import { submitSuggestionAction } from "@/app/(app)/trees/[treeId]/suggestions/actions";
 
 /**
@@ -19,11 +26,11 @@ export function SuggestForm({
   returnTo: string;
 }) {
   return (
-    <details className="rounded-md border border-archive-100 p-3">
-      <summary className="cursor-pointer text-sm font-medium">
+    <details className={disclosureClass}>
+      <summary className={disclosureSummaryClass}>
         Suggest a correction{targetType === "tree" ? "" : ` for ${targetLabel}`}
       </summary>
-      <form action={submitSuggestionAction} className="mt-3 space-y-3">
+      <form action={submitSuggestionAction} className={disclosureBodyClass}>
         <input type="hidden" name="treeId" value={treeId} />
         <input type="hidden" name="targetType" value={targetType} />
         {targetId && <input type="hidden" name="targetId" value={targetId} />}

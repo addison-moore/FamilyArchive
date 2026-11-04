@@ -7,7 +7,14 @@ import {
   type TreeRole,
 } from "@familyarchive/shared";
 
-import { Field, inputClass, subtleButtonClass } from "@/components/form";
+import {
+  disclosureBodyClass,
+  disclosureClass,
+  disclosureSummaryClass,
+  Field,
+  inputClass,
+  subtleButtonClass,
+} from "@/components/form";
 import {
   quickAddRelativeAction,
   setStartingPersonAction,
@@ -29,9 +36,9 @@ function QuickAddForm({
   types: readonly RelationshipType[];
 }) {
   return (
-    <details className="rounded-md border border-archive-100 p-2.5">
-      <summary className="cursor-pointer text-sm font-medium">{label}</summary>
-      <form action={quickAddRelativeAction} className="mt-3 space-y-3">
+    <details className={disclosureClass}>
+      <summary className={disclosureSummaryClass}>{label}</summary>
+      <form action={quickAddRelativeAction} className={disclosureBodyClass}>
         <input type="hidden" name="treeId" value={treeId} />
         <input type="hidden" name="personId" value={personId} />
         <input type="hidden" name="direction" value={direction} />
@@ -39,29 +46,21 @@ function QuickAddForm({
         <Field label="Full name">
           <input name="fullName" required maxLength={300} className={inputClass} />
         </Field>
-        <div className="flex flex-wrap items-end gap-3">
-          <Field label="Type">
-            <select name="type" className={`${inputClass} w-44`}>
-              {types.map((type) => (
-                <option key={type} value={type}>
-                  {RELATIONSHIP_TYPE_LABELS[type]}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field label="Birth year (optional)">
-            <input
-              name="birthYear"
-              type="number"
-              min={1}
-              max={9999}
-              className={`${inputClass} w-28`}
-            />
-          </Field>
-          <button type="submit" className={subtleButtonClass}>
-            Add
-          </button>
-        </div>
+        <Field label="Type">
+          <select name="type" className={inputClass}>
+            {types.map((type) => (
+              <option key={type} value={type}>
+                {RELATIONSHIP_TYPE_LABELS[type]}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Birth year (optional)">
+          <input name="birthYear" type="number" min={1} max={9999} className={inputClass} />
+        </Field>
+        <button type="submit" className={subtleButtonClass}>
+          Add
+        </button>
       </form>
     </details>
   );

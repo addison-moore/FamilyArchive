@@ -1,56 +1,41 @@
 import { GENDER_LABELS, GENDERS } from "@familyarchive/shared";
 
-import { Field, inputClass } from "@/components/form";
+import { CheckboxField, DateFields, Field, inputClass } from "@/components/form";
 import type { PersonRow } from "@/lib/people";
 
-function DatePartInputs({
+function LifeEvent({
+  legend,
   prefix,
   person,
+  placeName,
+  placePlaceholder,
 }: {
+  legend: string;
   prefix: "birth" | "death";
   person?: PersonRow | null;
+  placeName?: string | null;
+  placePlaceholder?: string;
 }) {
-  const year = person?.[`${prefix}Year`];
-  const month = person?.[`${prefix}Month`];
-  const day = person?.[`${prefix}Day`];
-  const approx = person?.[`${prefix}Approx`];
   return (
-    <div className="flex flex-wrap items-end gap-2">
-      <Field label="Year">
+    <fieldset className="space-y-3 rounded-md border border-archive-200 p-3">
+      <legend className="px-1 text-sm font-medium">{legend}</legend>
+      <DateFields
+        prefix={prefix}
+        year={person?.[`${prefix}Year`]}
+        month={person?.[`${prefix}Month`]}
+        day={person?.[`${prefix}Day`]}
+        approx={person?.[`${prefix}Approx`]}
+      />
+      <Field label="Place">
         <input
-          name={`${prefix}Year`}
-          type="number"
-          min={1}
-          max={9999}
-          defaultValue={year ?? ""}
-          className={`${inputClass} w-24`}
+          name={`${prefix}Place`}
+          maxLength={300}
+          defaultValue={placeName ?? ""}
+          placeholder={placePlaceholder}
+          className={inputClass}
         />
       </Field>
-      <Field label="Month">
-        <input
-          name={`${prefix}Month`}
-          type="number"
-          min={1}
-          max={12}
-          defaultValue={month ?? ""}
-          className={`${inputClass} w-20`}
-        />
-      </Field>
-      <Field label="Day">
-        <input
-          name={`${prefix}Day`}
-          type="number"
-          min={1}
-          max={31}
-          defaultValue={day ?? ""}
-          className={`${inputClass} w-20`}
-        />
-      </Field>
-      <label className="flex items-center gap-1.5 pb-2 text-sm">
-        <input type="checkbox" name={`${prefix}Approx`} defaultChecked={approx ?? false} />
-        approximate
-      </label>
-    </div>
+    </fieldset>
   );
 }
 
@@ -75,13 +60,9 @@ export function PersonFormFields({
           className={inputClass}
         />
       </Field>
-      <div className="flex flex-wrap gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Gender">
-          <select
-            name="gender"
-            defaultValue={person?.gender ?? "unknown"}
-            className={`${inputClass} w-auto`}
-          >
+          <select name="gender" defaultValue={person?.gender ?? "unknown"} className={inputClass}>
             {GENDERS.map((gender) => (
               <option key={gender} value={gender}>
                 {GENDER_LABELS[gender]}
@@ -98,35 +79,14 @@ export function PersonFormFields({
           />
         </Field>
       </div>
-      <fieldset className="rounded-md border border-archive-100 p-3">
-        <legend className="px-1 text-sm font-medium">Birth</legend>
-        <DatePartInputs prefix="birth" person={person} />
-        <div className="mt-2">
-          <Field label="Place">
-            <input
-              name="birthPlace"
-              maxLength={300}
-              defaultValue={birthPlaceName ?? ""}
-              placeholder="e.g. Galway, Ireland"
-              className={inputClass}
-            />
-          </Field>
-        </div>
-      </fieldset>
-      <fieldset className="rounded-md border border-archive-100 p-3">
-        <legend className="px-1 text-sm font-medium">Death</legend>
-        <DatePartInputs prefix="death" person={person} />
-        <div className="mt-2">
-          <Field label="Place">
-            <input
-              name="deathPlace"
-              maxLength={300}
-              defaultValue={deathPlaceName ?? ""}
-              className={inputClass}
-            />
-          </Field>
-        </div>
-      </fieldset>
+      <LifeEvent
+        legend="Birth"
+        prefix="birth"
+        person={person}
+        placeName={birthPlaceName}
+        placePlaceholder="e.g. Galway, Ireland"
+      />
+      <LifeEvent legend="Death" prefix="death" person={person} placeName={deathPlaceName} />
       <Field label="Biography / story">
         <textarea
           name="biography"
@@ -145,21 +105,13 @@ export function PersonFormFields({
           className={inputClass}
         />
       </Field>
-      <label className="flex items-start gap-2 text-sm">
-        <input
-          type="checkbox"
-          name="verified"
-          defaultChecked={person?.verified ?? false}
-          className="mt-0.5"
-        />
-        <span>
-          <span className="font-medium">Verified</span>
-          <span className="block text-archive-700/80">
-            This person has been confirmed against evidence, rather than being a likely match.
-            Verified people are outlined on the tree.
-          </span>
+      <CheckboxField name="verified" defaultChecked={person?.verified ?? false}>
+        <span className="font-medium">Verified</span>
+        <span className="block text-archive-700">
+          This person has been confirmed against evidence, rather than being a likely match.
+          Verified people are outlined on the tree.
         </span>
-      </label>
+      </CheckboxField>
     </>
   );
 }

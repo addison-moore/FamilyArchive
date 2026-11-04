@@ -59,3 +59,24 @@ test("concurrent uploads of the same bytes settle as one success and one conflic
   expect(statuses.filter((s) => s === 409)).toHaveLength(2);
   expect(statuses).not.toContain(500);
 });
+
+test("the Upload media button uploads what's picked, and the same file can be picked again", async () => {
+  // Through the real button, not the endpoint: the picker's change handler has
+  // to hand over the files before it clears the input, and only this reaches it.
+  const archive = await createArchive(page, "Upload Button Archive");
+  await page.goto(`/trees/${archive}/media`);
+  await page.waitForLoadState("networkidle");
+
+  const pick = async () => {
+    const chooser = page.waitForEvent("filechooser");
+    await page.getByRole("button", { name: "Upload media" }).click();
+    await (await chooser).setFiles({ name: "boathouse.png", mimeType: "image/png", buffer: png });
+  };
+
+  await pick();
+  await expect(page.getByRole("link", { name: "uploaded ✓" })).toBeVisible();
+
+  // Picking the same file again has to reach the server, which reports it.
+  await pick();
+  await expect(page.getByRole("link", { name: "(view existing)" })).toBeVisible();
+});

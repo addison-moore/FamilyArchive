@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { SegmentedLinks } from "@/components/ui";
 import type { ViewScope } from "@/lib/branch";
 
 /**
@@ -26,32 +25,19 @@ export function ScopeToggle({
     return `${basePath}?${query.toString()}`;
   };
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex rounded-md border border-archive-100 bg-surface p-0.5 text-sm">
-        <Link
-          href={href("branch")}
-          title={
-            anchorName
-              ? `Blood relatives and partners of ${anchorName}`
-              : "Set a starting person to use branch view"
-          }
-          className={`rounded px-3 py-1.5 no-underline ${
-            scope === "branch"
-              ? "bg-archive-100 font-medium"
-              : "text-archive-700 hover:bg-archive-50"
-          }`}
-        >
-          My branch
-        </Link>
-        <Link
-          href={href("all")}
-          className={`rounded px-3 py-1.5 no-underline ${
-            scope === "all" ? "bg-archive-100 font-medium" : "text-archive-700 hover:bg-archive-50"
-          }`}
-        >
-          Everyone
-        </Link>
-      </div>
-    </div>
+    <SegmentedLinks
+      label="Whose records to show"
+      items={[
+        {
+          href: href("branch"),
+          label: "My branch",
+          active: scope === "branch",
+          title: anchorName
+            ? `Blood relatives and partners of ${anchorName}`
+            : "Set a starting person to use branch view",
+        },
+        { href: href("all"), label: "Everyone", active: scope === "all" },
+      ]}
+    />
   );
 }

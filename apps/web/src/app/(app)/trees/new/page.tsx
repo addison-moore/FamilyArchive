@@ -3,6 +3,7 @@ import { canCreateTrees, getSessionUser } from "@familyarchive/auth";
 import { redirect } from "next/navigation";
 
 import { buttonClass, Card, Field, FormError, inputClass } from "@/components/form";
+import { PageHeader } from "@/components/ui";
 
 import { createTreeAction } from "./actions";
 
@@ -21,10 +22,10 @@ export default async function NewTreePage({
       <AppHeader />
       <PageBody>
         <div className="mx-auto max-w-md">
+          <PageHeader title="Create a family tree" />
           <Card>
-            <h1 className="mb-4 text-xl font-semibold">Create a family tree</h1>
-            <FormError message={error} />
-            <form action={createTreeAction} className="mt-4 space-y-4">
+            <FormError message={error} className="mb-4" />
+            <form action={createTreeAction} className="space-y-4">
               <Field label="Name">
                 <input
                   name="name"

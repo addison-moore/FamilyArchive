@@ -8,12 +8,14 @@ import { and, desc, eq, gt, isNull } from "drizzle-orm";
 import {
   buttonClass,
   Card,
+  CheckboxField,
   dangerButtonClass,
   Field,
   FormError,
   inputClass,
   subtleButtonClass,
 } from "@/components/form";
+import { Alert, Badge, PageHeader } from "@/components/ui";
 import { smtpConfigured } from "@/lib/email";
 
 import { ExportStatusPoller } from "@/components/export-status-poller";
@@ -89,8 +91,8 @@ export default async function TreeSettingsPage({
   const appUrl = getEnv().APP_URL;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <h1 className="text-2xl font-semibold">Archive settings</h1>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <PageHeader title="Archive settings" />
       <FormError message={error} />
 
       <Card>
@@ -131,12 +133,17 @@ export default async function TreeSettingsPage({
             >
               <div className="min-w-48 flex-1">
                 <div className="font-medium">{member.name ?? member.email}</div>
-                <div className="truncate text-sm text-archive-700/70">{member.email}</div>
+                <div className="truncate text-sm text-archive-700">{member.email}</div>
               </div>
               <form action={changeMemberRoleAction} className="flex items-center gap-2">
                 <input type="hidden" name="treeId" value={treeId} />
                 <input type="hidden" name="membershipId" value={member.membershipId} />
-                <select name="role" defaultValue={member.role} className={`${inputClass} w-auto`}>
+                <select
+                  name="role"
+                  aria-label={`Role for ${member.name ?? member.email}`}
+                  defaultValue={member.role}
+                  className={`${inputClass} w-auto capitalize`}
+                >
                   {TREE_ROLES.map((role) => (
                     <option key={role} value={role}>
                       {role}
@@ -165,30 +172,31 @@ export default async function TreeSettingsPage({
         <h2 id="invites" className="mb-1 text-lg font-semibold">
           Invites
         </h2>
-        <p className="mb-4 text-sm text-archive-700/80">
+        <p className="mb-4 text-sm text-archive-700">
           Invite links expire automatically and grant only the role you choose.
           {!smtpConfigured() &&
             " SMTP is not configured — create a link and share it yourself (email delivery is disabled)."}
         </p>
 
         {createdToken && (
-          <div className="mb-4 rounded-md border border-accent-600/30 bg-archive-100/50 p-3">
-            <p className="mb-2 text-sm font-medium">
+          <Alert className="mb-4">
+            <p className="mb-2 font-medium">
               Invite created{emailed ? " and emailed" : ""}
               {smtp === "0" ? " — SMTP is not configured, so share the link manually" : ""}:
             </p>
             <input
               readOnly
+              aria-label="Invite link"
               value={`${appUrl}/invite/${createdToken}`}
               className={`${inputClass} font-mono text-xs`}
             />
-          </div>
+          </Alert>
         )}
 
         <form action={createInviteAction} className="flex flex-wrap items-end gap-3">
           <input type="hidden" name="treeId" value={treeId} />
           <Field label="Role">
-            <select name="role" defaultValue="viewer" className={`${inputClass} w-auto`}>
+            <select name="role" defaultValue="viewer" className={`${inputClass} w-auto capitalize`}>
               {TREE_ROLES.map((role) => (
                 <option key={role} value={role}>
                   {role}
@@ -203,7 +211,7 @@ export default async function TreeSettingsPage({
               min={1}
               max={90}
               defaultValue={7}
-              className={`${inputClass} w-24`}
+              className={`${inputClass} w-28`}
             />
           </Field>
           <Field label="Email to (optional)" className="min-w-48 flex-1">
@@ -228,15 +236,12 @@ export default async function TreeSettingsPage({
               >
                 <div className="min-w-0 flex-1">
                   <div className="text-sm">
-                    <span className="rounded bg-archive-100 px-1.5 py-0.5 text-xs">
-                      {item.role}
-                    </span>{" "}
-                    {item.email ?? "link only"}
+                    <Badge className="capitalize">{item.role}</Badge> {item.email ?? "link only"}
                   </div>
-                  <div className="truncate font-mono text-xs text-archive-700/70">
+                  <div className="truncate font-mono text-xs text-archive-700">
                     {appUrl}/invite/{item.token}
                   </div>
-                  <div className="text-xs text-archive-700/60">
+                  <div className="text-xs text-archive-700">
                     expires {item.expiresAt.toDateString()}
                   </div>
                 </div>
@@ -255,44 +260,32 @@ export default async function TreeSettingsPage({
 
       <Card>
         <h2 className="mb-1 text-lg font-semibold">Public access</h2>
-        <p className="mb-4 text-sm text-archive-700/80">
+        <p className="mb-4 text-sm text-archive-700">
           Archives are private by default. Public mode lets anyone with the link view the
           <strong> entire archive</strong> — tree, people, and all media — without an account.
         </p>
         <form action={setPublicModeAction} className="space-y-3">
           <input type="hidden" name="treeId" value={treeId} />
-          <label className="flex items-start gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="isPublic"
-              defaultChecked={tree.isPublic}
-              className="mt-0.5"
-            />
+          <CheckboxField name="isPublic" defaultChecked={tree.isPublic}>
             Make this archive publicly viewable
-          </label>
-          <label className="flex items-start gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="allowIndexing"
-              defaultChecked={tree.allowIndexing}
-              className="mt-0.5"
-            />
+          </CheckboxField>
+          <CheckboxField name="allowIndexing" defaultChecked={tree.allowIndexing}>
             Allow search engines to index it (otherwise noindex is sent)
-          </label>
+          </CheckboxField>
           <button type="submit" className={buttonClass}>
             Save public access
           </button>
         </form>
         {tree.isPublic && (
-          <p className="mt-3 rounded-md border border-warn-line bg-warn-soft px-3 py-2 text-sm text-warn">
+          <Alert tone="warn" className="mt-3">
             This archive is currently public.
-          </p>
+          </Alert>
         )}
       </Card>
 
       <Card>
         <h2 className="mb-1 text-lg font-semibold">Audit log</h2>
-        <p className="mb-3 text-sm text-archive-700/80">
+        <p className="mb-3 text-sm text-archive-700">
           A record of important changes, visible to admins only.
         </p>
         <Link
@@ -305,7 +298,7 @@ export default async function TreeSettingsPage({
 
       <Card>
         <h2 className="mb-1 text-lg font-semibold">GEDCOM export</h2>
-        <p className="mb-4 text-sm text-archive-700/80">
+        <p className="mb-4 text-sm text-archive-700">
           Download this archive as a GEDCOM file — the standard format other family-tree apps can
           open. Photos and files are not included.
         </p>
@@ -321,12 +314,12 @@ export default async function TreeSettingsPage({
       <Card>
         <h2 className="mb-1 text-lg font-semibold">Storage</h2>
         {storage.quotaBytes === null ? (
-          <p className="text-sm text-archive-700/80">
+          <p className="text-sm text-archive-700">
             {formatStorage(storage.usedBytes)} of photos and files stored · no limit set.
           </p>
         ) : (
           <>
-            <p className="mb-3 text-sm text-archive-700/80">
+            <p className="mb-3 text-sm text-archive-700">
               {formatStorage(storage.usedBytes)} of {formatStorage(storage.quotaBytes)} used
             </p>
             <div
@@ -362,7 +355,7 @@ export default async function TreeSettingsPage({
 
       <Card>
         <h2 className="mb-1 text-lg font-semibold">Export everything</h2>
-        <p className="mb-4 text-sm text-archive-700/80">
+        <p className="mb-4 text-sm text-archive-700">
           Download this entire archive — the family tree, every original photo and file, and all
           details — as a single ZIP. Useful as a backup, and everything you&apos;d need to move to
           another server.
@@ -405,17 +398,16 @@ export default async function TreeSettingsPage({
               </div>
             )}
             {exportRow?.status === "failed" && (
-              <p className="mb-4 text-sm text-danger">
+              <Alert tone="danger" className="mb-4">
                 The last export didn&apos;t finish{exportRow.error ? ` (${exportRow.error})` : ""} —
                 try again below.
-              </p>
+              </Alert>
             )}
             <form action={requestArchiveExportAction} className="space-y-3">
               <input type="hidden" name="treeId" value={treeId} />
-              <label className="flex items-start gap-2 text-sm">
-                <input type="checkbox" name="includeDeleted" className="mt-0.5" />
+              <CheckboxField name="includeDeleted">
                 Also include people and files that were deleted
-              </label>
+              </CheckboxField>
               <button type="submit" className={subtleButtonClass}>
                 {exportRow?.status === "complete" ? "Export a fresh copy" : "Export archive"}
               </button>
@@ -429,7 +421,7 @@ export default async function TreeSettingsPage({
           <h2 id="danger" className="mb-1 text-lg font-semibold text-danger">
             Danger zone
           </h2>
-          <p className="mb-4 text-sm text-archive-700/80">
+          <p className="mb-4 text-sm text-archive-700">
             Deleting an archive permanently removes its people, media records, memberships, and
             invites. Type the archive name (<strong>{tree.name}</strong>) to confirm.
           </p>
@@ -438,6 +430,7 @@ export default async function TreeSettingsPage({
             <input
               name="confirmName"
               required
+              aria-label="Archive name to confirm"
               placeholder={tree.name}
               className={`${inputClass} sm:w-64`}
             />

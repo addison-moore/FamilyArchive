@@ -8,11 +8,16 @@
   /* Warm family-archive palette. These compile to CSS variables,
      so the .dark block below re-themes every utility without component edits. */
   --color-archive-50: #faf7f2; /* page background */
-  --color-archive-100: #f3ede2; /* borders, subtle fills */
-  --color-archive-700: #6b5d4a; /* muted text */
+  --color-archive-100: #f3ede2; /* card borders, dividers, subtle fills */
+  --color-archive-200: #e4dccd; /* button and toggle borders */
+  --color-archive-300: #998c78; /* field borders: 3:1 against the surface and the page */
+  --color-archive-700: #6b5d4a; /* secondary text: passes AA, so no opacity variants */
   --color-archive-800: #4e4335; /* body text on tinted banners */
   --color-archive-900: #3d3427; /* headings, primary text */
-  --color-accent-600: #8a4c32; /* brand accent: links, primary buttons — the app icon's brick */
+  --color-accent-600: #8a4c32; /* brand accent: links, focus — the app icon's brick */
+  /* Filled buttons, under white text. Dark mode lightens accent-600 for use as
+     text, so this stays the same in both themes. */
+  --color-accent-700: #8a4c32;
 
   /* Card/panel background (white in light mode — never use bg-white directly). */
   --color-surface: #ffffff;
@@ -30,6 +35,7 @@
   --color-success: #15803d;
   --color-success-soft: #dcfce7;
   --color-success-strong: #166534;
+  --color-success-fill: #15803d; /* like accent-700: under white text, in both themes */
 }
 
 /* The arrow on selects, in archive-700. A data URI can't follow a CSS color, so
@@ -42,6 +48,8 @@
 .dark {
   --color-archive-50: #191512;
   --color-archive-100: #322a21;
+  --color-archive-200: #463b2f;
+  --color-archive-300: #7d7162;
   --color-archive-700: #b3a493;
   --color-archive-800: #cfc3b4;
   --color-archive-900: #ece5da;
@@ -58,12 +66,36 @@
   --color-warn-line: #6d5420;
   --color-success: #6fc287;
   --color-success-soft: #14301c;
-  --color-success-strong: #2f9e53;
+  --color-success-strong: #5fbb7b;
 
   --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b3a493' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 @layer base {
+  /* A long name or place shouldn't push a page sideways. */
+  body {
+    overflow-wrap: break-word;
+  }
+
+  /* One focus ring for everything a keyboard can reach. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-600);
+    outline-offset: 2px;
+  }
+
+  /* Tailwind 4 gives buttons the default arrow. */
+  button:not(:disabled),
+  summary,
+  select:not(:disabled),
+  label:has(> input[type="checkbox"], > input[type="radio"]) {
+    cursor: pointer;
+  }
+
+  /* list-none hides the marker everywhere except Safari. */
+  summary.list-none::-webkit-details-marker {
+    display: none;
+  }
+
   input[type="checkbox"],
   input[type="radio"] {
     @apply size-4 shrink-0 accent-accent-600;
@@ -77,7 +109,12 @@
    content — a select with one long option — inside its container. */
 @layer components {
   .input {
-    @apply w-full max-w-full rounded-md border border-archive-100 bg-surface px-3 py-2 text-sm focus:border-accent-600 focus:outline-none;
+    @apply w-full max-w-full rounded-md border border-archive-300 bg-surface px-3 py-2 text-sm placeholder:text-archive-700 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .input:focus-visible {
+    @apply border-accent-600;
+    outline-offset: 0;
   }
 
   /* 38px, the height of the buttons in form.tsx and the segmented toggles, so
@@ -85,6 +122,15 @@
   input.input,
   select.input {
     @apply h-9.5;
+  }
+
+  /* block drops the baseline gap a textarea otherwise leaves under itself. */
+  textarea.input {
+    @apply block resize-y;
+  }
+
+  input[type="file"].input {
+    @apply cursor-pointer py-1 pl-1 text-archive-700 file:mr-3 file:h-full file:cursor-pointer file:rounded file:border-0 file:bg-archive-100 file:px-3 file:text-sm file:font-medium file:text-archive-900;
   }
 
   /* A native select sets its own height, indent and arrow, so its text wouldn't

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { buttonClass, Card, Field, FormError, inputClass } from "@/components/form";
+import { Alert } from "@/components/ui";
 import { anyUserExists } from "@/lib/users";
 
 import { loginAction } from "./actions";
@@ -31,13 +32,13 @@ export default async function LoginPage({
   return (
     <Card>
       <h1 className="mb-4 text-xl font-semibold">Sign in</h1>
-      <FormError message={errorMessage} />
+      <FormError message={errorMessage} className="mb-4" />
       {reset && !error && (
-        <p className="rounded-md border border-archive-100 bg-success-soft px-3 py-2 text-sm text-success-strong">
+        <Alert tone="success" className="mb-4">
           Your password has been changed — sign in with the new one.
-        </p>
+        </Alert>
       )}
-      <form action={loginAction} className="mt-4 space-y-4">
+      <form action={loginAction} className="space-y-4">
         <input type="hidden" name="callbackUrl" value={callbackUrl ?? "/"} />
         <Field label="Email">
           <input name="email" type="email" required autoComplete="email" className={inputClass} />
@@ -61,7 +62,7 @@ export default async function LoginPage({
         </Link>
       </p>
       {freshInstance ? (
-        <p className="mt-4 text-sm text-archive-700/80">
+        <p className="mt-4 text-sm text-archive-700">
           New instance?{" "}
           <Link href="/register" className="text-accent-600 hover:underline">
             Create the first account
@@ -69,7 +70,7 @@ export default async function LoginPage({
           .
         </p>
       ) : (
-        <p className="mt-4 text-sm text-archive-700/80">
+        <p className="mt-4 text-sm text-archive-700">
           Need an account? Ask a family member for an invite link.
         </p>
       )}

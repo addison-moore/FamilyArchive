@@ -12,6 +12,7 @@ import {
   subtleButtonClass,
 } from "@/components/form";
 import { MediaThumb } from "@/components/media-thumb";
+import { PageHeader } from "@/components/ui";
 import { getCollection, listCollectionMedia } from "@/lib/collections";
 import { thumbUrls } from "@/lib/media";
 
@@ -48,17 +49,21 @@ export default async function CollectionPage({
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <FormError message={error} />
-      <div>
-        <h1 className="text-2xl font-semibold">{collection.name}</h1>
-        <p className="mt-1 text-sm text-archive-700/80">
-          {media.length} item(s){range ? ` · ${range}` : ""}
-        </p>
-        {collection.description && (
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed whitespace-pre-line text-archive-700">
-            {collection.description}
-          </p>
-        )}
-      </div>
+      <PageHeader
+        title={collection.name}
+        description={
+          <>
+            <p>
+              {media.length} item(s){range ? ` · ${range}` : ""}
+            </p>
+            {collection.description && (
+              <p className="mt-2 max-w-2xl leading-relaxed whitespace-pre-line">
+                {collection.description}
+              </p>
+            )}
+          </>
+        }
+      />
 
       {media.length === 0 ? (
         <Card>
@@ -99,7 +104,7 @@ export default async function CollectionPage({
                   className={inputClass}
                 />
               </Field>
-              <div className="flex flex-wrap items-end gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <Field label="From year">
                   <input
                     name="startYear"
@@ -107,7 +112,7 @@ export default async function CollectionPage({
                     min={1}
                     max={9999}
                     defaultValue={collection.startYear ?? ""}
-                    className={`${inputClass} w-28`}
+                    className={inputClass}
                   />
                 </Field>
                 <Field label="To year">
@@ -117,26 +122,26 @@ export default async function CollectionPage({
                     min={1}
                     max={9999}
                     defaultValue={collection.endYear ?? ""}
-                    className={`${inputClass} w-28`}
+                    className={inputClass}
                   />
                 </Field>
-                <button type="submit" className={buttonClass}>
-                  Save
-                </button>
               </div>
+              <button type="submit" className={buttonClass}>
+                Save
+              </button>
             </form>
             {imageMembers.length > 0 && (
               <form
                 action={setCollectionCoverAction}
-                className="mt-5 flex flex-wrap items-end gap-3"
+                className="mt-5 flex flex-wrap items-end gap-3 border-t border-archive-100 pt-5"
               >
                 <input type="hidden" name="treeId" value={treeId} />
                 <input type="hidden" name="collectionId" value={collectionId} />
-                <Field label="Cover image">
+                <Field label="Cover image" className="min-w-48 flex-1 sm:max-w-sm">
                   <select
                     name="mediaId"
                     defaultValue={collection.coverMediaId ?? ""}
-                    className={`${inputClass} w-64`}
+                    className={inputClass}
                   >
                     <option value="">Select an image…</option>
                     {imageMembers.map((item) => (
@@ -155,7 +160,7 @@ export default async function CollectionPage({
 
           <Card>
             <h2 className="mb-1 text-lg font-semibold text-danger">Delete collection</h2>
-            <p className="mb-4 text-sm text-archive-700/80">
+            <p className="mb-4 text-sm text-archive-700">
               Removes the collection only — its media stays in the library.
             </p>
             <form action={deleteCollectionAction}>

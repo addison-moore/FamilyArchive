@@ -78,11 +78,11 @@ export default async function InvitePage({
   return (
     <Card>
       <h1 className="mb-1 text-xl font-semibold">Join “{treeName}”</h1>
-      <p className="mb-4 text-sm text-archive-700/80">
+      <p className="mb-4 text-sm text-archive-700">
         You&apos;ve been invited as <strong>{invite.role}</strong>. Create your account to join.
       </p>
-      <FormError message={error} />
-      <form action={registerViaInviteAction} className="mt-4 space-y-4">
+      <FormError message={error} className="mb-4" />
+      <form action={registerViaInviteAction} className="space-y-4">
         <input type="hidden" name="token" value={token} />
         <Field label="Name">
           <input name="name" required autoComplete="name" className={inputClass} />
@@ -111,7 +111,7 @@ export default async function InvitePage({
           Create account and join
         </button>
       </form>
-      <p className="mt-4 text-sm text-archive-700/80">
+      <p className="mt-4 text-sm text-archive-700">
         Already have an account?{" "}
         <Link
           href={`/login?callbackUrl=${encodeURIComponent(`/invite/${token}`)}`}

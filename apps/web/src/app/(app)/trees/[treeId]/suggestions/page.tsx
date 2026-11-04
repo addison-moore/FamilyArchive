@@ -4,15 +4,23 @@ import { treeRoleAtLeast } from "@familyarchive/shared";
 import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 
-import { Card, dangerButtonClass, Field, FormError, inputClass } from "@/components/form";
+import {
+  Card,
+  dangerButtonClass,
+  Field,
+  FormError,
+  inputClass,
+  successButtonClass,
+} from "@/components/form";
 import { SuggestForm } from "@/components/suggest-form";
+import { Alert, Badge, PageHeader } from "@/components/ui";
 
 import { resolveSuggestionAction } from "./actions";
 
-const STATUS_BADGE: Record<string, string> = {
-  open: "bg-warn-soft text-warn",
-  accepted: "bg-success-soft text-success-strong",
-  rejected: "bg-danger-soft text-danger",
+const STATUS_TONE: Record<string, "warn" | "success" | "danger"> = {
+  open: "warn",
+  accepted: "success",
+  rejected: "danger",
 };
 
 /** Suggestions: review queue for admins, own submissions for others. */
@@ -84,7 +92,7 @@ export default async function SuggestionsPage({
           <div className="min-w-0 flex-1">
             <p className="text-sm">
               <span className="font-medium">{row.submitterName ?? row.submitterEmail}</span>{" "}
-              <span className="text-archive-700/70">
+              <span className="text-archive-700">
                 suggested for{" "}
                 {target.href ? (
                   <Link href={target.href} className="text-accent-600 hover:underline">
@@ -105,25 +113,16 @@ export default async function SuggestionsPage({
               </p>
             )}
           </div>
-          <span
-            className={`rounded px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[s.status] ?? ""}`}
-          >
-            {s.status}
-          </span>
+          <Badge tone={STATUS_TONE[s.status]}>{s.status}</Badge>
         </div>
         {isAdmin && s.status === "open" && (
           <form action={resolveSuggestionAction} className="mt-4 flex flex-wrap items-end gap-2">
             <input type="hidden" name="treeId" value={treeId} />
             <input type="hidden" name="suggestionId" value={s.id} />
-            <Field label="Note (optional)">
-              <input name="note" maxLength={2000} className={`${inputClass} w-72`} />
+            <Field label="Note (optional)" className="w-full sm:w-auto sm:min-w-48 sm:flex-1">
+              <input name="note" maxLength={2000} className={inputClass} />
             </Field>
-            <button
-              type="submit"
-              name="decision"
-              value="accepted"
-              className="rounded-md border border-transparent bg-success px-3 py-2 text-sm font-medium text-white hover:bg-success/90"
-            >
+            <button type="submit" name="decision" value="accepted" className={successButtonClass}>
               Accept
             </button>
             <button type="submit" name="decision" value="rejected" className={dangerButtonClass}>
@@ -137,20 +136,16 @@ export default async function SuggestionsPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Suggestions</h1>
-        <p className="mt-1 text-sm text-archive-700/80">
-          {isAdmin
+      <PageHeader
+        title="Suggestions"
+        description={
+          isAdmin
             ? "Review corrections proposed by family members."
-            : "Propose corrections for admins to review."}
-        </p>
-      </div>
+            : "Propose corrections for admins to review."
+        }
+      />
       <FormError message={error} />
-      {suggested && (
-        <div className="rounded-md border border-accent-600/30 bg-archive-100/60 px-4 py-3 text-sm text-archive-800">
-          Suggestion sent — an admin will review it.
-        </div>
-      )}
+      {suggested && <Alert>Suggestion sent — an admin will review it.</Alert>}
 
       {!treeRoleAtLeast(role, "editor") && (
         <SuggestForm

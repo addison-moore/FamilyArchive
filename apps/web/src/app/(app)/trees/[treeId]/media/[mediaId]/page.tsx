@@ -17,14 +17,19 @@ import {
   buttonClass,
   Card,
   dangerButtonClass,
+  DateFields,
   Field,
   FormError,
   inputClass,
+  menuItemClass,
+  menuPanelClass,
+  popoverPanelClass,
   subtleButtonClass,
 } from "@/components/form";
 import { FaceTagger } from "@/components/face-tagger";
 import { MediaNav } from "@/components/media-nav";
 import { SuggestForm } from "@/components/suggest-form";
+import { Alert, Badge } from "@/components/ui";
 import {
   addMediaToCollectionAction,
   removeMediaFromCollectionAction,
@@ -63,11 +68,11 @@ import {
 
 const iconButtonClass =
   "flex size-9.5 cursor-pointer items-center justify-center rounded-md border " +
-  "border-archive-100 bg-surface text-archive-700 hover:bg-archive-100";
+  "border-archive-200 bg-surface text-archive-700 hover:bg-archive-50";
 
 /** The × on a chip: a 24px target, the size of the chip's text line and its padding. */
 const chipRemoveClass =
-  "flex size-6 items-center justify-center rounded-full text-archive-700/60 " +
+  "flex size-6 items-center justify-center rounded-full text-archive-700 " +
   "hover:bg-danger-soft hover:text-danger";
 
 function formatBytes(bytes: number): string {
@@ -208,28 +213,24 @@ export default async function MediaDetailPage({
           screen. */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 space-y-1">
-          {media.title && <h1 className="text-xl font-semibold">{media.title}</h1>}
+          {media.title && (
+            <h1 className="text-xl font-semibold [overflow-wrap:anywhere]">{media.title}</h1>
+          )}
           {media.description && (
             <p className="text-sm leading-relaxed whitespace-pre-line text-archive-700">
               {media.description}
             </p>
           )}
           {(dateText || placeName) && (
-            <p className="text-sm text-archive-700/80">
+            <p className="text-sm text-archive-700">
               {[dateText, placeName].filter(Boolean).join(" · ")}
             </p>
           )}
           {media.processingStatus !== "processed" && (
             <p>
-              <span
-                className={`inline-block rounded px-1.5 py-0.5 text-xs ${
-                  media.processingStatus === "failed"
-                    ? "bg-danger-soft text-danger"
-                    : "bg-archive-100 text-archive-700"
-                }`}
-              >
+              <Badge tone={media.processingStatus === "failed" ? "danger" : "neutral"}>
                 {media.processingStatus === "failed" ? "Failed" : "Preparing…"}
-              </span>
+              </Badge>
             </p>
           )}
         </div>
@@ -250,7 +251,9 @@ export default async function MediaDetailPage({
                 <path d="M12 16v-5M12 8h.01" />
               </svg>
             </summary>
-            <div className="absolute inset-x-4 z-20 mt-2 rounded-xl border border-archive-100 bg-surface p-5 shadow-lg sm:right-0 sm:left-auto sm:w-[26rem]">
+            <div
+              className={`${popoverPanelClass} absolute inset-x-4 mt-2 sm:right-0 sm:left-auto sm:w-[26rem]`}
+            >
               <dl className="space-y-1.5 text-sm">
                 <div>
                   <dt className="inline font-medium">Type: </dt>
@@ -290,7 +293,7 @@ export default async function MediaDetailPage({
                     <li key={collection.id} className={`${chipClass} bg-archive-100`}>
                       <Link
                         href={`/trees/${treeId}/collections/${collection.id}`}
-                        className="hover:text-accent-600"
+                        className="py-0.5 hover:text-accent-600"
                       >
                         {collection.name}
                       </Link>
@@ -312,7 +315,7 @@ export default async function MediaDetailPage({
                   ))}
                 </ul>
               ) : (
-                <p className="mb-2 text-sm text-archive-700/70">Not in any collection.</p>
+                <p className="mb-2 text-sm text-archive-700">Not in any collection.</p>
               )}
               {canTag && joinableCollections.length > 0 && (
                 <form action={addMediaToCollectionAction} className="flex items-center gap-2">
@@ -339,7 +342,7 @@ export default async function MediaDetailPage({
                     <li key={tag.id} className={`${chipClass} bg-archive-100`}>
                       <Link
                         href={`/trees/${treeId}/media?tag=${tag.id}`}
-                        className="hover:text-accent-600"
+                        className="py-0.5 hover:text-accent-600"
                       >
                         {tag.name}
                       </Link>
@@ -373,7 +376,7 @@ export default async function MediaDetailPage({
                   </button>
                 </form>
               ) : (
-                itemTags.length === 0 && <p className="text-sm text-archive-700/70">No tags yet.</p>
+                itemTags.length === 0 && <p className="text-sm text-archive-700">No tags yet.</p>
               )}
             </div>
           </details>
@@ -398,7 +401,9 @@ export default async function MediaDetailPage({
                   <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
                 </svg>
               </summary>
-              <div className="absolute inset-x-4 z-20 mt-2 rounded-xl border border-archive-100 bg-surface p-5 shadow-lg sm:right-0 sm:left-auto sm:w-[28rem]">
+              <div
+                className={`${popoverPanelClass} absolute inset-x-4 mt-2 sm:right-0 sm:left-auto sm:w-[28rem]`}
+              >
                 <form action={updateMediaAction} className="space-y-4">
                   <input type="hidden" name="treeId" value={treeId} />
                   <input type="hidden" name="mediaId" value={mediaId} />
@@ -428,44 +433,13 @@ export default async function MediaDetailPage({
                       ))}
                     </select>
                   </Field>
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-3 gap-3">
-                      <Field label="Year">
-                        <input
-                          name="dateYear"
-                          type="number"
-                          min={1}
-                          max={9999}
-                          defaultValue={media.dateYear ?? ""}
-                          className={inputClass}
-                        />
-                      </Field>
-                      <Field label="Month">
-                        <input
-                          name="dateMonth"
-                          type="number"
-                          min={1}
-                          max={12}
-                          defaultValue={media.dateMonth ?? ""}
-                          className={inputClass}
-                        />
-                      </Field>
-                      <Field label="Day">
-                        <input
-                          name="dateDay"
-                          type="number"
-                          min={1}
-                          max={31}
-                          defaultValue={media.dateDay ?? ""}
-                          className={inputClass}
-                        />
-                      </Field>
-                    </div>
-                    <label className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" name="dateApprox" defaultChecked={media.dateApprox} />
-                      approximate
-                    </label>
-                  </div>
+                  <DateFields
+                    prefix="date"
+                    year={media.dateYear}
+                    month={media.dateMonth}
+                    day={media.dateDay}
+                    approx={media.dateApprox}
+                  />
                   <Field label="Place">
                     <input
                       name="place"
@@ -494,29 +468,20 @@ export default async function MediaDetailPage({
                 <circle cx="19" cy="12" r="1.8" />
               </svg>
             </summary>
-            <div className="absolute right-0 z-20 mt-2 w-60 rounded-md border border-archive-100 bg-surface p-1 shadow-lg">
-              <a
-                href={url}
-                download={media.originalFilename}
-                className="block rounded px-3 py-2 text-sm no-underline hover:bg-archive-50"
-              >
+            <div className={`${menuPanelClass} absolute right-0 mt-2 w-60`}>
+              <a href={url} download={media.originalFilename} className={menuItemClass}>
                 Download original
               </a>
               {isEditor && isImageMime(media.mimeType) && taggedPeople.length > 0 && (
                 <details>
-                  <summary className="cursor-pointer rounded px-3 py-2 text-sm hover:bg-archive-50">
-                    Use as profile photo
-                  </summary>
+                  <summary className={menuItemClass}>Use as profile photo</summary>
                   <div className="pl-3">
                     {taggedPeople.map((tagged) => (
                       <form key={tagged.rowId} action={setProfilePhotoAction}>
                         <input type="hidden" name="treeId" value={treeId} />
                         <input type="hidden" name="mediaId" value={mediaId} />
                         <input type="hidden" name="personId" value={tagged.personId} />
-                        <button
-                          type="submit"
-                          className="w-full rounded px-3 py-1.5 text-left text-sm text-archive-700 hover:bg-archive-50"
-                        >
+                        <button type="submit" className={`${menuItemClass} text-archive-700`}>
                           {tagged.fullName}
                         </button>
                       </form>
@@ -526,11 +491,11 @@ export default async function MediaDetailPage({
               )}
               {isEditor && (
                 <details>
-                  <summary className="cursor-pointer rounded px-3 py-2 text-sm text-danger hover:bg-danger-soft">
+                  <summary className={`${menuItemClass} text-danger hover:bg-danger-soft`}>
                     Delete…
                   </summary>
                   <div className="space-y-2 px-3 py-2">
-                    <p className="text-xs text-archive-700/80">
+                    <p className="text-xs text-archive-700">
                       Removes this item from the library. The original file stays safely on the
                       server.
                     </p>
@@ -558,7 +523,7 @@ export default async function MediaDetailPage({
           <span key={tagged.rowId} className={`${chipClass} border border-archive-100 bg-surface`}>
             <Link
               href={`/trees/${treeId}/people/${tagged.personId}`}
-              className="hover:text-accent-600"
+              className="py-0.5 hover:text-accent-600"
             >
               {tagged.fullName}
             </Link>
@@ -577,7 +542,7 @@ export default async function MediaDetailPage({
         {canTag && untaggedPeople.length > 0 && (
           <details className="xl:relative">
             <summary
-              className="cursor-pointer list-none rounded-full border border-dashed border-archive-100 px-3 py-1 text-sm text-archive-700 hover:bg-archive-50"
+              className="cursor-pointer list-none rounded-full border border-dashed border-archive-200 px-3 py-1 text-sm text-archive-700 hover:bg-archive-50"
               title={
                 isBrowserRenderableImage(media.mimeType)
                   ? "Tag someone — or click their face in the photo"
@@ -592,7 +557,7 @@ export default async function MediaDetailPage({
             >
               <input type="hidden" name="treeId" value={treeId} />
               <input type="hidden" name="mediaId" value={mediaId} />
-              <select name="personId" required className={`${inputClass} flex-1`}>
+              <select name="personId" required className={`${inputClass} min-w-0 flex-1`}>
                 <option value="">Select a person…</option>
                 {untaggedPeople.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -623,12 +588,12 @@ export default async function MediaDetailPage({
           </p>
           {processingError && (
             <details className="mt-2">
-              <summary className="cursor-pointer text-xs text-archive-700/60">
+              <summary className="cursor-pointer py-1 text-xs text-archive-700">
                 Technical details
               </summary>
-              <p className="mt-1 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-xs text-danger">
+              <Alert tone="danger" className="mt-1">
                 {processingError}
-              </p>
+              </Alert>
             </details>
           )}
           {isEditor && (
@@ -669,28 +634,28 @@ export default async function MediaDetailPage({
         <Card>
           <h2 className="mb-3 text-lg font-semibold">Text</h2>
           {(meta.ocr?.status === "queued" || meta.ocr?.status === "running") && (
-            <p className="mb-3 text-sm text-archive-700/70">Reading the text in this document…</p>
+            <p className="mb-3 text-sm text-archive-700">Reading the text in this document…</p>
           )}
           {meta.ocr?.status === "failed" && (
-            <p className="mb-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <Alert tone="danger" className="mb-3">
               We couldn&apos;t read the text in this document automatically.
-            </p>
+            </Alert>
           )}
           {meta.ai?.status === "failed" && (
-            <p className="mb-3 rounded-md border border-danger-line bg-danger-soft px-3 py-2 text-sm text-danger">
+            <Alert tone="danger" className="mb-3">
               The AI tidy-up didn&apos;t work — you can try again.
-            </p>
+            </Alert>
           )}
 
           {media.ocrText ? (
             <details className="mb-4" open={!media.transcriptionText}>
-              <summary className="cursor-pointer text-sm font-medium">Extracted text</summary>
+              <summary className="cursor-pointer py-1 text-sm font-medium">Extracted text</summary>
               <pre className="mt-2 max-h-96 overflow-auto rounded-md bg-archive-100/50 p-3 text-xs whitespace-pre-wrap text-archive-800">
                 {media.ocrText}
               </pre>
             </details>
           ) : (
-            <p className="mb-4 text-sm text-archive-700/70">No text extracted yet.</p>
+            <p className="mb-4 text-sm text-archive-700">No text extracted yet.</p>
           )}
 
           {isEditor && (
@@ -743,7 +708,7 @@ export default async function MediaDetailPage({
               {media.transcriptionText}
             </pre>
           ) : (
-            <p className="text-sm text-archive-700/70">No transcription yet.</p>
+            <p className="text-sm text-archive-700">No transcription yet.</p>
           )}
         </Card>
       )}

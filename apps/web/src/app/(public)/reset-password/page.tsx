@@ -42,9 +42,9 @@ export default async function ResetPasswordPage({
   return (
     <Card>
       <h1 className="mb-1 text-xl font-semibold">Choose a new password</h1>
-      <p className="mb-4 text-sm text-archive-700/80">For {email}</p>
-      <FormError message={error ? ERROR_MESSAGES[error] : undefined} />
-      <form action={resetPasswordAction} className="mt-4 space-y-4">
+      <p className="mb-4 text-sm text-archive-700">For {email}</p>
+      <FormError message={error ? ERROR_MESSAGES[error] : undefined} className="mb-4" />
+      <form action={resetPasswordAction} className="space-y-4">
         <input type="hidden" name="token" value={token} />
         <Field label={`New password (min. ${MIN_PASSWORD_LENGTH} characters)`}>
           <input

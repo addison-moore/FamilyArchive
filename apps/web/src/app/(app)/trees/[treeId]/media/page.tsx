@@ -11,7 +11,6 @@ import {
   UPLOAD_MIME_TYPES,
 } from "@familyarchive/shared";
 import { asc, eq } from "drizzle-orm";
-import Link from "next/link";
 
 import { setMediaPageSizeAction } from "./actions";
 
@@ -21,6 +20,7 @@ import { MediaThumb } from "@/components/media-thumb";
 import { MediaUpload } from "@/components/media-upload";
 import { QUOTA_FULL_MESSAGE, quotaState } from "@/lib/quota";
 import { ScopeToggle } from "@/components/scope-toggle";
+import { Alert, PageHeader, SegmentedLinks } from "@/components/ui";
 import { resolveView } from "@/lib/branch";
 import { countMedia, listMedia, thumbUrls } from "@/lib/media";
 import { listPeople } from "@/lib/people";
@@ -102,22 +102,30 @@ export default async function MediaPage({
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold">Media</h1>
-        <div className="flex rounded-md border border-archive-100 bg-surface p-0.5 text-sm">
-          <Link
-            href={viewQuery(false)}
-            className={`rounded px-3 py-1.5 no-underline ${!mine ? "bg-archive-100 font-medium" : "text-archive-700 hover:bg-archive-50"}`}
-          >
-            All media
-          </Link>
-          <Link
-            href={viewQuery(true)}
-            className={`rounded px-3 py-1.5 no-underline ${mine ? "bg-archive-100 font-medium" : "text-archive-700 hover:bg-archive-50"}`}
-          >
-            My uploads
-          </Link>
-        </div>
+      <PageHeader title="Media">
+        {canUpload && storagePercent < 100 && <MediaUpload treeId={treeId} accept={accept} />}
+      </PageHeader>
+
+      {storagePercent >= 100 ? (
+        <Alert tone="danger" className="mb-4">
+          {QUOTA_FULL_MESSAGE}
+        </Alert>
+      ) : (
+        storagePercent >= 90 && (
+          <Alert tone="warn" className="mb-4">
+            Storage is almost full ({storagePercent}% used).
+          </Alert>
+        )
+      )}
+
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <SegmentedLinks
+          label="Whose uploads to show"
+          items={[
+            { href: viewQuery(false), label: "All media", active: !mine },
+            { href: viewQuery(true), label: "My uploads", active: Boolean(mine) },
+          ]}
+        />
         {user && (
           <ScopeToggle
             basePath={`/trees/${treeId}/media`}
@@ -169,25 +177,6 @@ export default async function MediaPage({
           </button>
         </form>
       </div>
-
-      {canUpload && (
-        <div className="mb-6">
-          {storagePercent >= 100 ? (
-            <p className="rounded-lg border border-danger-line bg-danger-soft px-4 py-3 text-sm text-danger">
-              {QUOTA_FULL_MESSAGE}
-            </p>
-          ) : (
-            <>
-              {storagePercent >= 90 && (
-                <p className="mb-3 rounded-lg border border-warn-line bg-warn-soft px-4 py-3 text-sm text-warn">
-                  Storage is almost full ({storagePercent}% used).
-                </p>
-              )}
-              <MediaUpload treeId={treeId} accept={accept} />
-            </>
-          )}
-        </div>
-      )}
 
       {mediaList.length === 0 ? (
         <Card>

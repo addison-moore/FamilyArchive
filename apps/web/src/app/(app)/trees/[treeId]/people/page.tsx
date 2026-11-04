@@ -11,6 +11,7 @@ import { buttonClass, Card, inputClass, subtleButtonClass } from "@/components/f
 import { ListPager } from "@/components/list-pager";
 import { PersonAvatar, personLifespan, PersonSummary } from "@/components/person-summary";
 import { ScopeToggle } from "@/components/scope-toggle";
+import { PageHeader } from "@/components/ui";
 import { resolveView } from "@/lib/branch";
 import { profilePhotoUrl } from "@/lib/media";
 import { countPeople, getPerson, getRelationshipGraph, listPeoplePage } from "@/lib/people";
@@ -78,8 +79,17 @@ export default async function PeoplePage({
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 lg:flex-row">
       <div className="min-w-0 flex-1">
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold">People</h1>
+        <PageHeader
+          title="People"
+          actions={
+            canEdit && (
+              <Link href={`/trees/${treeId}/people/new`} className={`${buttonClass} no-underline`}>
+                Add person
+              </Link>
+            )
+          }
+        />
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
           {user && (
             <ScopeToggle
               basePath={`/trees/${treeId}/people`}
@@ -89,28 +99,23 @@ export default async function PeoplePage({
             />
           )}
           {view.branchIds && (
-            <span className="text-xs text-archive-700/70">
+            <span className="text-xs text-archive-700">
               {total} of {allTotal} people
             </span>
           )}
-          <form method="GET" className="ml-auto flex items-center gap-2">
+          <form method="GET" className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
             {view.scope === "all" && <input type="hidden" name="scope" value="all" />}
             {sizeInUrl && <input type="hidden" name="size" value={sizeInUrl} />}
             <input
               name="q"
               defaultValue={q ?? ""}
               placeholder="Search names…"
-              className={`${inputClass} w-56`}
+              className={`${inputClass} min-w-0 flex-1 sm:w-56 sm:flex-none`}
             />
             <button type="submit" className={subtleButtonClass}>
               Search
             </button>
           </form>
-          {canEdit && (
-            <Link href={`/trees/${treeId}/people/new`} className={`${buttonClass} no-underline`}>
-              Add person
-            </Link>
-          )}
         </div>
 
         {total === 0 ? (
@@ -142,7 +147,7 @@ export default async function PeoplePage({
                     <div className="min-w-0">
                       <div className="truncate font-medium">{person.fullName}</div>
                       {personLifespan(person) && (
-                        <div className="text-sm text-archive-700/70">{personLifespan(person)}</div>
+                        <div className="text-sm text-archive-700">{personLifespan(person)}</div>
                       )}
                     </div>
                   </Link>
@@ -165,7 +170,13 @@ export default async function PeoplePage({
         )}
       </div>
 
-      <div className="w-full lg:w-96 lg:shrink-0">
+      {/* Above the list on narrow screens, where below it would be out of sight of
+          the row just tapped. With nobody selected there's nothing to show there. */}
+      <div
+        className={`w-full lg:order-none lg:block lg:w-96 lg:shrink-0 ${
+          selectedPerson ? "order-first" : "hidden"
+        }`}
+      >
         {selectedPerson && selectedGraph ? (
           <PersonSummary
             treeId={treeId}
@@ -175,7 +186,7 @@ export default async function PeoplePage({
             photoUrl={selectedPhotoUrl}
           />
         ) : (
-          <div className="rounded-xl border border-dashed border-archive-100 p-5 text-sm text-archive-700/60">
+          <div className="rounded-xl border border-dashed border-archive-100 p-5 text-sm text-archive-700">
             Select a person to see a summary.
           </div>
         )}

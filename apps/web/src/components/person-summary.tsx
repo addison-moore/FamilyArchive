@@ -112,7 +112,7 @@ export function PersonSummary({
         <div className="min-w-0">
           <h2 className="truncate text-lg font-semibold">{person.fullName}</h2>
           {personLifespan(person) && (
-            <p className="text-sm text-archive-700/80">{personLifespan(person)}</p>
+            <p className="text-sm text-archive-700">{personLifespan(person)}</p>
           )}
           {/* Stated in text, so the tree's border colour is not the only signal. */}
           {person.verified && (

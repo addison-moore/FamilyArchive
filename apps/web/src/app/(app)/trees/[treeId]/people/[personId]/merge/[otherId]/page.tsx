@@ -5,8 +5,9 @@ import { count, eq, or } from "drizzle-orm";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { buttonClass, Card, FormError, inputClass } from "@/components/form";
+import { buttonClass, Card, Field, FormError, inputClass } from "@/components/form";
 import { PersonAvatar, personLifespan } from "@/components/person-summary";
+import { Badge, PageHeader } from "@/components/ui";
 import { getPerson, getPlaceName, type PersonRow } from "@/lib/people";
 
 import { mergePeopleAction } from "./actions";
@@ -31,6 +32,9 @@ function deathText(person: PersonRow, place: string | null): string {
   return [date, place].filter(Boolean).join(" · ") || "—";
 }
 
+/** Label, then the two records: three columns, or stacked on a phone. */
+const COMPARE_GRID = "grid gap-x-4 gap-y-2 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,1fr)]";
+
 function ChoiceRow({
   label,
   name,
@@ -47,32 +51,50 @@ function ChoiceRow({
   defaultTo: "survivor" | "other";
 }) {
   return (
-    <tr className="border-t border-archive-100 align-top">
-      <th className="py-2.5 pr-3 text-left text-sm font-medium whitespace-nowrap">{label}</th>
-      <td className="px-3 py-2.5">
-        <label className="flex cursor-pointer items-start gap-2 text-sm">
+    <div
+      role="radiogroup"
+      aria-labelledby={`merge-${name}`}
+      className={`${COMPARE_GRID} border-t border-archive-100 py-3`}
+    >
+      <div id={`merge-${name}`} className="text-sm font-medium">
+        {label}
+      </div>
+      <label className="flex min-h-6 items-start gap-2 text-sm">
+        <input
+          type="radio"
+          name={name}
+          value="survivor"
+          defaultChecked={defaultTo === "survivor"}
+          className="mt-0.5"
+        />
+        <span className="min-w-0 whitespace-pre-line">
+          {survivorValue || "—"}
+          {/* The column headings are out of sight when a phone stacks the choices. */}
+          <Badge className="ml-2 sm:hidden">survives</Badge>
+        </span>
+      </label>
+      <div className="space-y-2">
+        <label className="flex min-h-6 items-start gap-2 text-sm">
           <input
             type="radio"
             name={name}
-            value="survivor"
-            defaultChecked={defaultTo === "survivor"}
+            value="other"
+            defaultChecked={defaultTo === "other"}
+            className="mt-0.5"
           />
-          <span className="whitespace-pre-line">{survivorValue || "—"}</span>
-        </label>
-      </td>
-      <td className="px-3 py-2.5">
-        <label className="flex cursor-pointer items-start gap-2 text-sm">
-          <input type="radio" name={name} value="other" defaultChecked={defaultTo === "other"} />
-          <span className="whitespace-pre-line">{otherValue || "—"}</span>
+          <span className="min-w-0 whitespace-pre-line">
+            {otherValue || "—"}
+            <Badge className="ml-2 sm:hidden">merged away</Badge>
+          </span>
         </label>
         {allowBoth && (
-          <label className="mt-1.5 flex cursor-pointer items-center gap-2 text-xs text-archive-700/80">
-            <input type="radio" name={name} value="both" />
+          <label className="flex min-h-6 items-start gap-2 text-sm text-archive-700">
+            <input type="radio" name={name} value="both" className="mt-0.5" />
             keep both (combined)
           </label>
         )}
-      </td>
-    </tr>
+      </div>
+    </div>
   );
 }
 
@@ -128,19 +150,22 @@ export default async function MergePage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Merge people</h1>
-        <p className="mt-1 text-sm text-archive-700/80">
-          <strong>{other.fullName}</strong> will be merged into <strong>{survivor.fullName}</strong>{" "}
-          — the left column survives where you don&apos;t choose otherwise.{" "}
-          <Link
-            href={`/trees/${treeId}/people/${otherId}/merge/${personId}`}
-            className="text-accent-600 hover:underline"
-          >
-            Swap direction
-          </Link>
-        </p>
-      </div>
+      <PageHeader
+        title="Merge people"
+        description={
+          <>
+            <strong>{other.fullName}</strong> will be merged into{" "}
+            <strong>{survivor.fullName}</strong> — the left column survives where you don&apos;t
+            choose otherwise.{" "}
+            <Link
+              href={`/trees/${treeId}/people/${otherId}/merge/${personId}`}
+              className="text-accent-600 hover:underline"
+            >
+              Swap direction
+            </Link>
+          </>
+        }
+      />
       <FormError message={error} />
 
       <form action={mergePeopleAction} className="space-y-6">
@@ -149,95 +174,83 @@ export default async function MergePage({
         <input type="hidden" name="otherId" value={otherId} />
 
         <Card>
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="w-28" />
-                {[survivor, other].map((person, index) => (
-                  <th key={person.id} className="px-3 pb-3 text-left">
-                    <div className="flex items-center gap-2.5">
-                      <PersonAvatar name={person.fullName} />
-                      <div>
-                        <div className="text-sm font-semibold">
-                          {person.fullName}
-                          <span className="ml-2 rounded bg-archive-100 px-1.5 py-0.5 text-[10px] font-normal">
-                            {index === 0 ? "survives" : "merged away"}
-                          </span>
-                        </div>
-                        <div className="text-xs font-normal text-archive-700/70">
-                          {personLifespan(person) ?? "no dates"}
-                        </div>
-                      </div>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <ChoiceRow
-                label="Name"
-                name="fullName"
-                survivorValue={survivor.fullName}
-                otherValue={other.fullName}
-                defaultTo="survivor"
-              />
-              <ChoiceRow
-                label="Gender"
-                name="gender"
-                survivorValue={
-                  survivor.gender === "custom"
-                    ? (survivor.genderCustom ?? "Custom")
-                    : GENDER_LABELS[survivor.gender]
-                }
-                otherValue={
-                  other.gender === "custom"
-                    ? (other.genderCustom ?? "Custom")
-                    : GENDER_LABELS[other.gender]
-                }
-                defaultTo={
-                  survivor.gender === "unknown" && other.gender !== "unknown" ? "other" : "survivor"
-                }
-              />
-              <ChoiceRow
-                label="Birth"
-                name="birth"
-                survivorValue={birthText(survivor, sBirthPlace)}
-                otherValue={birthText(other, oBirthPlace)}
-                defaultTo={
-                  survivor.birthYear === null && other.birthYear !== null ? "other" : "survivor"
-                }
-              />
-              <ChoiceRow
-                label="Death"
-                name="death"
-                survivorValue={deathText(survivor, sDeathPlace)}
-                otherValue={deathText(other, oDeathPlace)}
-                defaultTo={
-                  survivor.deathYear === null && other.deathYear !== null ? "other" : "survivor"
-                }
-              />
-              <ChoiceRow
-                label="Biography"
-                name="biography"
-                survivorValue={survivor.biography ?? ""}
-                otherValue={other.biography ?? ""}
-                allowBoth
-                defaultTo={prefer(survivor.biography, other.biography)}
-              />
-              <ChoiceRow
-                label="Notes"
-                name="notes"
-                survivorValue={survivor.notes ?? ""}
-                otherValue={other.notes ?? ""}
-                allowBoth
-                defaultTo={prefer(survivor.notes, other.notes)}
-              />
-            </tbody>
-          </table>
+          <div className={`${COMPARE_GRID} pb-3`}>
+            <div className="hidden sm:block" />
+            {[survivor, other].map((person, index) => (
+              <div key={person.id} className="flex min-w-0 items-center gap-2.5">
+                <PersonAvatar name={person.fullName} />
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold">{person.fullName}</div>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-archive-700">
+                    <Badge>{index === 0 ? "survives" : "merged away"}</Badge>
+                    {personLifespan(person) ?? "no dates"}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <ChoiceRow
+            label="Name"
+            name="fullName"
+            survivorValue={survivor.fullName}
+            otherValue={other.fullName}
+            defaultTo="survivor"
+          />
+          <ChoiceRow
+            label="Gender"
+            name="gender"
+            survivorValue={
+              survivor.gender === "custom"
+                ? (survivor.genderCustom ?? "Custom")
+                : GENDER_LABELS[survivor.gender]
+            }
+            otherValue={
+              other.gender === "custom"
+                ? (other.genderCustom ?? "Custom")
+                : GENDER_LABELS[other.gender]
+            }
+            defaultTo={
+              survivor.gender === "unknown" && other.gender !== "unknown" ? "other" : "survivor"
+            }
+          />
+          <ChoiceRow
+            label="Birth"
+            name="birth"
+            survivorValue={birthText(survivor, sBirthPlace)}
+            otherValue={birthText(other, oBirthPlace)}
+            defaultTo={
+              survivor.birthYear === null && other.birthYear !== null ? "other" : "survivor"
+            }
+          />
+          <ChoiceRow
+            label="Death"
+            name="death"
+            survivorValue={deathText(survivor, sDeathPlace)}
+            otherValue={deathText(other, oDeathPlace)}
+            defaultTo={
+              survivor.deathYear === null && other.deathYear !== null ? "other" : "survivor"
+            }
+          />
+          <ChoiceRow
+            label="Biography"
+            name="biography"
+            survivorValue={survivor.biography ?? ""}
+            otherValue={other.biography ?? ""}
+            allowBoth
+            defaultTo={prefer(survivor.biography, other.biography)}
+          />
+          <ChoiceRow
+            label="Notes"
+            name="notes"
+            survivorValue={survivor.notes ?? ""}
+            otherValue={other.notes ?? ""}
+            allowBoth
+            defaultTo={prefer(survivor.notes, other.notes)}
+          />
         </Card>
 
         <Card>
-          <h2 className="mb-2 text-sm font-semibold">Carried over automatically</h2>
+          <h2 className="mb-2 text-lg font-semibold">Carried over automatically</h2>
           <p className="text-sm text-archive-700">
             {edgeCount[0]?.value ?? 0} relationship(s), {mediaTagCount[0]?.value ?? 0} media tag(s),{" "}
             {faceCount[0]?.value ?? 0} face tag(s), and {nameCount[0]?.value ?? 0} alternate name(s)
@@ -249,12 +262,9 @@ export default async function MergePage({
 
         <Card>
           <div className="flex flex-wrap items-end gap-3">
-            <div>
-              <label className="mb-1 block text-sm font-medium">
-                Type <strong>MERGE</strong> to confirm
-              </label>
-              <input name="confirm" required className={`${inputClass} w-40`} placeholder="MERGE" />
-            </div>
+            <Field label="Type MERGE to confirm" className="w-full sm:w-44">
+              <input name="confirm" required className={inputClass} placeholder="MERGE" />
+            </Field>
             <button type="submit" className={buttonClass}>
               Merge {other.fullName} into {survivor.fullName}
             </button>
