@@ -72,15 +72,14 @@ export function MediaUpload({ treeId, accept }: { treeId: string; accept: string
       xhr.send(file);
     });
 
-  const onFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const list = [...files];
+  const onFiles = async (files: File[]) => {
+    if (files.length === 0) return;
     const offset = uploads.length;
     setUploads((prev) => [
       ...prev,
-      ...list.map((file) => ({ name: file.name, progress: 0, status: "uploading" as const })),
+      ...files.map((file) => ({ name: file.name, progress: 0, status: "uploading" as const })),
     ]);
-    for (const [i, file] of list.entries()) {
+    for (const [i, file] of files.entries()) {
       await uploadFile(file, offset + i);
     }
     router.refresh();
@@ -95,11 +94,11 @@ export function MediaUpload({ treeId, accept }: { treeId: string; accept: string
         accept={accept}
         className="hidden"
         onChange={(event) => {
-          // A file input fires `change` only when the selection differs from
-          // its current value, so re-picking the same file after a failed or
-          // finished upload was a silent no-op. onFiles copies the FileList
-          // before its first await, so clearing here is safe.
-          const files = event.target.files;
+          // Copy before clearing: `files` is live, and clearing the value empties
+          // it in place. The clear is what lets the same file be picked again
+          // after a failed or finished upload, since a file input only fires
+          // `change` when the selection differs from its current value.
+          const files = [...(event.target.files ?? [])];
           event.target.value = "";
           void onFiles(files);
         }}
