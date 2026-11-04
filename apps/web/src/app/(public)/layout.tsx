@@ -9,7 +9,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
         </span>
       </header>
       <main className="mx-auto w-full max-w-md flex-1 px-4">{children}</main>
-      <footer className="py-6 text-center text-xs text-archive-700/60">
+      <footer className="py-6 text-center text-xs text-archive-700">
         Free, open-source, self-hosted family history
       </footer>
     </div>

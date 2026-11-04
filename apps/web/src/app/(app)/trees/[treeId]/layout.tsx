@@ -7,7 +7,10 @@ import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { AppHeader } from "@/components/app-header";
+import { HeaderNav, RowNav } from "@/components/archive-nav";
 import { Dropdown } from "@/components/dropdown";
+import { menuItemClass, menuPanelClass, menuTriggerClass } from "@/components/form";
+import { Badge, Chevron } from "@/components/ui";
 import { getAccessibleTrees } from "@/lib/trees";
 
 /** Tree-level navigation. */
@@ -74,49 +77,35 @@ export default async function TreeLayout({
       : [{ id: tree.id, name: tree.name }];
   }
 
-  const navLinks = (
-    <nav aria-label="Archive navigation" className="hidden min-w-0 items-center gap-0.5 lg:flex">
-      {ACTIVE_NAV.map((item) => (
-        <Link
-          key={item.label}
-          href={item.path ? `/trees/${treeId}/${item.path}` : `/trees/${treeId}`}
-          className="rounded-md px-2.5 py-1.5 text-sm whitespace-nowrap text-archive-700 no-underline hover:bg-archive-100"
-        >
-          {item.label}
-        </Link>
-      ))}
-      {role === "admin" && (
-        <Link
-          href={`/trees/${treeId}/settings`}
-          className="rounded-md px-2.5 py-1.5 text-sm whitespace-nowrap text-archive-700 no-underline hover:bg-archive-100"
-        >
-          Settings
-        </Link>
-      )}
-    </nav>
-  );
+  const root = `/trees/${treeId}`;
+  const navItems = [
+    ...ACTIVE_NAV.map((item) => ({
+      label: item.label,
+      href: item.path ? `${root}/${item.path}` : root,
+    })),
+    ...(role === "admin" ? [{ label: "Settings", href: `${root}/settings` }] : []),
+  ];
 
   // The wordmark puts the switcher too far along a phone's header for its panel
   // to fit under it, so below sm the panel anchors to the sticky header instead.
   const archiveSwitcher = (
     <Dropdown
       className="min-w-0 shrink sm:relative"
-      summaryClassName="flex cursor-pointer list-none items-center gap-1 rounded-md border border-archive-100 px-2.5 py-1.5 text-sm font-medium hover:bg-archive-50"
+      summaryClassName={`${menuTriggerClass} font-medium`}
       summary={
         <>
-          <span className="max-w-[12rem] truncate">{tree.name}</span>
-          <span className="shrink-0 text-xs text-archive-700/50">▾</span>
+          <span className="max-w-[9rem] truncate xl:max-w-[12rem]">{tree.name}</span>
+          <Chevron />
         </>
       }
     >
-      <div className="absolute left-4 z-10 mt-1 w-64 rounded-md border border-archive-100 bg-surface p-1 shadow-md sm:left-0">
+      <div className={`absolute left-4 mt-1 w-64 sm:left-0 ${menuPanelClass}`}>
         {accessibleTrees.map((item) => (
           <Link
             key={item.id}
             href={`/trees/${item.id}`}
-            className={`block rounded px-3 py-2 text-sm no-underline hover:bg-archive-50 ${
-              item.id === treeId ? "font-semibold" : ""
-            }`}
+            aria-current={item.id === treeId ? "true" : undefined}
+            className={`${menuItemClass} ${item.id === treeId ? "font-semibold" : ""}`}
           >
             {item.name}
           </Link>
@@ -124,7 +113,7 @@ export default async function TreeLayout({
         {user && (
           <Link
             href="/trees"
-            className="block rounded border-t border-archive-100 px-3 py-2 text-sm text-archive-700/80 no-underline hover:bg-archive-50"
+            className={`${menuItemClass} rounded-t-none border-t border-archive-100 text-archive-700`}
           >
             All archives…
           </Link>
@@ -139,39 +128,19 @@ export default async function TreeLayout({
         nav={
           <div className="flex min-w-0 items-center gap-2">
             {archiveSwitcher}
-            {navLinks}
+            <HeaderNav root={root} items={navItems} />
           </div>
         }
         trailing={
-          <span className="hidden shrink-0 rounded bg-archive-100 px-2 py-0.5 text-xs text-archive-700 md:inline">
+          // The header has no room for it at lg, where the nav joins the bar.
+          <Badge className="hidden md:inline-block lg:hidden xl:inline-block">
             {user ? `your role: ${role}` : "public archive — read-only"}
-          </span>
+          </Badge>
         }
       />
       {/* Narrow screens lose the in-header nav, so it reappears as its own row
           rather than being unreachable. */}
-      <nav
-        aria-label="Archive navigation"
-        className="flex flex-wrap items-center gap-1 border-b border-archive-100 px-4 py-2 lg:hidden"
-      >
-        {ACTIVE_NAV.map((item) => (
-          <Link
-            key={item.label}
-            href={item.path ? `/trees/${treeId}/${item.path}` : `/trees/${treeId}`}
-            className="rounded-md px-2.5 py-1.5 text-sm text-archive-700 no-underline hover:bg-archive-100"
-          >
-            {item.label}
-          </Link>
-        ))}
-        {role === "admin" && (
-          <Link
-            href={`/trees/${treeId}/settings`}
-            className="rounded-md px-2.5 py-1.5 text-sm text-archive-700 no-underline hover:bg-archive-100"
-          >
-            Settings
-          </Link>
-        )}
-      </nav>
+      <RowNav root={root} items={navItems} />
       {/* The height chain the canvas page relies on: min-h-0 lets a flex child
           shrink below its content so `flex-1` resolves against the viewport
           instead of the graph's own size. `*:w-full` is for the other pages,

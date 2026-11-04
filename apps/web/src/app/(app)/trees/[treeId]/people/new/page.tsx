@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { buttonClass, Card, FormError } from "@/components/form";
 import { PersonFormFields } from "@/components/person-form-fields";
+import { PageHeader } from "@/components/ui";
 
 import { createPersonAction } from "../actions";
 
@@ -24,10 +25,10 @@ export default async function NewPersonPage({
 
   return (
     <div className="mx-auto max-w-2xl">
+      <PageHeader title="Add a person" />
       <Card>
-        <h1 className="mb-4 text-xl font-semibold">Add a person</h1>
-        <FormError message={error} />
-        <form action={createPersonAction} className="mt-4 space-y-4">
+        <FormError message={error} className="mb-4" />
+        <form action={createPersonAction} className="space-y-4">
           <input type="hidden" name="treeId" value={treeId} />
           <PersonFormFields />
           <button type="submit" className={buttonClass}>

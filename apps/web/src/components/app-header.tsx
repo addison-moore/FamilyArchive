@@ -6,6 +6,13 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Dropdown } from "@/components/dropdown";
+import {
+  menuItemClass,
+  menuPanelClass,
+  menuTriggerClass,
+  subtleButtonClass,
+} from "@/components/form";
+import { Badge, Chevron } from "@/components/ui";
 
 /**
  * The single top bar for the authenticated app.
@@ -22,36 +29,38 @@ export async function AppHeader({ nav, trailing }: { nav?: ReactNode; trailing?:
 
   return (
     <header className="sticky top-0 z-30 border-b border-archive-100 bg-surface">
-      <div className="flex h-14 items-center gap-4 px-4">
+      <div className="flex h-14 items-center gap-2 px-4 sm:gap-4">
         <Link href="/" className="shrink-0 text-lg font-semibold tracking-tight no-underline">
           Family<span className="text-accent-600">Archive</span>
         </Link>
         {nav}
-        <div className="ml-auto flex min-w-0 items-center gap-3">
+        {/* An account name can truncate, but "Sign in" has to fit whole. */}
+        <div className={`ml-auto flex items-center gap-3 ${user ? "min-w-0" : "shrink-0"}`}>
           {trailing}
           {user ? (
             <Dropdown
               className="group relative min-w-0"
-              summaryClassName="flex cursor-pointer list-none items-center gap-2 rounded-md border border-archive-100 px-3 py-1.5 text-sm text-archive-700 hover:bg-archive-50"
+              summaryClassName={`${menuTriggerClass} text-archive-700`}
               summary={
                 <>
-                  <span className="max-w-[14rem] truncate">{user.name ?? user.email}</span>
+                  <span className="max-w-[9rem] truncate xl:max-w-[14rem]">
+                    {user.name ?? user.email}
+                  </span>
+                  {/* Like the role badge, it gives way at lg where the nav joins the bar. */}
                   {user.role === "owner" && (
-                    <span className="hidden shrink-0 rounded bg-archive-100 px-1.5 py-0.5 text-xs sm:inline">
+                    <Badge className="hidden sm:inline-block lg:hidden xl:inline-block">
                       owner
-                    </span>
+                    </Badge>
                   )}
+                  <Chevron />
                 </>
               }
             >
-              <div className="absolute right-0 z-10 mt-1 w-48 rounded-md border border-archive-100 bg-surface p-1 shadow-md">
-                <div className="truncate px-3 py-2 text-xs text-archive-700/70" title={user.email}>
+              <div className={`absolute right-0 mt-1 w-48 ${menuPanelClass}`}>
+                <div className="truncate px-3 py-2 text-xs text-archive-700" title={user.email}>
                   {user.email}
                 </div>
-                <Link
-                  href="/trees"
-                  className="block rounded px-3 py-2 text-sm no-underline hover:bg-archive-50"
-                >
+                <Link href="/trees" className={menuItemClass}>
                   My archives
                 </Link>
                 <form
@@ -69,10 +78,7 @@ export async function AppHeader({ nav, trailing }: { nav?: ReactNode; trailing?:
                     revalidatePath("/", "layout");
                   }}
                 >
-                  <button
-                    type="submit"
-                    className="w-full rounded px-3 py-2 text-left text-sm hover:bg-archive-50"
-                  >
+                  <button type="submit" className={menuItemClass}>
                     {user.theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
                   </button>
                 </form>
@@ -82,10 +88,7 @@ export async function AppHeader({ nav, trailing }: { nav?: ReactNode; trailing?:
                     await signOut({ redirectTo: "/login" });
                   }}
                 >
-                  <button
-                    type="submit"
-                    className="w-full rounded px-3 py-2 text-left text-sm hover:bg-archive-50"
-                  >
+                  <button type="submit" className={menuItemClass}>
                     Sign out
                   </button>
                 </form>
@@ -94,7 +97,7 @@ export async function AppHeader({ nav, trailing }: { nav?: ReactNode; trailing?:
           ) : (
             <Link
               href="/login"
-              className="rounded-md border border-archive-100 px-3 py-1.5 text-sm text-archive-700 no-underline hover:bg-archive-50"
+              className={`${subtleButtonClass} shrink-0 whitespace-nowrap no-underline`}
             >
               Sign in
             </Link>
@@ -107,5 +110,5 @@ export async function AppHeader({ nav, trailing }: { nav?: ReactNode; trailing?:
 
 /** Centred column for the pages that are documents rather than workspaces. */
 export function PageBody({ children }: { children: ReactNode }) {
-  return <div className="mx-auto w-full max-w-6xl px-4 py-8">{children}</div>;
+  return <div className="mx-auto w-full max-w-6xl px-4 py-6">{children}</div>;
 }

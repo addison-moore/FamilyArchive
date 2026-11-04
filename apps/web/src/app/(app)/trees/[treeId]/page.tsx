@@ -1,11 +1,13 @@
 import { requireTreeRole } from "@familyarchive/auth";
 import { treeRoleAtLeast } from "@familyarchive/shared";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { buttonClass, Card, FormError } from "@/components/form";
 import { PersonSummary, personLifespan } from "@/components/person-summary";
 import { TreeNodeActions } from "@/components/tree-node-actions";
 import { TreeWorkspace } from "@/components/tree-workspace";
+import { Alert, SegmentedLinks } from "@/components/ui";
 import { profilePhotoUrl } from "@/lib/media";
 import { getPerson, getRelationshipGraph, personBirthSortKey } from "@/lib/people";
 import {
@@ -17,8 +19,14 @@ import {
 import { resolveStartingPerson } from "@/lib/tree-graph";
 import type { TreeGraphPayload } from "@/lib/tree-visibility";
 
-const MODE_LABELS: Record<TreeViewMode, string> = {
-  both: "Ancestors & descendants",
+const MODE_LABELS: Record<TreeViewMode, ReactNode> = {
+  // The long label would wrap the toggle onto two lines on a phone.
+  both: (
+    <>
+      <span className="sm:hidden">Both</span>
+      <span className="hidden sm:inline">Ancestors &amp; descendants</span>
+    </>
+  ),
   ancestors: "Ancestors",
   descendants: "Descendants",
 };
@@ -60,7 +68,7 @@ export default async function TreePage({
               Add the first person
             </Link>
           ) : (
-            <p className="text-sm text-archive-700/70">
+            <p className="text-sm text-archive-700">
               Ask an editor or admin to add the first person.
             </p>
           )}
@@ -110,9 +118,10 @@ export default async function TreePage({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <FormError message={error} />
+      <h1 className="sr-only">Family tree</h1>
+      <FormError message={error} className="mb-4" />
       {imported && (
-        <div className="mb-4 rounded-md border border-accent-600/30 bg-archive-100/60 px-4 py-3 text-sm text-archive-800">
+        <Alert className="mb-4">
           GEDCOM import complete: {people ?? "?"} people and {rels ?? "?"} relationships.{" "}
           {warn && (
             <span className="text-warn">
@@ -124,25 +133,20 @@ export default async function TreePage({
               Review possible duplicates
             </Link>
           )}
-        </div>
+        </Alert>
       )}
-      <div className="mb-3 flex shrink-0 flex-wrap items-center gap-3">
-        <div className="flex rounded-md border border-archive-100 bg-surface p-0.5">
-          {TREE_VIEW_MODES.map((m) => (
-            <Link
-              key={m}
-              href={modeQuery(m)}
-              className={`rounded px-3 py-1.5 text-sm no-underline ${
-                m === mode
-                  ? "bg-archive-100 font-medium text-archive-900"
-                  : "text-archive-700 hover:bg-archive-50"
-              }`}
-            >
-              {MODE_LABELS[m]}
-            </Link>
-          ))}
-        </div>
-        <span className="text-sm text-archive-700/70">starting from {startPerson.fullName}</span>
+      <div className="mb-3 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2">
+        <SegmentedLinks
+          label="Who to show"
+          items={TREE_VIEW_MODES.map((m) => ({
+            href: modeQuery(m),
+            label: MODE_LABELS[m],
+            active: m === mode,
+          }))}
+        />
+        <span className="min-w-0 truncate text-sm text-archive-700">
+          starting from {startPerson.fullName}
+        </span>
       </div>
 
       <TreeWorkspace

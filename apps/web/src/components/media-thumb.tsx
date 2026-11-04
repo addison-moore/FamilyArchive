@@ -1,6 +1,7 @@
 import { isBrowserRenderableImage, MEDIA_TYPE_LABELS } from "@familyarchive/shared";
 import Link from "next/link";
 
+import { Badge } from "@/components/ui";
 import type { MediaRow } from "@/lib/media";
 import { mediaUrl } from "@/lib/media";
 
@@ -48,21 +49,18 @@ export function MediaThumb({
         ) : (
           <div className="text-center">
             <div className="text-4xl">{TYPE_ICONS[media.mediaType] ?? "📁"}</div>
-            <div className="mt-1 text-xs text-archive-700/70">
+            <div className="mt-1 text-xs text-archive-700">
               {MEDIA_TYPE_LABELS[media.mediaType]}
             </div>
           </div>
         )}
         {media.processingStatus !== "processed" && (
-          <span
-            className={`absolute right-1.5 bottom-1.5 rounded px-1.5 py-0.5 text-[10px] font-medium ${
-              media.processingStatus === "failed"
-                ? "bg-danger-soft text-danger"
-                : "bg-archive-100 text-archive-700"
-            }`}
+          <Badge
+            tone={media.processingStatus === "failed" ? "danger" : "neutral"}
+            className="absolute right-1.5 bottom-1.5"
           >
             {media.processingStatus === "failed" ? "Failed" : "Preparing…"}
-          </span>
+          </Badge>
         )}
       </div>
       <div className="truncate px-2.5 py-2 text-xs text-archive-700">{label}</div>

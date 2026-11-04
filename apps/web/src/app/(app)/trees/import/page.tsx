@@ -3,6 +3,7 @@ import { canCreateTrees, getSessionUser } from "@familyarchive/auth";
 import { redirect } from "next/navigation";
 
 import { buttonClass, Card, Field, FormError, inputClass } from "@/components/form";
+import { PageHeader } from "@/components/ui";
 import { getAccessibleTrees } from "@/lib/trees";
 
 import { importGedcomAction } from "./actions";
@@ -28,15 +29,13 @@ export default async function ImportGedcomPage({
       <AppHeader />
       <PageBody>
         <div className="mx-auto max-w-md">
+          <PageHeader
+            title="Import a GEDCOM file"
+            description="Import into an existing archive to combine research — the file's people join the shared graph and likely duplicates are flagged for merge review. Or create a new, separate archive. Media referenced by the file is not imported."
+          />
           <Card>
-            <h1 className="mb-1 text-xl font-semibold">Import a GEDCOM file</h1>
-            <p className="mb-4 text-sm text-archive-700/80">
-              Import into an existing archive to combine research — the file&apos;s people join the
-              shared graph and likely duplicates are flagged for merge review. Or create a new,
-              separate archive. Media referenced by the file is not imported.
-            </p>
-            <FormError message={error} />
-            <form action={importGedcomAction} className="mt-4 space-y-4">
+            <FormError message={error} className="mb-4" />
+            <form action={importGedcomAction} className="space-y-4">
               <Field label="GEDCOM file (.ged, max 10 MB)">
                 <input name="file" type="file" accept=".ged" required className={inputClass} />
               </Field>

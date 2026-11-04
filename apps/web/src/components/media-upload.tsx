@@ -85,8 +85,10 @@ export function MediaUpload({ treeId, accept }: { treeId: string; accept: string
     router.refresh();
   };
 
+  // `contents` puts the button and the progress list straight into the page
+  // header's row: the button at its far end, the list on a line of its own below.
   return (
-    <div>
+    <div className="contents">
       <input
         ref={inputRef}
         type="file"
@@ -103,14 +105,18 @@ export function MediaUpload({ treeId, accept }: { treeId: string; accept: string
           void onFiles(files);
         }}
       />
-      <button type="button" onClick={() => inputRef.current?.click()} className={buttonClass}>
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className={`${buttonClass} ml-auto`}
+      >
         Upload media
       </button>
       {uploads.length > 0 && (
-        <ul className="mt-3 space-y-1.5">
+        <ul className="basis-full space-y-1.5">
           {uploads.map((upload, index) => (
-            <li key={index} className="flex items-center gap-3 text-sm">
-              <span className="max-w-56 truncate">{upload.name}</span>
+            <li key={index} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              <span className="max-w-56 min-w-0 truncate">{upload.name}</span>
               {upload.status === "uploading" && (
                 <span className="h-1.5 w-32 overflow-hidden rounded bg-archive-100">
                   <span

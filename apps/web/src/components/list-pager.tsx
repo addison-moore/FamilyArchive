@@ -1,6 +1,9 @@
 import { PAGE_SIZES, type PageSize } from "@familyarchive/shared";
 import Link from "next/link";
 
+import { subtleButtonClass } from "@/components/form";
+import { segmentClass, segmentGroupClass } from "@/components/ui";
+
 /**
  * Footer for a paginated list: how much is shown, page navigation, and the
  * rows-per-page choice. Page links are URL-based; the size control posts to a
@@ -79,11 +82,7 @@ export function ListPager({
             <input key={name} type="hidden" name={name} value={value} />
           ))}
         <span id="page-size-label">Per page</span>
-        <div
-          role="group"
-          aria-labelledby="page-size-label"
-          className="flex rounded-md border border-archive-100 bg-surface p-0.5"
-        >
+        <div role="group" aria-labelledby="page-size-label" className={segmentGroupClass}>
           {PAGE_SIZES.map((option) => (
             <button
               key={option}
@@ -91,11 +90,7 @@ export function ListPager({
               name="size"
               value={option}
               aria-current={option === size ? "true" : undefined}
-              className={`rounded px-3 py-1.5 tabular-nums ${
-                option === size
-                  ? "bg-archive-100 font-medium"
-                  : "text-archive-700 hover:bg-archive-50"
-              }`}
+              className={`${segmentClass(option === size)} tabular-nums`}
             >
               {option}
             </button>
@@ -115,16 +110,15 @@ function PageLink({
   disabled: boolean;
   children: string;
 }) {
-  const base = "rounded-md border border-archive-100 bg-surface px-3 py-2";
   if (disabled) {
     return (
-      <span aria-disabled="true" className={`${base} text-archive-700/40`}>
+      <span aria-disabled="true" className={`${subtleButtonClass} opacity-50 hover:bg-surface`}>
         {children}
       </span>
     );
   }
   return (
-    <Link href={href} className={`${base} text-archive-700 no-underline hover:bg-archive-50`}>
+    <Link href={href} className={`${subtleButtonClass} no-underline`}>
       {children}
     </Link>
   );

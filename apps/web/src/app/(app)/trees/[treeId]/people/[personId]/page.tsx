@@ -14,14 +14,19 @@ import { notFound } from "next/navigation";
 import {
   buttonClass,
   Card,
+  disclosureBodyClass,
+  disclosureClass,
+  disclosureSummaryClass,
   Field,
   FormError,
   inputClass,
   subtleButtonClass,
+  textButtonClass,
 } from "@/components/form";
 import { MediaThumb } from "@/components/media-thumb";
 import { SuggestForm } from "@/components/suggest-form";
 import { PersonAvatar, personLifespan } from "@/components/person-summary";
+import { Alert } from "@/components/ui";
 import { listMediaForPerson, profilePhotoUrl, thumbUrls } from "@/lib/media";
 import {
   getPerson,
@@ -51,7 +56,7 @@ function RelationGroup({
   if (related.length === 0) return null;
   return (
     <div>
-      <h3 className="mb-2 text-sm font-semibold text-archive-700/80">{title}</h3>
+      <h3 className="mb-2 text-sm font-semibold text-archive-700">{title}</h3>
       <ul className="space-y-2">
         {related.map((item) => (
           <li key={item.relationshipId} className="flex items-center gap-3">
@@ -63,7 +68,7 @@ function RelationGroup({
               >
                 {item.person.fullName}
               </Link>
-              <div className="text-xs text-archive-700/70">
+              <div className="text-xs text-archive-700">
                 {RELATIONSHIP_TYPE_LABELS[item.type]}
                 {personLifespan(item.person) ? ` · ${personLifespan(item.person)}` : ""}
               </div>
@@ -73,11 +78,7 @@ function RelationGroup({
                 <input type="hidden" name="treeId" value={treeId} />
                 <input type="hidden" name="personId" value={personId} />
                 <input type="hidden" name="relationshipId" value={item.relationshipId} />
-                <button
-                  type="submit"
-                  className="text-xs text-archive-700/50 hover:text-danger"
-                  title="Remove relationship"
-                >
+                <button type="submit" className={textButtonClass} title="Remove relationship">
                   remove
                 </button>
               </form>
@@ -105,35 +106,37 @@ function AddRelationshipForm({
   candidates: PersonRow[];
 }) {
   return (
-    <details className="rounded-md border border-archive-100 p-3">
-      <summary className="cursor-pointer text-sm font-medium">{label}</summary>
-      <form action={addRelationshipAction} className="mt-3 flex flex-wrap items-end gap-3">
+    <details className={disclosureClass}>
+      <summary className={disclosureSummaryClass}>{label}</summary>
+      <form action={addRelationshipAction} className={disclosureBodyClass}>
         <input type="hidden" name="treeId" value={treeId} />
         <input type="hidden" name="personId" value={personId} />
         <input type="hidden" name="direction" value={direction} />
-        <Field label="Person">
-          <select name="otherPersonId" required className={`${inputClass} w-56`}>
-            <option value="">Select…</option>
-            {candidates.map((candidate) => (
-              <option key={candidate.id} value={candidate.id}>
-                {candidate.fullName}
-                {personLifespan(candidate) ? ` (${personLifespan(candidate)})` : ""}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Type">
-          <select name="type" className={`${inputClass} w-44`}>
-            {types.map((type) => (
-              <option key={type} value={type}>
-                {RELATIONSHIP_TYPE_LABELS[type]}
-              </option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Note (optional)">
-          <input name="notes" maxLength={2000} className={`${inputClass} w-48`} />
-        </Field>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Field label="Person">
+            <select name="otherPersonId" required className={inputClass}>
+              <option value="">Select…</option>
+              {candidates.map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>
+                  {candidate.fullName}
+                  {personLifespan(candidate) ? ` (${personLifespan(candidate)})` : ""}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Type">
+            <select name="type" className={inputClass}>
+              {types.map((type) => (
+                <option key={type} value={type}>
+                  {RELATIONSHIP_TYPE_LABELS[type]}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Note (optional)">
+            <input name="notes" maxLength={2000} className={inputClass} />
+          </Field>
+        </div>
         <button type="submit" className={subtleButtonClass}>
           Add
         </button>
@@ -219,13 +222,13 @@ export default async function PersonProfilePage({
     <div className="mx-auto max-w-3xl space-y-6">
       <FormError message={error} />
       {merged && (
-        <div className="rounded-md border border-accent-600/30 bg-archive-100/60 px-4 py-3 text-sm text-archive-800">
+        <Alert>
           Merge complete — relationships, media tags, face tags, and names were consolidated here,
           and both records&apos; provenance is preserved.
-        </div>
+        </Alert>
       )}
       {dupPeople.length > 0 && (
-        <div className="rounded-md border border-warn-line bg-warn-soft px-4 py-3 text-sm text-warn">
+        <Alert tone="warn">
           <strong>Possible duplicate:</strong> similar people already exist —{" "}
           {dupPeople.map((dup, index) => (
             <span key={dup.id}>
@@ -251,23 +254,23 @@ export default async function PersonProfilePage({
             </span>
           ))}
           .
-        </div>
+        </Alert>
       )}
 
       <Card>
-        <div className="flex flex-wrap items-center gap-5">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
           <PersonAvatar name={person.fullName} size="lg" photoUrl={photoUrl} />
-          <div className="min-w-0 flex-1">
-            <h1 className="text-2xl font-semibold">{person.fullName}</h1>
+          <div className="min-w-48 flex-1">
+            <h1 className="text-2xl font-semibold [overflow-wrap:anywhere]">{person.fullName}</h1>
             {names.length > 0 && (
-              <p className="text-sm text-archive-700/80">
+              <p className="text-sm text-archive-700">
                 {names
                   .map((n) => `${n.name}${n.kind ? ` (${n.kind.replace(/_/g, " ")})` : ""}`)
                   .join(" · ")}
               </p>
             )}
             {personLifespan(person) && (
-              <p className="text-sm text-archive-700/80">{personLifespan(person)}</p>
+              <p className="text-sm text-archive-700">{personLifespan(person)}</p>
             )}
           </div>
           {canEdit && (
@@ -315,7 +318,7 @@ export default async function PersonProfilePage({
             </p>
           </>
         ) : (
-          <p className="text-sm text-archive-700/70">
+          <p className="text-sm text-archive-700">
             No media tagged with {person.fullName} yet.{" "}
             <Link href={`/trees/${treeId}/media`} className="text-accent-600 hover:underline">
               Go to the media library
@@ -360,7 +363,7 @@ export default async function PersonProfilePage({
           />
           {graph.siblings.length > 0 && (
             <div>
-              <h3 className="mb-2 text-sm font-semibold text-archive-700/80">Siblings</h3>
+              <h3 className="mb-2 text-sm font-semibold text-archive-700">Siblings</h3>
               <ul className="space-y-2">
                 {graph.siblings.map((sibling) => (
                   <li key={sibling.id} className="flex items-center gap-3">
@@ -378,7 +381,7 @@ export default async function PersonProfilePage({
           )}
           {graph.parents.length + graph.partners.length + graph.children.length === 0 &&
             graph.siblings.length === 0 && (
-              <p className="text-sm text-archive-700/70">No relationships yet.</p>
+              <p className="text-sm text-archive-700">No relationships yet.</p>
             )}
         </div>
 
@@ -409,7 +412,7 @@ export default async function PersonProfilePage({
               candidates={candidates}
             />
             {candidates.length === 0 && (
-              <p className="text-xs text-archive-700/60">
+              <p className="text-xs text-archive-700">
                 Add more people to the tree to connect them here.
               </p>
             )}

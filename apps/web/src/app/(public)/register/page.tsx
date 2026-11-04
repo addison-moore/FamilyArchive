@@ -41,11 +41,11 @@ export default async function RegisterPage({
   return (
     <Card>
       <h1 className="mb-1 text-xl font-semibold">Set up your instance</h1>
-      <p className="mb-4 text-sm text-archive-700/80">
+      <p className="mb-4 text-sm text-archive-700">
         You&apos;re the first person here — this account becomes the instance owner.
       </p>
-      <FormError message={error} />
-      <form action={registerOwnerAction} className="mt-4 space-y-4">
+      <FormError message={error} className="mb-4" />
+      <form action={registerOwnerAction} className="space-y-4">
         <Field label="Name">
           <input name="name" required autoComplete="name" className={inputClass} />
         </Field>

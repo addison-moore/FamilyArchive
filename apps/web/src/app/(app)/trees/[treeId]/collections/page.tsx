@@ -3,6 +3,7 @@ import { treeRoleAtLeast } from "@familyarchive/shared";
 import Link from "next/link";
 
 import { buttonClass, Card } from "@/components/form";
+import { PageHeader } from "@/components/ui";
 import { listCollections } from "@/lib/collections";
 import { thumbUrls } from "@/lib/media";
 
@@ -20,17 +21,19 @@ export default async function CollectionsPage({ params }: { params: Promise<{ tr
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold">Collections</h1>
-        {canEdit && (
-          <Link
-            href={`/trees/${treeId}/collections/new`}
-            className={`${buttonClass} ml-auto no-underline`}
-          >
-            New collection
-          </Link>
-        )}
-      </div>
+      <PageHeader
+        title="Collections"
+        actions={
+          canEdit && (
+            <Link
+              href={`/trees/${treeId}/collections/new`}
+              className={`${buttonClass} no-underline`}
+            >
+              New collection
+            </Link>
+          )
+        }
+      />
 
       {collectionsList.length === 0 ? (
         <Card>
@@ -66,7 +69,7 @@ export default async function CollectionsPage({ params }: { params: Promise<{ tr
                 </div>
                 <div className="px-3 py-2.5">
                   <div className="truncate font-medium">{collection.name}</div>
-                  <div className="text-xs text-archive-700/70">
+                  <div className="text-xs text-archive-700">
                     {collection.mediaCount} item(s){range ? ` · ${range}` : ""}
                   </div>
                 </div>

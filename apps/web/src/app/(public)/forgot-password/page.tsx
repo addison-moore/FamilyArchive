@@ -53,7 +53,7 @@ export default async function ForgotPasswordPage({
   return (
     <Card>
       <h1 className="mb-1 text-xl font-semibold">Reset your password</h1>
-      <p className="mb-4 text-sm text-archive-700/80">
+      <p className="mb-4 text-sm text-archive-700">
         Enter your email and we&apos;ll send you a link to choose a new password.
       </p>
       <form action={requestPasswordResetAction} className="space-y-4">

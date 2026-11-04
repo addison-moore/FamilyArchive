@@ -8,6 +8,7 @@ import { buttonClass, Card, inputClass } from "@/components/form";
 import { MediaThumb } from "@/components/media-thumb";
 import { PersonAvatar, personLifespan } from "@/components/person-summary";
 import { ScopeToggle } from "@/components/scope-toggle";
+import { PageHeader } from "@/components/ui";
 import { resolveView } from "@/lib/branch";
 import { thumbUrls } from "@/lib/media";
 import { listPeople } from "@/lib/people";
@@ -77,8 +78,7 @@ export default async function SearchPage({
 
   return (
     <div className="mx-auto max-w-6xl">
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold">Search</h1>
+      <PageHeader title="Search">
         {user && (
           <ScopeToggle
             basePath={`/trees/${treeId}/search`}
@@ -87,7 +87,7 @@ export default async function SearchPage({
             anchorName={view.anchorName}
           />
         )}
-      </div>
+      </PageHeader>
 
       <form method="GET" className="mb-6 max-w-4xl space-y-2">
         {view.scope === "all" && <input type="hidden" name="scope" value="all" />}
@@ -151,7 +151,7 @@ export default async function SearchPage({
 
       {!results ? (
         <Card>
-          <p className="text-sm text-archive-700/70">
+          <p className="text-sm text-archive-700">
             Search across people, biographies, notes, media, tags, OCR&apos;d documents,
             transcriptions, collections, and places. Enter at least two characters.
           </p>
@@ -179,7 +179,7 @@ export default async function SearchPage({
                       <div className="min-w-0">
                         <div className="truncate font-medium">{p.fullName}</div>
                         {personLifespan(p) && (
-                          <div className="text-sm text-archive-700/70">{personLifespan(p)}</div>
+                          <div className="text-sm text-archive-700">{personLifespan(p)}</div>
                         )}
                       </div>
                     </Link>
@@ -219,7 +219,7 @@ export default async function SearchPage({
                     >
                       <span className="font-medium">🗂 {c.name}</span>
                       {c.description && (
-                        <span className="ml-2 text-sm text-archive-700/70">{c.description}</span>
+                        <span className="ml-2 text-sm text-archive-700">{c.description}</span>
                       )}
                     </Link>
                   </li>

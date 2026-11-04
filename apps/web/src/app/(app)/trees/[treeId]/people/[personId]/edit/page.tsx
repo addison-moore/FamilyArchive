@@ -12,6 +12,7 @@ import {
   subtleButtonClass,
 } from "@/components/form";
 import { PersonFormFields } from "@/components/person-form-fields";
+import { Badge, PageHeader } from "@/components/ui";
 import { getPerson, getPersonNames, getPlaceName } from "@/lib/people";
 
 import {
@@ -48,10 +49,10 @@ export default async function EditPersonPage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
+      <PageHeader title={`Edit ${person.fullName}`} />
       <Card>
-        <h1 className="mb-4 text-xl font-semibold">Edit {person.fullName}</h1>
-        <FormError message={error} />
-        <form action={updatePersonAction} className="mt-4 space-y-4">
+        <FormError message={error} className="mb-4" />
+        <form action={updatePersonAction} className="space-y-4">
           <input type="hidden" name="treeId" value={treeId} />
           <input type="hidden" name="personId" value={personId} />
           <PersonFormFields
@@ -74,9 +75,7 @@ export default async function EditPersonPage({
                 <span className="min-w-0 flex-1 text-sm">
                   {name.name}
                   {name.kind && (
-                    <span className="ml-2 rounded bg-archive-100 px-1.5 py-0.5 text-xs text-archive-700">
-                      {PERSON_NAME_KIND_LABELS[name.kind]}
-                    </span>
+                    <Badge className="ml-2">{PERSON_NAME_KIND_LABELS[name.kind]}</Badge>
                   )}
                 </span>
                 <form action={removePersonNameAction}>
@@ -94,11 +93,11 @@ export default async function EditPersonPage({
         <form action={addPersonNameAction} className="flex flex-wrap items-end gap-3">
           <input type="hidden" name="treeId" value={treeId} />
           <input type="hidden" name="personId" value={personId} />
-          <Field label="Name">
-            <input name="name" required maxLength={300} className={`${inputClass} w-64`} />
+          <Field label="Name" className="min-w-48 flex-1">
+            <input name="name" required maxLength={300} className={inputClass} />
           </Field>
-          <Field label="Kind">
-            <select name="kind" className={`${inputClass} w-44`}>
+          <Field label="Kind" className="w-full sm:w-44">
+            <select name="kind" className={inputClass}>
               <option value="">—</option>
               {PERSON_NAME_KINDS.map((kind) => (
                 <option key={kind} value={kind}>
@@ -115,7 +114,7 @@ export default async function EditPersonPage({
 
       <Card>
         <h2 className="mb-1 text-lg font-semibold text-danger">Delete person</h2>
-        <p className="mb-4 text-sm text-archive-700/80">
+        <p className="mb-4 text-sm text-archive-700">
           {person.fullName} will disappear from the tree, lists, and search. Their record and photos
           are kept on the server.
         </p>

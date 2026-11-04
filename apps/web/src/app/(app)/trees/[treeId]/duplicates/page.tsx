@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { Card, subtleButtonClass } from "@/components/form";
 import { PersonAvatar, personLifespan } from "@/components/person-summary";
+import { PageHeader } from "@/components/ui";
 import { findDuplicatePairs } from "@/lib/duplicates";
 
 /** Possible-duplicates review with merge entry points. */
@@ -20,11 +21,10 @@ export default async function DuplicatesPage({ params }: { params: Promise<{ tre
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="mb-1 text-2xl font-semibold">Possible duplicates</h1>
-      <p className="mb-6 text-sm text-archive-700/80">
-        People with the same name and compatible birth years — usually the result of overlapping
-        GEDCOM imports. Compare each pair and merge them into one shared record.
-      </p>
+      <PageHeader
+        title="Possible duplicates"
+        description="People with the same name and compatible birth years — usually the result of overlapping GEDCOM imports. Compare each pair and merge them into one shared record."
+      />
       {pairs.length === 0 ? (
         <Card>
           <p className="text-sm text-archive-700">No possible duplicates found.</p>
@@ -35,9 +35,9 @@ export default async function DuplicatesPage({ params }: { params: Promise<{ tre
             <li key={`${pair.a.id}-${pair.b.id}`}>
               <Card>
                 <div className="flex flex-wrap items-center gap-4">
-                  <div className="grid min-w-0 flex-1 gap-4 sm:grid-cols-2">
+                  <div className="grid min-w-0 flex-1 basis-full gap-4 sm:basis-0 sm:grid-cols-2">
                     {[pair.a, pair.b].map((person) => (
-                      <div key={person.id} className="flex items-center gap-3">
+                      <div key={person.id} className="flex min-w-0 items-center gap-3">
                         <PersonAvatar name={person.fullName} />
                         <div className="min-w-0">
                           <Link
@@ -46,7 +46,7 @@ export default async function DuplicatesPage({ params }: { params: Promise<{ tre
                           >
                             {person.fullName}
                           </Link>
-                          <div className="text-xs text-archive-700/70">
+                          <div className="text-xs text-archive-700">
                             {personLifespan(person) ?? "no dates"}
                           </div>
                         </div>

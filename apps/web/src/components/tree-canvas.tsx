@@ -94,7 +94,7 @@ function BranchToggle({
           event.stopPropagation();
           onToggle(personId, direction, false);
         }}
-        className={`nodrag nopan absolute ${edgeClass} left-1/2 z-10 -translate-x-1/2 rounded-full border border-archive-100 bg-surface-raised px-1 text-archive-700/70 opacity-0 shadow-sm transition-opacity hover:bg-archive-100 focus-visible:opacity-100 group-hover:opacity-100`}
+        className={`nodrag nopan absolute ${edgeClass} left-1/2 z-10 -translate-x-1/2 rounded-full border border-archive-100 bg-surface-raised px-1 text-archive-700 opacity-0 shadow-sm transition-opacity hover:bg-archive-100 focus-visible:opacity-100 group-hover:opacity-100`}
       >
         <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
           <line
@@ -193,9 +193,7 @@ function PersonNode({ id, data }: NodeProps<PersonFlowNode>) {
       </div>
       <div className="min-w-0">
         <div className="truncate text-sm font-medium text-archive-900">{data.fullName}</div>
-        {data.lifespan && (
-          <div className="truncate text-xs text-archive-700/70">{data.lifespan}</div>
-        )}
+        {data.lifespan && <div className="truncate text-xs text-archive-700">{data.lifespan}</div>}
         {data.isStart && <div className="text-[10px] text-accent-600">starting person</div>}
       </div>
       <Handle
