@@ -13,7 +13,7 @@ const createTreeSchema = z.object({
 export async function createTreeAction(formData: FormData): Promise<void> {
   const user = await requireUser();
   if (!(await canCreateTrees(user))) {
-    throw new AuthorizationError("Tree creation requires owner or admin access");
+    throw new AuthorizationError("Creating an archive requires owner or admin access");
   }
 
   const parsed = createTreeSchema.safeParse({
@@ -35,7 +35,7 @@ export async function createTreeAction(formData: FormData): Promise<void> {
         createdBy: user.id,
       })
       .returning({ id: trees.id });
-    if (!tree) throw new Error("Failed to create tree");
+    if (!tree) throw new Error("Failed to create archive");
     // Creator becomes Admin of the new tree.
     await tx.insert(treeMemberships).values({ treeId: tree.id, userId: user.id, role: "admin" });
     return tree.id;

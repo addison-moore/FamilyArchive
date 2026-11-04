@@ -17,7 +17,7 @@ you browse it.
 Every GEDCOM import is recorded as a **source**: who imported which file, when,
 and what it contained. Imported people and relationships keep a reference to
 their source, and the original GEDCOM records are preserved verbatim in
-metadata. Sources are provenance, not separate trees — the imported people
+metadata. Sources are provenance, not separate archives — the imported people
 join the archive's shared graph.
 
 ## Duplicates and merging

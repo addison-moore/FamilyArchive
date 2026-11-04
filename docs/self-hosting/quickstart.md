@@ -49,7 +49,7 @@ verify the downloads.
 
 Open <http://localhost:3000/register> and create the first account — it
 automatically becomes the instance **Owner**. After that, registration is
-invite-only: family members join through invite links created by tree admins
+invite-only: family members join through invite links created by archive admins
 (Settings → Invites). If SMTP is configured (see the
 [environment reference](environment.md)), invites can be emailed directly;
 otherwise copy the invite link and share it yourself.

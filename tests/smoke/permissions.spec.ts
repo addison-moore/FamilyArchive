@@ -63,7 +63,7 @@ function uploadMedia(request: APIRequestContext, treeId: string, name: string) {
 async function createArchive(name: string): Promise<string> {
   await ownerPage.goto("/trees/new");
   await ownerPage.getByLabel("Name").fill(name);
-  await ownerPage.getByRole("button", { name: "Create tree" }).click();
+  await ownerPage.getByRole("button", { name: "Create archive" }).click();
   await ownerPage.waitForURL(/\/trees\/[0-9a-f-]{36}/);
   return ownerPage.url().match(/\/trees\/([0-9a-f-]{36})/)![1]!;
 }

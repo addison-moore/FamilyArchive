@@ -413,7 +413,7 @@ export default async function PersonProfilePage({
             />
             {candidates.length === 0 && (
               <p className="text-xs text-archive-700">
-                Add more people to the tree to connect them here.
+                Add more people to the archive to connect them here.
               </p>
             )}
           </div>

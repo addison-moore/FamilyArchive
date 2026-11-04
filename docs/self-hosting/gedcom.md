@@ -33,7 +33,7 @@ What is imported:
 
 Everything else — sources, events beyond birth/death, vendor extensions — is
 **preserved verbatim** in each person's `metadata.gedcom.raw` (and the file
-header on the tree record), so nothing is lost even though it isn't displayed.
+header on the source record), so nothing is lost even though it isn't displayed.
 
 Media files referenced by the GEDCOM are not imported (v1).
 
@@ -50,11 +50,11 @@ the canvas footer.
 
 ## Export
 
-**Tree settings → GEDCOM export**, or `GET /api/trees/<treeId>/gedcom` as any
-member of the tree. The export contains people (names, gender, birth/death dates
-and places, notes + biography as `NOTE`s), reconstructed `FAM` records with
-`MARR`/`DIV` from relationship types, and `PEDI adopted`/`foster` for
-adoptive/foster children. Media is not included.
+**Archive settings → GEDCOM export**, or `GET /api/trees/<archive-id>/gedcom`
+as any member of the archive. The export contains people (names, gender,
+birth/death dates and places, notes + biography as `NOTE`s), reconstructed `FAM`
+records with `MARR`/`DIV` from relationship types, and `PEDI adopted`/`foster`
+for adoptive/foster children. Media is not included.
 
 Known limits (v1):
 

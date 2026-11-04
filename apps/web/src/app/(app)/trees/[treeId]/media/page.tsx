@@ -183,7 +183,7 @@ export default async function MediaPage({
           <p className="text-sm text-archive-700">
             {canUpload
               ? "No media yet — upload the first photos, videos, or documents."
-              : "No media in this tree yet."}
+              : "No media in this archive yet."}
           </p>
         </Card>
       ) : (

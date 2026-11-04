@@ -27,7 +27,7 @@ export async function login(page: Page, email: string, password: string): Promis
 export async function createArchive(page: Page, name: string): Promise<string> {
   await page.goto("/trees/new");
   await page.getByLabel("Name").fill(name);
-  await page.getByRole("button", { name: "Create tree" }).click();
+  await page.getByRole("button", { name: "Create archive" }).click();
   await page.waitForURL(/\/trees\/[0-9a-f-]{36}/);
   return page.url().match(/\/trees\/([0-9a-f-]{36})/)![1]!;
 }

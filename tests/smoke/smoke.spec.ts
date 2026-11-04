@@ -83,7 +83,7 @@ test("register (owner bootstrap) and log in", async () => {
 test("owner can create an archive", async () => {
   await page.goto("/trees/new");
   await page.getByLabel("Name").fill("Smoke Test Archive");
-  await page.getByRole("button", { name: "Create tree" }).click();
+  await page.getByRole("button", { name: "Create archive" }).click();
   await page.waitForURL(/\/trees\/[0-9a-f-]{36}/);
   treeId = page.url().match(/\/trees\/([0-9a-f-]{36})/)![1]!;
 });

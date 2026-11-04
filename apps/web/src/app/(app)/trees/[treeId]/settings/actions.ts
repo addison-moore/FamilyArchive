@@ -196,7 +196,7 @@ export async function createInviteAction(formData: FormData): Promise<void> {
         .from(trees)
         .where(eq(trees.id, treeId))
         .limit(1);
-      const treeName = treeRows[0]?.name ?? "a family tree";
+      const treeName = treeRows[0]?.name ?? "a family archive";
       const inviteUrl = `${getEnv().APP_URL}/invite/${token}`;
       const inviter = user.name ?? user.email;
       await enqueueEmail({
@@ -294,7 +294,7 @@ export async function deleteTreeAction(formData: FormData): Promise<void> {
   if (!tree) redirect("/trees");
   if (confirmName !== tree.name) {
     redirect(
-      `${settingsPath(treeId)}?error=${encodeURIComponent("Type the exact tree name to confirm deletion")}#danger`,
+      `${settingsPath(treeId)}?error=${encodeURIComponent("Type the exact archive name to confirm deletion")}#danger`,
     );
   }
 

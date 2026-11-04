@@ -22,7 +22,7 @@ export default async function NewTreePage({
       <AppHeader />
       <PageBody>
         <div className="mx-auto max-w-md">
-          <PageHeader title="Create a family tree" />
+          <PageHeader title="Create a family archive" />
           <Card>
             <FormError message={error} className="mb-4" />
             <form action={createTreeAction} className="space-y-4">
@@ -39,7 +39,7 @@ export default async function NewTreePage({
                 <textarea name="description" rows={3} maxLength={2000} className={inputClass} />
               </Field>
               <button type="submit" className={`${buttonClass} w-full`}>
-                Create tree
+                Create archive
               </button>
             </form>
           </Card>

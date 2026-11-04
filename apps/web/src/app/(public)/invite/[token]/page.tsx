@@ -36,7 +36,7 @@ export default async function InvitePage({
     .from(trees)
     .where(eq(trees.id, invite.treeId))
     .limit(1);
-  const treeName = treeRows[0]?.name ?? "a family tree";
+  const treeName = treeRows[0]?.name ?? "a family archive";
 
   const user = await getSessionUser();
 
@@ -48,13 +48,13 @@ export default async function InvitePage({
         {existingRole ? (
           <>
             <p className="text-sm text-archive-700">
-              You already have {existingRole} access to this tree.
+              You already have {existingRole} access to this archive.
             </p>
             <Link
               href={`/trees/${invite.treeId}`}
               className={`${buttonClass} mt-4 inline-block no-underline`}
             >
-              Open the tree
+              Open the archive
             </Link>
           </>
         ) : (
@@ -66,7 +66,7 @@ export default async function InvitePage({
             <form action={acceptInviteAction} className="mt-4">
               <input type="hidden" name="token" value={token} />
               <button type="submit" className={buttonClass}>
-                Join tree
+                Join archive
               </button>
             </form>
           </>
