@@ -115,7 +115,7 @@ function PageLink({
   disabled: boolean;
   children: string;
 }) {
-  const base = "rounded-md border border-archive-100 bg-surface px-3 py-1.5";
+  const base = "rounded-md border border-archive-100 bg-surface px-3 py-2";
   if (disabled) {
     return (
       <span aria-disabled="true" className={`${base} text-archive-700/40`}>

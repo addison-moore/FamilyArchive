@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 
+import { buttonClass, dangerButtonClass, inputClass, subtleButtonClass } from "@/components/form";
 import type { FaceBox } from "@/lib/faces";
 
 interface PersonOption {
@@ -175,7 +176,7 @@ export function FaceTagger({
                   });
                 }}
                 disabled={isPending}
-                className="rounded-md border border-archive-100 bg-surface px-2 py-1.5 text-sm"
+                className={`${inputClass} w-auto`}
               >
                 <option value="">— unassigned —</option>
                 {people.map((person) => (
@@ -193,7 +194,7 @@ export function FaceTagger({
                     setSelectedId(null);
                   })
                 }
-                className="rounded-md border border-danger-line bg-surface px-2.5 py-1.5 text-sm text-danger hover:bg-danger-soft"
+                className={dangerButtonClass}
               >
                 Remove box
               </button>
@@ -203,11 +204,7 @@ export function FaceTagger({
           {draft && (
             <div className="flex flex-wrap items-center gap-2 rounded-md border border-archive-100 bg-archive-50 p-3">
               <span className="text-sm">Who is this?</span>
-              <select
-                id="face-draft-person"
-                className="rounded-md border border-archive-100 bg-surface px-2 py-1.5 text-sm"
-                defaultValue=""
-              >
+              <select id="face-draft-person" className={`${inputClass} w-auto`} defaultValue="">
                 <option value="">— tag later —</option>
                 {people.map((person) => (
                   <option key={person.id} value={person.id}>
@@ -236,15 +233,11 @@ export function FaceTagger({
                     setDraft(null);
                   });
                 }}
-                className="rounded-md bg-accent-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-600/90"
+                className={buttonClass}
               >
                 Save tag
               </button>
-              <button
-                type="button"
-                onClick={() => setDraft(null)}
-                className="rounded-md border border-archive-100 bg-surface px-2.5 py-1.5 text-sm text-archive-700 hover:bg-archive-50"
-              >
+              <button type="button" onClick={() => setDraft(null)} className={subtleButtonClass}>
                 Cancel
               </button>
             </div>

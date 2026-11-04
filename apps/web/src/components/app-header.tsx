@@ -37,7 +37,7 @@ export async function AppHeader({ nav, trailing }: { nav?: ReactNode; trailing?:
                 <>
                   <span className="max-w-[14rem] truncate">{user.name ?? user.email}</span>
                   {user.role === "owner" && (
-                    <span className="shrink-0 rounded bg-archive-100 px-1.5 py-0.5 text-xs">
+                    <span className="hidden shrink-0 rounded bg-archive-100 px-1.5 py-0.5 text-xs sm:inline">
                       owner
                     </span>
                   )}

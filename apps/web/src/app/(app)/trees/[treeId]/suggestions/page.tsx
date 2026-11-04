@@ -4,7 +4,7 @@ import { treeRoleAtLeast } from "@familyarchive/shared";
 import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 
-import { Card, Field, FormError, inputClass } from "@/components/form";
+import { Card, dangerButtonClass, Field, FormError, inputClass } from "@/components/form";
 import { SuggestForm } from "@/components/suggest-form";
 
 import { resolveSuggestionAction } from "./actions";
@@ -122,16 +122,11 @@ export default async function SuggestionsPage({
               type="submit"
               name="decision"
               value="accepted"
-              className="rounded-md bg-success px-3 py-1.5 text-sm font-medium text-white hover:bg-success/90"
+              className="rounded-md border border-transparent bg-success px-3 py-2 text-sm font-medium text-white hover:bg-success/90"
             >
               Accept
             </button>
-            <button
-              type="submit"
-              name="decision"
-              value="rejected"
-              className="rounded-md border border-danger-line bg-surface px-3 py-1.5 text-sm text-danger hover:bg-danger-soft"
-            >
+            <button type="submit" name="decision" value="rejected" className={dangerButtonClass}>
               Reject
             </button>
           </form>
