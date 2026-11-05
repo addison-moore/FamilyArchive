@@ -26,7 +26,15 @@ describe("validateDateParts", () => {
     expect(validateDateParts(parts(0))).toBe("Year must be between 1 and 9999");
     expect(validateDateParts(parts(10_000))).toBe("Year must be between 1 and 9999");
     expect(validateDateParts(parts(1900, 13))).toBe("Month must be between 1 and 12");
-    expect(validateDateParts(parts(1900, 12, 32))).toBe("Day must be between 1 and 31");
+    expect(validateDateParts(parts(1900, 12, 32))).toBe(
+      "Day must be between 1 and 31 for that month",
+    );
+    expect(validateDateParts(parts(1900, 2, 30))).toBe(
+      "Day must be between 1 and 29 for that month",
+    );
+    expect(validateDateParts(parts(1900, 4, 31))).toBe(
+      "Day must be between 1 and 30 for that month",
+    );
   });
 
   it("accepts unknown, partial, and full dates", () => {
@@ -34,6 +42,7 @@ describe("validateDateParts", () => {
     expect(validateDateParts(parts(1892))).toBeNull();
     expect(validateDateParts(parts(1892, 5))).toBeNull();
     expect(validateDateParts(parts(1892, 5, 3))).toBeNull();
+    expect(validateDateParts(parts(1892, 2, 29))).toBeNull();
   });
 });
 

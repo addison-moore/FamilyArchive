@@ -11,9 +11,13 @@ import {
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { createOwnerIfFirst, registrationSchema } from "@/lib/users";
+import { anyUserExists, createOwnerIfFirst, registrationSchema } from "@/lib/users";
 
 export async function registerOwnerAction(formData: FormData): Promise<void> {
+  // Before anything costly: this action stays callable after setup, and below
+  // here every request spends a bcrypt hash, with no account needed to send one.
+  if (await anyUserExists()) redirect("/register");
+
   const parsed = registrationSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),

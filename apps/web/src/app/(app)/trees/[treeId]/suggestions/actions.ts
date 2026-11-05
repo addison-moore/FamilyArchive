@@ -6,11 +6,13 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { enqueueEmail, smtpConfigured } from "@/lib/email";
+import { recordAudit } from "@/lib/audit";
+import { safeRedirectPath } from "@/lib/http";
+import { enqueueEmail } from "@/lib/jobs";
 import { renderBrandedEmail } from "@familyarchive/shared";
 import { getMediaItem } from "@/lib/media";
 import { getPerson } from "@/lib/people";
-import { getEnv } from "@familyarchive/config";
+import { getEnv, smtpConfigured } from "@familyarchive/config";
 
 const TARGET_TYPES = new Set(["person", "media", "tree"]);
 
@@ -22,14 +24,11 @@ export async function submitSuggestionAction(formData: FormData): Promise<void> 
   const message = String(formData.get("message") ?? "")
     .trim()
     .slice(0, 10_000);
-  const returnTo = String(formData.get("returnTo") ?? `/trees/${treeId}/suggestions`);
-  const backPath =
-    returnTo.startsWith("/") && !returnTo.startsWith("//")
-      ? returnTo
-      : `/trees/${treeId}/suggestions`;
+  const suggestionsPath = `/trees/${treeId}/suggestions`;
+  const backPath = safeRedirectPath(String(formData.get("returnTo") ?? ""), suggestionsPath);
   const { user } = await requireMemberRole(treeId, "viewer");
 
-  if (!message || !TARGET_TYPES.has(targetType)) {
+  if (!message || !TARGET_TYPES.has(targetType) || (targetType !== "tree" && !targetId)) {
     redirect(`${backPath}?error=${encodeURIComponent("Enter a suggestion message")}`);
   }
   // Validate the target belongs to this archive.
@@ -108,7 +107,7 @@ export async function resolveSuggestionAction(formData: FormData): Promise<void>
   const { user } = await requireMemberRole(treeId, "admin");
   if (decision !== "accepted" && decision !== "rejected") return;
 
-  await getDb()
+  const resolved = await getDb()
     .update(suggestions)
     .set({
       status: decision,
@@ -122,6 +121,17 @@ export async function resolveSuggestionAction(formData: FormData): Promise<void>
         eq(suggestions.treeId, treeId),
         eq(suggestions.status, "open"),
       ),
-    );
+    )
+    .returning({ id: suggestions.id });
+  if (resolved[0]) {
+    await recordAudit({
+      treeId,
+      actorId: user.id,
+      action: `suggestion.${decision}`,
+      targetType: "suggestion",
+      targetId: suggestionId,
+      summary: `Marked a suggestion ${decision}`,
+    });
+  }
   revalidatePath(`/trees/${treeId}/suggestions`);
 }

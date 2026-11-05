@@ -1,8 +1,8 @@
 import { AuthorizationError, requireMemberRole, type SessionUser } from "@familyarchive/auth";
-import { getEnv } from "@familyarchive/config";
+import { getEnv, smtpConfigured } from "@familyarchive/config";
 import { notFound } from "next/navigation";
 import { getDb, invites, treeMemberships, trees, users } from "@familyarchive/db";
-import { TREE_ROLES } from "@familyarchive/shared";
+import { formatBytes, TREE_ROLES } from "@familyarchive/shared";
 import { and, desc, eq, gt, isNull } from "drizzle-orm";
 
 import {
@@ -16,11 +16,10 @@ import {
   subtleButtonClass,
 } from "@/components/form";
 import { Alert, Badge, PageHeader } from "@/components/ui";
-import { smtpConfigured } from "@/lib/email";
 
 import { ExportStatusPoller } from "@/components/export-status-poller";
 import { latestExport } from "@/lib/export";
-import { formatStorage, quotaState } from "@/lib/quota";
+import { quotaState } from "@/lib/quota";
 
 import {
   changeMemberRoleAction,
@@ -33,12 +32,6 @@ import {
   updateTreeAction,
 } from "./actions";
 import Link from "next/link";
-
-function formatBytes(bytes: number): string {
-  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`;
-  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
 
 export default async function TreeSettingsPage({
   params,
@@ -315,12 +308,12 @@ export default async function TreeSettingsPage({
         <h2 className="mb-1 text-lg font-semibold">Storage</h2>
         {storage.quotaBytes === null ? (
           <p className="text-sm text-archive-700">
-            {formatStorage(storage.usedBytes)} of photos and files stored · no limit set.
+            {formatBytes(storage.usedBytes)} of photos and files stored · no limit set.
           </p>
         ) : (
           <>
             <p className="mb-3 text-sm text-archive-700">
-              {formatStorage(storage.usedBytes)} of {formatStorage(storage.quotaBytes)} used
+              {formatBytes(storage.usedBytes)} of {formatBytes(storage.quotaBytes)} used
             </p>
             <div
               role="progressbar"

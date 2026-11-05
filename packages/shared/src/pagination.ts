@@ -6,7 +6,7 @@ export type PageSize = (typeof PAGE_SIZES)[number];
 
 export const DEFAULT_PAGE_SIZE: PageSize = 50;
 
-export function isPageSize(value: unknown): value is PageSize {
+function isPageSize(value: unknown): value is PageSize {
   return typeof value === "number" && (PAGE_SIZES as readonly number[]).includes(value);
 }
 

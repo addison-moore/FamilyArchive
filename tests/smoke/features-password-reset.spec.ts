@@ -10,7 +10,9 @@ import { createArchive, createInvite, login, OWNER, registerViaInvite } from "./
  */
 test.describe.configure({ mode: "serial" });
 
-const MAILPIT = "http://localhost:8025";
+// Overridable so a throwaway stack can be tested beside another Mailpit: this spec
+// empties the inbox it points at.
+const MAILPIT = process.env.MAILPIT_URL ?? "http://localhost:8025";
 const RESET_USER = {
   name: "Rowena Thistle",
   email: "reset-tester@example.test",

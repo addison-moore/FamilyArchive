@@ -16,17 +16,18 @@
     "@familyarchive/media": "workspace:*",
     "@familyarchive/shared": "workspace:*",
     "archiver": "^8.0.0",
-    "bullmq": "^5.56.0",
-    "drizzle-orm": "^0.44.7",
-    "nodemailer": "^9.0.3",
-    "pino": "^9.7.0",
-    "sharp": "^0.35.3",
-    "tsx": "^4.20.3"
+    "bullmq": "^6.7.0",
+    "drizzle-orm": "^0.45.4",
+    "ioredis": "^6.0.0",
+    "nodemailer": "^10.3.1",
+    "pino": "^10.4.0",
+    "sharp": "^0.35.5",
+    "tsx": "^4.23.15"
   },
   "devDependencies": {
     "@types/node": "^22.20.0",
-    "@types/nodemailer": "^8.0.1",
+    "@types/nodemailer": "^8.0.2",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^5.1.0"
   }
 }

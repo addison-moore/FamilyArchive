@@ -6,7 +6,13 @@ import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { promisify } from "node:util";
 
-import { getDb, mediaDerivatives, mediaItems, recomputeInstanceUsage } from "@familyarchive/db";
+import {
+  getDb,
+  mediaDerivatives,
+  mediaItems,
+  mergeMediaMetadata,
+  recomputeInstanceUsage,
+} from "@familyarchive/db";
 import { derivativeKey } from "@familyarchive/media";
 import {
   FACES_QUEUE,
@@ -28,6 +34,7 @@ import sharp from "sharp";
 import type pino from "pino";
 
 import { EXEC_LIMITS } from "./exec-limits";
+import { readableImagePath } from "./image-input";
 import { storageDriverFor } from "./storage";
 
 const execFileAsync = promisify(execFile);
@@ -57,23 +64,47 @@ async function makeThumb(sourcePath: string, outPath: string): Promise<Derivativ
   };
 }
 
-async function processImage(sourcePath: string, workDir: string): Promise<DerivativeOutput[]> {
-  return [await makeThumb(sourcePath, path.join(workDir, "thumb_512.webp"))];
+async function processImage(
+  sourcePath: string,
+  mimeType: string,
+  workDir: string,
+): Promise<DerivativeOutput[]> {
+  const readable = await readableImagePath(sourcePath, mimeType, workDir);
+  return [await makeThumb(readable, path.join(workDir, "thumb_512.webp"))];
 }
 
-async function processVideo(sourcePath: string, workDir: string): Promise<DerivativeOutput[]> {
+/**
+ * ffmpeg probes its input, so given the choice it would treat an uploaded
+ * playlist as HLS and go after whatever the playlist names. Naming the demuxer
+ * from the stored type and allowing only the file protocol leaves it reading
+ * exactly one local file, however the bytes present themselves.
+ */
+const VIDEO_DEMUXERS: Record<string, string> = {
+  "video/mp4": "mov",
+  "video/quicktime": "mov",
+  "video/webm": "matroska",
+};
+
+async function processVideo(
+  sourcePath: string,
+  mimeType: string,
+  workDir: string,
+): Promise<DerivativeOutput[]> {
+  const demuxer = VIDEO_DEMUXERS[mimeType];
+  if (!demuxer) throw new Error(`No video demuxer for ${mimeType}`);
   const framePath = path.join(workDir, "frame.png");
+  const input = ["-nostdin", "-y", "-protocol_whitelist", "file", "-f", demuxer];
   // Grab a frame ~1s in (falls back to the first frame on very short clips).
   await execFileAsync(
     "ffmpeg",
-    ["-y", "-ss", "1", "-i", sourcePath, "-frames:v", "1", framePath],
+    [...input, "-ss", "1", "-i", sourcePath, "-frames:v", "1", framePath],
     EXEC_LIMITS,
   ).catch(async (seekError: Error) => {
     // Report both attempts: when the retry fails for the same underlying reason,
     // its message alone is usually the less informative of the two.
     await execFileAsync(
       "ffmpeg",
-      ["-y", "-i", sourcePath, "-frames:v", "1", framePath],
+      [...input, "-i", sourcePath, "-frames:v", "1", framePath],
       EXEC_LIMITS,
     ).catch((firstFrameError: Error) => {
       throw new Error(
@@ -144,21 +175,16 @@ async function processPdf(
 }
 
 async function setStatus(mediaId: string, status: ProcessingStatus, error?: string): Promise<void> {
-  const db = getDb();
-  const rows = await db
-    .select({ metadata: mediaItems.metadata })
-    .from(mediaItems)
-    .where(eq(mediaItems.id, mediaId))
-    .limit(1);
-  const metadata = { ...(rows[0]?.metadata as Record<string, unknown>) };
-  metadata.processing = {
-    ...(metadata.processing as Record<string, unknown> | undefined),
-    error: error ?? null,
-    updatedAt: new Date().toISOString(),
-  };
-  await db
+  await getDb()
     .update(mediaItems)
-    .set({ processingStatus: status, metadata, updatedAt: new Date() })
+    .set({
+      processingStatus: status,
+      metadata: mergeMediaMetadata("processing", {
+        error: error ?? null,
+        updatedAt: new Date().toISOString(),
+      }),
+      updatedAt: new Date(),
+    })
     .where(eq(mediaItems.id, mediaId));
 }
 
@@ -187,14 +213,16 @@ async function processMedia(
     const object = await driver.getStream(media.storageKey);
     await pipeline(object.stream, createWriteStream(sourcePath));
 
+    // Chosen from the MIME type, not the media type: the media type is a label
+    // people can change (a PDF filed as a document is still a PDF).
     let outputs: DerivativeOutput[] = [];
     if (media.mimeType.startsWith("image/")) {
-      outputs = await processImage(sourcePath, workDir);
-    } else if (media.mediaType === "video") {
-      outputs = await processVideo(sourcePath, workDir);
-    } else if (media.mediaType === "pdf") {
+      outputs = await processImage(sourcePath, media.mimeType, workDir);
+    } else if (media.mimeType.startsWith("video/")) {
+      outputs = await processVideo(sourcePath, media.mimeType, workDir);
+    } else if (media.mimeType === "application/pdf") {
       outputs = await processPdf(sourcePath, workDir, job);
-    } // audio and other types: no derivatives
+    } // audio: no derivatives
 
     for (const output of outputs) {
       const key = derivativeKey(treeId, mediaId, output.fileName);

@@ -32,12 +32,18 @@ def main() -> None:
     for detection in result.detections:
         bbox = detection.bounding_box
         confidence = detection.categories[0].score if detection.categories else None
+        # A face at the frame's edge can extend past it. Clamp the corners rather
+        # than the origin and size separately, which moved the box off the face.
+        left = max(0.0, bbox.origin_x / image.width)
+        top = max(0.0, bbox.origin_y / image.height)
+        right = min(1.0, (bbox.origin_x + bbox.width) / image.width)
+        bottom = min(1.0, (bbox.origin_y + bbox.height) / image.height)
         boxes.append(
             {
-                "x": max(0.0, bbox.origin_x / image.width),
-                "y": max(0.0, bbox.origin_y / image.height),
-                "width": min(1.0, bbox.width / image.width),
-                "height": min(1.0, bbox.height / image.height),
+                "x": left,
+                "y": top,
+                "width": right - left,
+                "height": bottom - top,
                 "confidence": round(confidence, 4) if confidence is not None else None,
             }
         )

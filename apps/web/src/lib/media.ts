@@ -1,20 +1,16 @@
 import type { SessionUser } from "@familyarchive/auth";
 import { getEnv } from "@familyarchive/config";
-import {
-  getDb,
-  mediaDerivatives,
-  mediaFaces,
-  mediaItems,
-  mediaPeople,
-  mediaTags,
-  tags,
-} from "@familyarchive/db";
+import { getDb, mediaDerivatives, mediaItems, mediaTags } from "@familyarchive/db";
 import { storageDriverFromEnv, type StorageDriver } from "@familyarchive/media";
-import { treeRoleAtLeast, type TreeRole } from "@familyarchive/shared";
+import {
+  isBrowserRenderableImage,
+  isImageMime,
+  treeRoleAtLeast,
+  type TreeRole,
+} from "@familyarchive/shared";
 import { and, asc, count, desc, eq, inArray, isNull, sql, type SQL } from "drizzle-orm";
 
 export type MediaRow = typeof mediaItems.$inferSelect;
-export type TagRow = typeof tags.$inferSelect;
 
 /**
  * Driver by name, so items uploaded before a driver switch keep working:
@@ -80,17 +76,33 @@ export async function adjacentMedia(
   return { prevId: prev[0]?.id ?? null, nextId: next[0]?.id ?? null };
 }
 
-export interface MediaFilters {
+/**
+ * Branch view rule: media tagged with at least one of these people, plus media
+ * tagged with nobody, which belongs to the whole archive and stays visible. A
+ * self-contained parenthesized group, so it is safe inside any `and()`.
+ */
+export function branchMediaCondition(branchIds: Set<string>): SQL {
+  const ids = [...branchIds];
+  const inBranch =
+    ids.length > 0
+      ? sql`exists (select 1 from media_people mp where mp.media_id = ${mediaItems.id} and mp.person_id in ${ids})
+          or exists (select 1 from media_faces mf where mf.media_id = ${mediaItems.id} and mf.person_id in ${ids})`
+      : sql`false`;
+  return sql`(not exists (select 1 from media_people mp where mp.media_id = ${mediaItems.id})
+    and not exists (select 1 from media_faces mf where mf.media_id = ${mediaItems.id} and mf.person_id is not null)
+    or (${inBranch}))`;
+}
+
+interface MediaFilters {
   type?: string;
   tagId?: string;
   personId?: string;
   uploaderId?: string;
   collectionId?: string;
   /**
-   * Branch view: keep media tagged with at least one of these people, plus
-   * media tagged with nobody. Applied in SQL rather than after the fact so it
-   * composes with limit/offset — filtering a page in memory would silently
-   * return short pages.
+   * Branch view (see branchMediaCondition). Applied in SQL rather than after the
+   * fact so it composes with limit/offset — filtering a page in memory would
+   * silently return short pages.
    */
   branchIds?: Set<string> | null;
 }
@@ -113,20 +125,7 @@ function mediaConditions(treeId: string, filters: MediaFilters): SQL[] {
       sql`exists (select 1 from collection_media cm where cm.media_id = ${mediaItems.id} and cm.collection_id = ${filters.collectionId})`,
     );
   }
-  if (filters.branchIds) {
-    const ids = [...filters.branchIds];
-    const inBranch =
-      ids.length > 0
-        ? sql`exists (select 1 from media_people mp where mp.media_id = ${mediaItems.id} and mp.person_id in ${ids})
-            or exists (select 1 from media_faces mf where mf.media_id = ${mediaItems.id} and mf.person_id in ${ids})`
-        : sql`false`;
-    // Untagged media belongs to the whole archive and stays visible.
-    conditions.push(
-      sql`(not exists (select 1 from media_people mp where mp.media_id = ${mediaItems.id})
-        and not exists (select 1 from media_faces mf where mf.media_id = ${mediaItems.id} and mf.person_id is not null)
-        or (${inBranch}))`,
-    );
-  }
+  if (filters.branchIds) conditions.push(branchMediaCondition(filters.branchIds));
   return conditions;
 }
 
@@ -171,30 +170,6 @@ export async function listMediaForPerson(treeId: string, personId: string): Prom
   return listMedia(treeId, { personId });
 }
 
-/**
- * mediaId → person ids tagged on it (simple tags + assigned face tags), for
- * branch-view filtering. Media absent from the map is untagged.
- */
-export async function taggedPersonIdsByMedia(mediaIds: string[]): Promise<Map<string, string[]>> {
-  if (mediaIds.length === 0) return new Map();
-  const [simple, faces] = await Promise.all([
-    getDb()
-      .select({ mediaId: mediaPeople.mediaId, personId: mediaPeople.personId })
-      .from(mediaPeople)
-      .where(inArray(mediaPeople.mediaId, mediaIds)),
-    getDb()
-      .select({ mediaId: mediaFaces.mediaId, personId: mediaFaces.personId })
-      .from(mediaFaces)
-      .where(inArray(mediaFaces.mediaId, mediaIds)),
-  ]);
-  const result = new Map<string, string[]>();
-  for (const row of [...simple, ...faces]) {
-    if (!row.personId) continue;
-    result.set(row.mediaId, [...(result.get(row.mediaId) ?? []), row.personId]);
-  }
-  return result;
-}
-
 export function mediaUrl(treeId: string, mediaId: string): string {
   return `/api/trees/${treeId}/media/${mediaId}/original`;
 }
@@ -203,20 +178,30 @@ export function derivativeUrl(treeId: string, mediaId: string, derivativeId: str
   return `/api/trees/${treeId}/media/${mediaId}/derivatives/${derivativeId}`;
 }
 
-export type DerivativeRow = typeof mediaDerivatives.$inferSelect;
-
-/** Grid thumbnails: mediaId → thumb URL, one query for the whole listing. */
+/**
+ * Grid thumbnails: mediaId → thumb URL, one query for the whole listing. Live items
+ * only, since the route refuses a deleted item's derivatives: a collection whose
+ * cover had been deleted kept linking to it and showed a broken image.
+ */
 export async function thumbUrls(treeId: string, mediaIds: string[]): Promise<Map<string, string>> {
   if (mediaIds.length === 0) return new Map();
   const rows = await getDb()
     .select({ id: mediaDerivatives.id, mediaId: mediaDerivatives.mediaId })
     .from(mediaDerivatives)
-    .where(and(inArray(mediaDerivatives.mediaId, mediaIds), eq(mediaDerivatives.kind, "thumb")));
+    .innerJoin(mediaItems, eq(mediaDerivatives.mediaId, mediaItems.id))
+    .where(
+      and(
+        inArray(mediaDerivatives.mediaId, mediaIds),
+        eq(mediaDerivatives.kind, "thumb"),
+        eq(mediaItems.treeId, treeId),
+        isNull(mediaItems.deletedAt),
+      ),
+    );
   return new Map(rows.map((row) => [row.mediaId, derivativeUrl(treeId, row.mediaId, row.id)]));
 }
 
 /** All derivatives of one item, pages in order (detail page PDF previews). */
-export async function listDerivatives(mediaId: string): Promise<DerivativeRow[]> {
+export async function listDerivatives(mediaId: string) {
   return getDb()
     .select()
     .from(mediaDerivatives)
@@ -224,13 +209,19 @@ export async function listDerivatives(mediaId: string): Promise<DerivativeRow[]>
     .orderBy(asc(mediaDerivatives.kind), asc(mediaDerivatives.page));
 }
 
-/** The person's profile photo as a servable URL, when set and still valid. */
+/**
+ * The person's profile photo as a servable URL, when set and still valid. The
+ * thumbnail where there is one: an avatar has no use for a full-size scan, and an
+ * original in HEIC or TIFF would not display in an `<img>` at all.
+ */
 export async function profilePhotoUrl(
   treeId: string,
   profileMediaId: string | null,
 ): Promise<string | null> {
   if (!profileMediaId) return null;
   const media = await getMediaItem(treeId, profileMediaId);
-  if (!media || !media.mimeType.startsWith("image/")) return null;
-  return mediaUrl(treeId, media.id);
+  if (!media || !isImageMime(media.mimeType)) return null;
+  const thumb = (await thumbUrls(treeId, [media.id])).get(media.id);
+  if (thumb) return thumb;
+  return isBrowserRenderableImage(media.mimeType) ? mediaUrl(treeId, media.id) : null;
 }

@@ -4,12 +4,12 @@ import postgres from "postgres";
 
 import * as schema from "./schema";
 
-export function createDb(databaseUrl: string) {
+function createDb(databaseUrl: string) {
   const client = postgres(databaseUrl);
   return drizzle(client, { schema });
 }
 
-export type Db = ReturnType<typeof createDb>;
+type Db = ReturnType<typeof createDb>;
 
 // `next dev` evaluates this module separately per compiled route, so a module
 // variable would give each route its own pool until Postgres runs out of

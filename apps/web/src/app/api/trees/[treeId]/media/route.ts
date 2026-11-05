@@ -6,7 +6,11 @@ import { AuthorizationError, requireMemberRole } from "@familyarchive/auth";
 import { getEnv } from "@familyarchive/config";
 import { adjustInstanceUsage, getDb, isUniqueViolation, mediaItems } from "@familyarchive/db";
 import { originalKey, uploadTempKey } from "@familyarchive/media";
-import { UPLOAD_MIME_TYPES } from "@familyarchive/shared";
+import {
+  matchesUploadSignature,
+  UPLOAD_MIME_TYPES,
+  UPLOAD_SIGNATURE_BYTES,
+} from "@familyarchive/shared";
 import { and, eq, isNull, ne } from "drizzle-orm";
 
 import { recordAudit } from "@/lib/audit";
@@ -77,10 +81,11 @@ export async function POST(
   // Sanitized for storage as metadata only — never used in storage keys.
   // The decode is the forgiving variant: a client header containing a stray "%"
   // is malformed input, not a server fault, and must not surface as a 500.
-  const originalFilename = decodeURIComponentSafe(rawName)
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u001f/\\]/g, "")
-    .slice(0, 300);
+  const originalFilename =
+    decodeURIComponentSafe(rawName)
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u001f/\\]/g, "")
+      .slice(0, 300) || "upload";
 
   if (!request.body) {
     return Response.json({ error: "Empty request body" }, { status: 400 });
@@ -108,9 +113,27 @@ export async function POST(
   const tempKey = uploadTempKey(treeId, mediaId);
   const hasher = createHash("sha256");
   let byteCount = 0;
+  // The declared type decides which tool the worker hands these bytes to, so it
+  // has to be checked against the bytes. Everything so far is only at the temp key.
+  let head: Buffer | null = Buffer.alloc(0);
+  const signatureFails = () => head !== null && !matchesUploadSignature(mimeType, head);
   const tap = new Transform({
+    flush(callback) {
+      // A file shorter than the window never reached the check in transform().
+      callback(byteCount > 0 && signatureFails() ? new Error("type-mismatch") : null);
+    },
     transform(chunk: Buffer, _encoding, callback) {
       byteCount += chunk.length;
+      if (head) {
+        head = Buffer.concat([head, chunk]).subarray(0, UPLOAD_SIGNATURE_BYTES);
+        if (head.length === UPLOAD_SIGNATURE_BYTES) {
+          if (signatureFails()) {
+            callback(new Error("type-mismatch"));
+            return;
+          }
+          head = null;
+        }
+      }
       if (byteCount > maxBytes) {
         callback(new Error("size-limit"));
         return;
@@ -139,6 +162,12 @@ export async function POST(
     await Promise.all([pipeline(body, tap), driver.putStream(tempKey, tap)]);
   } catch (error) {
     await cleanup();
+    if (error instanceof Error && error.message === "type-mismatch") {
+      return Response.json(
+        { error: `This file's contents don't match its type (${mimeType})` },
+        { status: 415 },
+      );
+    }
     if (error instanceof Error && error.message === "size-limit") {
       return Response.json(
         { error: `File exceeds the ${env.MEDIA_MAX_UPLOAD_MB} MB upload limit` },
@@ -225,10 +254,16 @@ export async function POST(
     return Response.json({ error: "Failed to store the uploaded file" }, { status: 500 });
   }
 
-  await adjustInstanceUsage({ originalBytes: byteCount, mediaCount: 1 });
-  await maybeNotifyOwners();
-
-  await enqueueMediaProcessing(treeId, mediaId);
+  // The upload has succeeded from here on. A failure below must not be reported as
+  // a failed upload: the file is stored, and retrying would only hit the duplicate
+  // check. The nightly recompute corrects the counter, and the item's page offers
+  // to start processing again if the job never ran.
+  await adjustInstanceUsage({ originalBytes: byteCount, mediaCount: 1 })
+    .then(maybeNotifyOwners)
+    .catch((error) => console.error("upload: quota bookkeeping failed:", error));
+  await enqueueMediaProcessing(treeId, mediaId).catch((error) =>
+    console.error(`upload: could not queue processing for ${mediaId}:`, error),
+  );
   await recordAudit({
     treeId,
     actorId: user.id,

@@ -1,6 +1,6 @@
 import { deflateSync } from "node:zlib";
 
-import type { Browser, BrowserContext, Page } from "@playwright/test";
+import type { Browser, BrowserContext, Locator, Page } from "@playwright/test";
 
 /** All smoke data is fictional. */
 export const OWNER = {
@@ -21,6 +21,17 @@ export async function login(page: Page, email: string, password: string): Promis
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/trees/);
+}
+
+/**
+ * Click a form's submit button and wait for its server action to answer. A click
+ * returns as soon as it lands, and navigating straight afterwards aborts the POST
+ * or renders the state from before it.
+ */
+export async function submitAction(page: Page, button: Locator): Promise<void> {
+  const answered = page.waitForResponse((response) => response.request().method() === "POST");
+  await button.click();
+  await answered;
 }
 
 /** Create an archive as the signed-in user and return its tree id. */

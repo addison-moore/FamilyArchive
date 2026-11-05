@@ -266,4 +266,23 @@ describe("parser pointer handling", () => {
     // The reference resolves, so no "missing individual" warning is raised.
     expect(parsed.warnings).toEqual([]);
   });
+
+  it("writes textarea line endings as clean CONT lines", () => {
+    const output = buildGedcom({
+      individuals: [
+        {
+          id: "a",
+          fullName: "Ada Holloway",
+          alternateNames: [],
+          gender: "female",
+          birth: null,
+          death: null,
+          notes: ["first line\r\nsecond line"],
+        },
+      ],
+      families: [],
+    });
+    expect(output).toContain("1 NOTE first line\n2 CONT second line\n");
+    expect(output).not.toContain("\r");
+  });
 });

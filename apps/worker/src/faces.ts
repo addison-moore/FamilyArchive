@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { pipeline } from "node:stream/promises";
 import { promisify } from "node:util";
 
-import { getDb, mediaFaces, mediaItems } from "@familyarchive/db";
+import { getDb, mediaFaces, mediaItems, mergeMediaMetadata } from "@familyarchive/db";
 import {
   FACES_QUEUE,
   isFaceDetectionEligible,
@@ -19,12 +19,14 @@ import { and, eq, isNull } from "drizzle-orm";
 import sharp from "sharp";
 import type pino from "pino";
 
+import { EXEC_LIMITS } from "./exec-limits";
 import { filterFreshDetections } from "./face-boxes";
+import { readableImagePath } from "./image-input";
 import { storageDriverFor } from "./storage";
 
 const execFileAsync = promisify(execFile);
 const SCRIPT_PATH = fileURLToPath(new URL("../scripts/detect_faces.py", import.meta.url));
-const DETECTION_VERSION = "mediapipe-blazeface-0.10";
+const DETECTION_VERSION = "mediapipe-blazeface-1.2";
 
 interface DetectedBox {
   x: number;
@@ -38,21 +40,12 @@ async function setFacesState(
   mediaId: string,
   state: { status: TextJobStatus; error?: string | null; count?: number },
 ): Promise<void> {
-  const db = getDb();
-  const rows = await db
-    .select({ metadata: mediaItems.metadata })
-    .from(mediaItems)
-    .where(eq(mediaItems.id, mediaId))
-    .limit(1);
-  const metadata = { ...(rows[0]?.metadata as Record<string, unknown>) };
-  metadata.faces = {
-    ...(metadata.faces as Record<string, unknown> | undefined),
-    ...state,
-    updatedAt: new Date().toISOString(),
-  };
-  await db
+  await getDb()
     .update(mediaItems)
-    .set({ metadata, updatedAt: new Date() })
+    .set({
+      metadata: mergeMediaMetadata("faces", { ...state, updatedAt: new Date().toISOString() }),
+      updatedAt: new Date(),
+    })
     .where(eq(mediaItems.id, mediaId));
 }
 
@@ -87,16 +80,13 @@ async function detectFaces(job: Job<FaceDetectJob>, logger: pino.Logger): Promis
     // Normalized PNG input: EXIF-rotated, bounded size; coordinates stay
     // valid for the original because they are relative.
     const detectPath = path.join(workDir, "detect.png");
-    await sharp(sourcePath, { failOn: "error" })
+    await sharp(await readableImagePath(sourcePath, media.mimeType, workDir), { failOn: "error" })
       .rotate()
       .resize(1600, 1600, { fit: "inside", withoutEnlargement: true })
       .png()
       .toFile(detectPath);
 
-    const { stdout } = await execFileAsync("python3", [SCRIPT_PATH, detectPath], {
-      maxBuffer: 8 * 1024 * 1024,
-      timeout: 5 * 60 * 1000,
-    });
+    const { stdout } = await execFileAsync("python3", [SCRIPT_PATH, detectPath], EXEC_LIMITS);
     const boxes = JSON.parse(stdout) as DetectedBox[];
 
     await db.transaction(async (tx) => {

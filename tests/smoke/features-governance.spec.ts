@@ -7,6 +7,7 @@ import {
   OWNER,
   registerViaInvite,
   samplePng,
+  submitAction,
   uploadMedia,
 } from "./helpers";
 
@@ -112,10 +113,11 @@ test("admins can change a member's role, revoke invites, and remove members", as
   await ownerPage.goto(`/trees/${treeId}/settings`);
   const memberRow = ownerPage.locator("li").filter({ hasText: MEMBER.email });
   await memberRow.locator('select[name="role"]').selectOption("editor");
-  await memberRow.getByRole("button", { name: "Update" }).click();
-  // Reload before asserting: selectOption already set this value in the DOM, so
-  // checking it without a round trip proves nothing and — worse — lets the rest
-  // of the test race the server action it never waited for.
+  // Wait for the action, then reload before asserting: selectOption already set
+  // this value in the DOM, so checking it without a round trip proves nothing. The
+  // click returns at once, so a reload alone can still beat the POST and render the
+  // old role, where it then stays.
+  await submitAction(ownerPage, memberRow.getByRole("button", { name: "Update" }));
   await ownerPage.reload();
   await expect(
     ownerPage.locator("li").filter({ hasText: MEMBER.email }).locator('select[name="role"]'),

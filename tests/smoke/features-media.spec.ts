@@ -7,6 +7,7 @@ import {
   OWNER,
   samplePdf,
   samplePng,
+  submitAction,
   uploadMedia,
 } from "./helpers";
 
@@ -67,7 +68,7 @@ test("collection lifecycle: create, add media, set cover, remove, delete", async
   await page.locator('summary[title="Info"]').click();
   const addForm = page.locator('form:has(select[name="collectionId"])');
   await addForm.locator('select[name="collectionId"]').selectOption({ label: "The Bristol Years" });
-  await addForm.getByRole("button", { name: "Add" }).click();
+  await submitAction(page, addForm.getByRole("button", { name: "Add" }));
   // Reload for a deterministic popover state — the action leaves it open.
   await page.goto(`/trees/${treeId}/media/${photoId}`);
   await page.locator('summary[title="Info"]').click();
@@ -78,7 +79,7 @@ test("collection lifecycle: create, add media, set cover, remove, delete", async
   await expect(page.locator(`a[href*="${photoId}"]`)).toBeVisible();
 
   await page.getByLabel("Cover image").selectOption({ label: "holloway-picnic.png" });
-  await page.getByRole("button", { name: "Set cover" }).click();
+  await submitAction(page, page.getByRole("button", { name: "Set cover" }));
   // The card cover renders from the generated thumbnail, so poll until the
   // thumbnail job has produced one.
   const card = page.locator(`a[href*="${collectionId}"]`);

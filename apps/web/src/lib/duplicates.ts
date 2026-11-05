@@ -1,7 +1,7 @@
 import { getDb, people } from "@familyarchive/db";
-import { and, eq, isNull, ne } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
-import type { PersonRow } from "@/lib/people";
+import { PERSON_OPTION_COLUMNS, type PersonOption } from "@/lib/people";
 
 /**
  * Simple duplicate heuristic: same normalized full name, and birth
@@ -19,19 +19,22 @@ function birthYearsCompatible(a: number | null, b: number | null): boolean {
   return Math.abs(a - b) <= 2;
 }
 
-export interface DuplicatePair {
-  a: PersonRow;
-  b: PersonRow;
+interface DuplicatePair {
+  a: PersonOption;
+  b: PersonOption;
 }
 
-/** All potential duplicate pairs within a tree. */
-export async function findDuplicatePairs(treeId: string): Promise<DuplicatePair[]> {
-  const rows = await getDb()
-    .select()
+const peopleInTree = (treeId: string) =>
+  getDb()
+    .select(PERSON_OPTION_COLUMNS)
     .from(people)
     .where(and(eq(people.treeId, treeId), isNull(people.deletedAt)));
 
-  const byName = new Map<string, PersonRow[]>();
+/** All potential duplicate pairs within a tree. */
+export async function findDuplicatePairs(treeId: string): Promise<DuplicatePair[]> {
+  const rows = await peopleInTree(treeId);
+
+  const byName = new Map<string, PersonOption[]>();
   for (const person of rows) {
     const key = normalizeName(person.fullName);
     byName.set(key, [...(byName.get(key) ?? []), person]);
@@ -56,16 +59,12 @@ export async function findSimilarPeople(
   fullName: string,
   birthYear: number | null,
   excludePersonId: string,
-): Promise<PersonRow[]> {
-  const rows = await getDb()
-    .select()
-    .from(people)
-    .where(
-      and(eq(people.treeId, treeId), isNull(people.deletedAt), ne(people.id, excludePersonId)),
-    );
+): Promise<PersonOption[]> {
+  const rows = await peopleInTree(treeId);
   const target = normalizeName(fullName);
   return rows.filter(
     (person) =>
+      person.id !== excludePersonId &&
       normalizeName(person.fullName) === target &&
       birthYearsCompatible(person.birthYear, birthYear),
   );

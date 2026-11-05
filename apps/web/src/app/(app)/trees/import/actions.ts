@@ -9,7 +9,8 @@ import {
 import { decodeGedcom, UnsupportedGedcomEncodingError } from "@familyarchive/gedcom";
 import { redirect } from "next/navigation";
 
-import { importGedcom } from "@/lib/gedcom-import";
+import { recordAudit } from "@/lib/audit";
+import { GedcomImportError, importGedcom } from "@/lib/gedcom-import";
 
 const MAX_GEDCOM_BYTES = 10 * 1024 * 1024;
 
@@ -53,9 +54,20 @@ export async function importGedcomAction(formData: FormData): Promise<void> {
       targetTreeId: target === "new" ? undefined : target,
     });
   } catch (error) {
-    if (error instanceof Error && "digest" in error) throw error; // Next redirects
-    return fail(error instanceof Error ? error.message : "Import failed");
+    if (error instanceof GedcomImportError) return fail(error.message);
+    // Not shown: a driver error can quote the failed statement and its values, and
+    // at that length it would not fit in the redirect's URL either.
+    console.error("GEDCOM import failed:", error);
+    return fail("The import failed and nothing was saved. Check the file and try again.");
   }
+  await recordAudit({
+    treeId: result.treeId,
+    actorId: user.id,
+    action: "gedcom.imported",
+    targetType: "source",
+    targetId: result.sourceId,
+    summary: `Imported ${result.peopleCount} people and ${result.relationshipCount} relationships from ${file.name}`,
+  });
 
   const params = new URLSearchParams({
     imported: "1",

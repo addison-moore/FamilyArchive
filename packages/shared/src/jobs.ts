@@ -1,7 +1,5 @@
 /** Queue names and job payloads shared between the web app and the worker. */
 
-export const HEARTBEAT_QUEUE = "heartbeat";
-
 /** Outbound email jobs. */
 export const EMAIL_QUEUE = "email";
 
@@ -10,7 +8,7 @@ export interface EmailJob {
   subject: string;
   /** Plain-text body — always present as the fallback. */
   text: string;
-  /** Branded HTML body (see apps/web lib/email-template). */
+  /** Branded HTML body (see email-template.ts). */
   html?: string;
 }
 
@@ -40,15 +38,21 @@ export interface TreeCleanupJob {
   storageDriver: "local" | "s3";
 }
 
-/** Parse a redis:// URL into BullMQ connection options (BullMQ bundles its own ioredis). */
+/**
+ * Parse a redis:// or rediss:// URL into BullMQ connection options (BullMQ
+ * bundles its own ioredis). `URL` leaves credentials percent-encoded, so a
+ * password with a reserved character has to be decoded or it never matches.
+ */
 export function redisConnectionOptions(redisUrl: string) {
   const url = new URL(redisUrl);
   return {
     host: url.hostname,
     port: Number(url.port || "6379"),
-    username: url.username || undefined,
-    password: url.password || undefined,
+    username: url.username ? decodeURIComponent(url.username) : undefined,
+    password: url.password ? decodeURIComponent(url.password) : undefined,
     db: Number(url.pathname.slice(1) || "0"),
     maxRetriesPerRequest: null,
+    // Without this a rediss:// URL silently spoke plaintext.
+    ...(url.protocol === "rediss:" ? { tls: {} } : {}),
   };
 }

@@ -68,6 +68,44 @@ function violationsIn(files: string[]): string[] {
   );
 }
 
+/** Every source file in the web app and the packages. */
+function sourceFiles(): string[] {
+  const repoRoot = path.join(APP_DIR, "..", "..", "..", "..");
+  return ["apps/web/src", "apps/worker/src", "packages"].flatMap((dir) =>
+    readdirSync(path.join(repoRoot, dir), { recursive: true })
+      .map(String)
+      .filter((entry) => /\.tsx?$/.test(entry) && !entry.includes("node_modules"))
+      .map((entry) => path.join(repoRoot, dir, entry)),
+  );
+}
+
+describe("session invalidation", () => {
+  it("only a password reset writes users.updatedAt", () => {
+    // getSessionUser rejects any token older than users.updatedAt, so this column
+    // doubles as "credentials changed at". Bumping it for anything else signs the
+    // user out of every device, which is what the theme toggle used to do.
+    const writers = sourceFiles()
+      .filter((file) =>
+        /\.update\(users\)\s*\.set\(\{[^}]*updatedAt/.test(readFileSync(file, "utf8")),
+      )
+      .map((file) => path.basename(file));
+    expect(writers).toEqual(["password-reset.ts"]);
+  });
+});
+
+describe("database writes", () => {
+  it("never discard a query with void", () => {
+    // A Drizzle query runs only when awaited or chained, so `void query` silently does
+    // nothing, and its types hide `then` from the floating-promise lint. A failed
+    // export's status update was lost this way.
+    const dropped = sourceFiles()
+      .filter((file) => !file.endsWith(".test.ts"))
+      .filter((file) => /\bvoid\s+(getDb\(\)|db|tx)\b/.test(readFileSync(file, "utf8")))
+      .map((file) => path.basename(file));
+    expect(dropped).toEqual([]);
+  });
+});
+
 describe("authorization guard coverage", () => {
   it("every (app) server action calls a guard", () => {
     const files = findFiles("(app)", "actions.ts");

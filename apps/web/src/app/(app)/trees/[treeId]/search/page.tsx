@@ -11,7 +11,7 @@ import { ScopeToggle } from "@/components/scope-toggle";
 import { PageHeader } from "@/components/ui";
 import { resolveView } from "@/lib/branch";
 import { thumbUrls } from "@/lib/media";
-import { listPeople } from "@/lib/people";
+import { listPeopleOptions } from "@/lib/people";
 import { searchArchive, type SearchResults } from "@/lib/search";
 
 /** Archive search: grouped results, filters, branch scope. */
@@ -31,7 +31,7 @@ export default async function SearchPage({
   }>;
 }) {
   const { treeId } = await params;
-  const { user } = await requireTreeRole(treeId, "viewer");
+  const { user, isMember } = await requireTreeRole(treeId, "viewer");
   const { q, type, tag, person, uploader, year, scope: scopeParam } = await searchParams;
   const query = q?.trim() ?? "";
 
@@ -39,12 +39,16 @@ export default async function SearchPage({
   const [view, treeTags, peopleList, uploaders] = await Promise.all([
     resolveView(user?.id ?? null, treeId, scopeParam),
     db.select().from(tags).where(eq(tags.treeId, treeId)).orderBy(asc(tags.name)),
-    listPeople(treeId),
-    db
-      .select({ id: users.id, name: users.name, email: users.email })
-      .from(treeMemberships)
-      .innerJoin(users, eq(treeMemberships.userId, users.id))
-      .where(eq(treeMemberships.treeId, treeId)),
+    listPeopleOptions(treeId),
+    // Public mode opens the archive's content, not the list of who belongs to it:
+    // anonymous visitors were being shown every member's name in this filter.
+    isMember
+      ? db
+          .select({ id: users.id, name: users.name, email: users.email })
+          .from(treeMemberships)
+          .innerJoin(users, eq(treeMemberships.userId, users.id))
+          .where(eq(treeMemberships.treeId, treeId))
+      : [],
   ]);
 
   const yearNumber = year && /^\d{1,4}$/.test(year) ? Number(year) : undefined;
@@ -129,14 +133,16 @@ export default async function SearchPage({
               </option>
             ))}
           </select>
-          <select name="uploader" defaultValue={uploader ?? ""} className={inputClass}>
-            <option value="">Any uploader</option>
-            {uploaders.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name ?? u.email}
-              </option>
-            ))}
-          </select>
+          {isMember && (
+            <select name="uploader" defaultValue={uploader ?? ""} className={inputClass}>
+              <option value="">Any uploader</option>
+              {uploaders.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name ?? u.email}
+                </option>
+              ))}
+            </select>
+          )}
           <input
             name="year"
             type="number"

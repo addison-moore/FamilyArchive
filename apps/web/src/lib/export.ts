@@ -44,7 +44,17 @@ export async function requestArchiveExport(
       storageDriver: getEnv().MEDIA_STORAGE_DRIVER,
       storageKey: exportKey(treeId, id),
     });
-  await enqueueArchiveExport({ treeId, exportId: id });
+  try {
+    await enqueueArchiveExport({ treeId, exportId: id });
+  } catch (error) {
+    // Left "pending", this row would make every later request report an export
+    // already in progress, with no job that could ever finish it.
+    await getDb()
+      .update(archiveExports)
+      .set({ status: "failed", error: "The export could not be queued" })
+      .where(eq(archiveExports.id, id));
+    throw error;
+  }
   await recordAudit({
     treeId,
     actorId: userId,

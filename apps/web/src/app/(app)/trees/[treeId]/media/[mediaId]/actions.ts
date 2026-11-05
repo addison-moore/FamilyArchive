@@ -7,6 +7,7 @@ import {
   mediaItems,
   mediaPeople,
   mediaTags,
+  mergeMediaMetadata,
   people,
   tags,
 } from "@familyarchive/db";
@@ -14,6 +15,7 @@ import {
   isFaceDetectionEligible,
   isMediaType,
   isOcrEligible,
+  mediaTypesForMime,
   validateDateParts,
 } from "@familyarchive/shared";
 import { and, eq, isNull } from "drizzle-orm";
@@ -63,6 +65,12 @@ export async function updateMediaAction(formData: FormData): Promise<void> {
     place: String(formData.get("place") ?? "").trim() || undefined,
   });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "Invalid input");
+  if (
+    parsed.data.mediaType !== media.mediaType &&
+    !mediaTypesForMime(media.mimeType).includes(parsed.data.mediaType)
+  ) {
+    return fail("That type doesn't fit this file");
+  }
 
   const datePart = (name: string): number | null => {
     const raw = String(formData.get(name) ?? "").trim();
@@ -207,12 +215,24 @@ export async function removeMediaPersonAction(formData: FormData): Promise<void>
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
   const tagRowId = String(formData.get("tagRowId") ?? "");
-  await requireMemberRole(treeId, "contributor");
+  const { user } = await requireMemberRole(treeId, "contributor");
   if (!(await getMediaItem(treeId, mediaId))) return;
 
-  await getDb()
+  const removed = await getDb()
     .delete(mediaPeople)
-    .where(and(eq(mediaPeople.id, tagRowId), eq(mediaPeople.mediaId, mediaId)));
+    .where(and(eq(mediaPeople.id, tagRowId), eq(mediaPeople.mediaId, mediaId)))
+    .returning({ personId: mediaPeople.personId });
+  if (removed[0]) {
+    await recordAudit({
+      treeId,
+      actorId: user.id,
+      action: "media.untagged",
+      targetType: "media",
+      targetId: mediaId,
+      summary: "Removed a person's tag from media",
+      metadata: { personId: removed[0].personId },
+    });
+  }
   revalidatePath(mediaPath(treeId, mediaId));
 }
 
@@ -232,19 +252,16 @@ export async function reprocessMediaAction(formData: FormData): Promise<void> {
 }
 
 async function markTextJobQueued(mediaId: string, section: "ocr" | "ai" | "faces"): Promise<void> {
-  const rows = await getDb()
-    .select({ metadata: mediaItems.metadata })
-    .from(mediaItems)
-    .where(eq(mediaItems.id, mediaId))
-    .limit(1);
-  const metadata = { ...(rows[0]?.metadata as Record<string, unknown>) };
-  metadata[section] = {
-    ...(metadata[section] as Record<string, unknown> | undefined),
-    status: "queued",
-    error: null,
-    updatedAt: new Date().toISOString(),
-  };
-  await getDb().update(mediaItems).set({ metadata }).where(eq(mediaItems.id, mediaId));
+  await getDb()
+    .update(mediaItems)
+    .set({
+      metadata: mergeMediaMetadata(section, {
+        status: "queued",
+        error: null,
+        updatedAt: new Date().toISOString(),
+      }),
+    })
+    .where(eq(mediaItems.id, mediaId));
 }
 
 /** Run/re-run OCR (editor+). */
@@ -363,11 +380,20 @@ export async function assignFacePersonAction(formData: FormData): Promise<void> 
 export async function removeFaceAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const faceId = String(formData.get("faceId") ?? "");
-  await requireMemberRole(treeId, "contributor");
+  const { user } = await requireMemberRole(treeId, "contributor");
 
   const face = await getFaceInTree(treeId, faceId);
   if (!face) return;
   await getDb().delete(mediaFaces).where(eq(mediaFaces.id, faceId));
+  await recordAudit({
+    treeId,
+    actorId: user.id,
+    action: "media.untagged",
+    targetType: "media",
+    targetId: face.mediaId,
+    summary: "Removed a face box from media",
+    metadata: { faceId },
+  });
   revalidatePath(mediaPath(treeId, face.mediaId));
 }
 

@@ -7,11 +7,8 @@ import type {
   ParsedGedcom,
 } from "./types";
 
-/**
- * Versions this parser targets. Lives here rather than in the barrel so
- * `parseGedcom` can check against it without an import cycle.
- */
-export const SUPPORTED_GEDCOM_VERSIONS = ["5.5", "5.5.1"] as const;
+/** Versions this parser targets. */
+const SUPPORTED_GEDCOM_VERSIONS = ["5.5", "5.5.1"] as const;
 
 /** GEDCOM line: LEVEL [XREF] TAG [VALUE]. Tags may be vendor extensions (_UID). */
 const LINE_PATTERN = /^(\d+)\s+(?:(@[^@]+@)\s+)?([A-Za-z0-9_]+)(?:\s(.*))?$/;

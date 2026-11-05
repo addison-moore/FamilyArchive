@@ -13,6 +13,9 @@ import { and, eq, inArray, isNull, or } from "drizzle-orm";
 
 import type { PersonRow } from "@/lib/people";
 
+/** A merge refused for a reason the editor can act on; its message is shown to them. */
+export class MergeError extends Error {}
+
 /** Which record's value survives, per field group. */
 export interface MergeFieldChoices {
   fullName: "survivor" | "other";
@@ -48,7 +51,7 @@ export async function mergePeople(
   choices: MergeFieldChoices,
   mergedBy: string,
 ): Promise<void> {
-  if (survivorId === otherId) throw new Error("Cannot merge a person into themselves");
+  if (survivorId === otherId) throw new MergeError("Cannot merge a person into themselves");
   const db = getDb();
 
   await db.transaction(async (tx) => {
@@ -66,7 +69,7 @@ export async function mergePeople(
       );
     const survivor = rows.find((p) => p.id === survivorId);
     const other = rows.find((p) => p.id === otherId);
-    if (!survivor || !other) throw new Error("Person not found in this archive");
+    if (!survivor || !other) throw new MergeError("Person not found in this archive");
 
     // 1. Scalar fields per choices.
     const birthSource: PersonRow = choices.birth === "other" ? other : survivor;

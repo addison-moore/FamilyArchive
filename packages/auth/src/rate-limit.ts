@@ -69,12 +69,12 @@ export async function consumeRateLimit(key: string, rule: RateLimitRule): Promis
     }
     if (count <= rule.limit) return ALLOWED;
     const ttl = await redis.ttl(namespaced);
-    return {
-      allowed: false,
-      // -1 (no expiry) and -2 (missing) should not happen after an INCR, but
-      // reporting the whole window is better than reporting "retry now".
-      retryAfterSeconds: ttl > 0 ? ttl : rule.windowSeconds,
-    };
+    if (ttl > 0) return { allowed: false, retryAfterSeconds: ttl };
+    // INCR and EXPIRE are two commands, so a failure between them leaves a
+    // counter that never expires: a permanent lockout, keyed on an email anyone
+    // can type. Arm the expiry now so the block still ends with the window.
+    await redis.expire(namespaced, rule.windowSeconds);
+    return { allowed: false, retryAfterSeconds: rule.windowSeconds };
   } catch {
     return ALLOWED;
   }
@@ -87,14 +87,6 @@ export async function resetRateLimit(key: string): Promise<void> {
   } catch {
     // Best effort: a stale counter expires on its own.
   }
-}
-
-/** Close the client so a worker or test run can exit cleanly. */
-export async function closeRateLimiter(): Promise<void> {
-  if (!client) return;
-  const closing = client;
-  client = undefined;
-  await closing.quit().catch(() => closing.disconnect());
 }
 
 /**

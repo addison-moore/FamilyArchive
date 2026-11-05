@@ -37,8 +37,9 @@ pnpm test:smoke
 This runs the core smoke spec first (it bootstraps the instance owner), then
 the permission-matrix and feature specs. The Mailpit override is optional —
 it captures outbound email so the password-reset spec can follow the emailed
-link; without it that one spec skips itself. To rerun just the permission
-checks on an already-used stack:
+link; without it that one spec skips itself. That spec empties the inbox it
+talks to, so set `MAILPIT_URL` when testing beside a Mailpit whose mail you want
+to keep. To rerun just the permission checks on an already-used stack:
 
 ```bash
 pnpm --filter @familyarchive/smoke-tests exec playwright test --project=permissions --no-deps

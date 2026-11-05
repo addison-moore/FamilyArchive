@@ -7,7 +7,7 @@ import { pipeline } from "node:stream/promises";
 import { promisify } from "node:util";
 
 import { getEnv } from "@familyarchive/config";
-import { getDb, mediaItems } from "@familyarchive/db";
+import { getDb, mediaItems, mergeMediaMetadata } from "@familyarchive/db";
 import {
   AI_QUEUE,
   isOcrEligible,
@@ -18,11 +18,13 @@ import {
   type TextJobStatus,
 } from "@familyarchive/shared";
 import { Worker, type ConnectionOptions, type Job } from "bullmq";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, or, sql } from "drizzle-orm";
 import type pino from "pino";
 
+import { splitForCleanup } from "./ai-chunks";
 import { aiConfig, type AiConfig } from "./ai-config";
 import { EXEC_LIMITS } from "./exec-limits";
+import { readableImagePath } from "./image-input";
 import { storageDriverFor } from "./storage";
 
 const execFileAsync = promisify(execFile);
@@ -33,22 +35,24 @@ async function setTextJobState(
   section: "ocr" | "ai",
   state: { status: TextJobStatus; error?: string | null; [key: string]: unknown },
 ): Promise<void> {
-  const db = getDb();
-  const rows = await db
-    .select({ metadata: mediaItems.metadata })
-    .from(mediaItems)
-    .where(eq(mediaItems.id, mediaId))
-    .limit(1);
-  const metadata = { ...(rows[0]?.metadata as Record<string, unknown>) };
-  metadata[section] = {
-    ...(metadata[section] as Record<string, unknown> | undefined),
-    ...state,
-    updatedAt: new Date().toISOString(),
-  };
-  await db
+  await getDb()
     .update(mediaItems)
-    .set({ metadata, updatedAt: new Date() })
+    .set({
+      metadata: mergeMediaMetadata(section, { ...state, updatedAt: new Date().toISOString() }),
+      updatedAt: new Date(),
+    })
     .where(eq(mediaItems.id, mediaId));
+}
+
+/** Pages in the whole document, so a capped OCR run can say what it left out. */
+async function pdfPageCount(pdfPath: string): Promise<number | null> {
+  try {
+    const { stdout } = await execFileAsync("pdfinfo", [pdfPath], EXEC_LIMITS);
+    const match = stdout.match(/^Pages:\s+(\d+)/m);
+    return match ? Number(match[1]) : null;
+  } catch {
+    return null;
+  }
 }
 
 async function tesseract(imagePath: string, languages: string): Promise<string> {
@@ -60,7 +64,7 @@ async function tesseract(imagePath: string, languages: string): Promise<string> 
   return stdout.trim();
 }
 
-/** OCR job: Tesseract over the original image or 300 dpi PDF pages. */
+/** OCR job: Tesseract over the original image or 300 dpi PDF pages (first MAX_PDF_PREVIEW_PAGES). */
 async function runOcr(job: Job<OcrJob>, logger: pino.Logger): Promise<void> {
   const { mediaId, treeId } = job.data;
   const db = getDb();
@@ -88,7 +92,11 @@ async function runOcr(job: Job<OcrJob>, logger: pino.Logger): Promise<void> {
 
     let text: string;
     let pages = 1;
-    if (media.mediaType === "pdf") {
+    let totalPages: number | null = 1;
+    // By MIME type: a PDF filed as a document is still a PDF, and handing Tesseract
+    // the raw file failed every time.
+    if (media.mimeType === "application/pdf") {
+      totalPages = await pdfPageCount(sourcePath);
       // Higher DPI than the visual previews — Tesseract needs ~300 dpi.
       await execFileAsync(
         "pdftoppm",
@@ -117,7 +125,10 @@ async function runOcr(job: Job<OcrJob>, logger: pino.Logger): Promise<void> {
       }
       text = parts.join("\n\n");
     } else {
-      text = await tesseract(sourcePath, languages);
+      text = await tesseract(
+        await readableImagePath(sourcePath, media.mimeType, workDir),
+        languages,
+      );
     }
 
     await db
@@ -130,6 +141,7 @@ async function runOcr(job: Job<OcrJob>, logger: pino.Logger): Promise<void> {
       engine: "tesseract",
       languages,
       pages,
+      totalPages,
       characters: text.length,
     });
     logger.info({ mediaId, pages, characters: text.length }, "ocr complete");
@@ -144,8 +156,18 @@ const CLEANUP_PROMPT =
   "original wording — do not modernize spelling of names or places, do not summarize, do not " +
   "add commentary. Return only the corrected text.";
 
+/** A provider that never answers must not hold the AI worker forever. */
+const PROVIDER_TIMEOUT_MS = 5 * 60 * 1000;
+
+/** A reply that stopped early is a shortened transcription, so it is a failure. */
+function assertComplete(provider: string, stopReason: string | null | undefined, stops: string[]) {
+  if (stopReason && stops.includes(stopReason)) {
+    throw new Error(`${provider} stopped before finishing (${stopReason})`);
+  }
+}
+
 async function callProvider(config: AiConfig, text: string): Promise<string> {
-  const input = text.slice(0, 30_000);
+  const content = `${CLEANUP_PROMPT}\n\n${text}`;
   if (config.provider === "anthropic") {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -156,15 +178,22 @@ async function callProvider(config: AiConfig, text: string): Promise<string> {
       },
       body: JSON.stringify({
         model: config.model,
-        max_tokens: 8192,
-        messages: [{ role: "user", content: `${CLEANUP_PROMPT}\n\n${input}` }],
+        // Generous on purpose: on current models thinking counts toward this cap.
+        max_tokens: 16_000,
+        messages: [{ role: "user", content }],
       }),
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
     });
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
       throw new Error(`Anthropic API error ${response.status}: ${detail.slice(0, 300)}`);
     }
-    const data = (await response.json()) as { content?: { type: string; text?: string }[] };
+    const data = (await response.json()) as {
+      content?: { type: string; text?: string }[];
+      stop_reason?: string | null;
+    };
+    assertComplete("Anthropic", data.stop_reason, ["max_tokens", "refusal"]);
+    // Found by type: a response can open with thinking blocks.
     const out = data.content?.find((c) => c.type === "text")?.text;
     if (!out) throw new Error("Anthropic API returned no text");
     return out;
@@ -172,16 +201,17 @@ async function callProvider(config: AiConfig, text: string): Promise<string> {
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${config.apiKey}` },
-    body: JSON.stringify({
-      model: config.model,
-      messages: [{ role: "user", content: `${CLEANUP_PROMPT}\n\n${input}` }],
-    }),
+    body: JSON.stringify({ model: config.model, messages: [{ role: "user", content }] }),
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(`OpenAI API error ${response.status}: ${detail.slice(0, 300)}`);
   }
-  const data = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+  const data = (await response.json()) as {
+    choices?: { message?: { content?: string }; finish_reason?: string | null }[];
+  };
+  assertComplete("OpenAI", data.choices?.[0]?.finish_reason, ["length", "content_filter"]);
   const out = data.choices?.[0]?.message?.content;
   if (!out) throw new Error("OpenAI API returned no text");
   return out;
@@ -207,16 +237,31 @@ async function runAiCleanup(job: Job<AiCleanupJob>, logger: pino.Logger): Promis
   }
 
   await setTextJobState(mediaId, "ai", { status: "running", error: null });
-  const cleaned = await callProvider(config, media.ocrText);
-  await db
+  const chunks = splitForCleanup(media.ocrText);
+  const cleaned: string[] = [];
+  for (const [index, chunk] of chunks.entries()) {
+    cleaned.push((await callProvider(config, chunk)).trim());
+    await job.updateProgress(Math.round(((index + 1) / chunks.length) * 100));
+  }
+  // Checked again in the write itself: this job can run for minutes, and someone
+  // may have saved a transcription by hand in the meantime.
+  const written = await db
     .update(mediaItems)
-    .set({ transcriptionText: cleaned, updatedAt: new Date() })
-    .where(eq(mediaItems.id, mediaId));
+    .set({ transcriptionText: cleaned.join("\n\n"), updatedAt: new Date() })
+    .where(
+      and(
+        eq(mediaItems.id, mediaId),
+        or(isNull(mediaItems.transcriptionText), sql`trim(${mediaItems.transcriptionText}) = ''`),
+      ),
+    )
+    .returning({ id: mediaItems.id });
   await setTextJobState(mediaId, "ai", {
     status: "done",
     error: null,
     provider: config.provider,
     model: config.model,
+    chunks: chunks.length,
+    ...(written.length === 0 ? { discarded: "a transcription was saved while this ran" } : {}),
   });
   logger.info({ mediaId, provider: config.provider }, "ai cleanup complete");
 }

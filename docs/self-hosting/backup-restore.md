@@ -42,6 +42,7 @@ docker compose exec -T postgres pg_restore -U familyarchive -d familyarchive \
 
 docker compose up -d                      # start everything else
 docker compose cp ./media-backup-YYYY-MM-DD/. app:/data/media   # media back in place
+docker compose exec -u 0 app chown -R app:app /data/media       # cp leaves them root's
 ```
 
 Log in with your existing account — users, archives, and media metadata come

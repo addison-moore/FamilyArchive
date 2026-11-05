@@ -39,7 +39,7 @@ export type CollapseDirection = "up" | "down";
 /** Trees larger than this start with distant generations collapsed. */
 export const AUTO_COLLAPSE_THRESHOLD = 60;
 /** How many generations stay open in each direction when auto-collapsing. */
-export const AUTO_COLLAPSE_GENERATIONS = 3;
+const AUTO_COLLAPSE_GENERATIONS = 3;
 
 export interface TreeAdjacency {
   parentsOf: Map<string, string[]>;

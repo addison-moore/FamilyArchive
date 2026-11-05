@@ -1,9 +1,9 @@
-import { getEnv } from "@familyarchive/config";
+import { getEnv, smtpConfigured } from "@familyarchive/config";
 import { getDb, getInstanceUsage, setUsageNotifiedLevel, users } from "@familyarchive/db";
-import { renderBrandedEmail } from "@familyarchive/shared";
+import { formatBytes, renderBrandedEmail } from "@familyarchive/shared";
 import { eq } from "drizzle-orm";
 
-import { enqueueEmail, smtpConfigured } from "@/lib/email";
+import { enqueueEmail } from "@/lib/jobs";
 
 /**
  * Shown wherever the quota blocks an upload. It deliberately does NOT suggest
@@ -44,12 +44,6 @@ export async function quotaState(): Promise<QuotaState> {
   };
 }
 
-export function formatStorage(bytes: number): string {
-  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GB`;
-  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-  return `${Math.max(0, Math.round(bytes / 1024))} KB`;
-}
-
 /**
  * Email instance owners when usage crosses 90% or 100% of the quota — once per
  * crossing (tracked on the usage row, reset when usage drops back under 90%).
@@ -83,10 +77,10 @@ export async function maybeNotifyOwners(): Promise<void> {
     await enqueueEmail({
       to: owner.email,
       subject: heading,
-      text: `${body}\n\nCurrently used: ${formatStorage(state.usedBytes)}.`,
+      text: `${body}\n\nCurrently used: ${formatBytes(state.usedBytes)}.`,
       html: renderBrandedEmail({
         heading,
-        bodyLines: [body, `Currently used: ${formatStorage(state.usedBytes)}.`],
+        bodyLines: [body, `Currently used: ${formatBytes(state.usedBytes)}.`],
         cta: { label: "Open FamilyArchive", url: env.APP_URL },
       }),
     });

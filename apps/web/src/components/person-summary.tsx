@@ -3,7 +3,7 @@ import type { TreeRole } from "@familyarchive/shared";
 import Link from "next/link";
 
 import { buttonClass, subtleButtonClass } from "@/components/form";
-import type { PersonRow, RelationshipGraph } from "@/lib/people";
+import type { PersonOption, PersonRow, RelationshipGraph } from "@/lib/people";
 
 export function PersonAvatar({
   name,
@@ -42,7 +42,7 @@ export function PersonAvatar({
   );
 }
 
-export function personLifespan(person: PersonRow): string | null {
+export function personLifespan(person: PersonOption): string | null {
   return formatLifespan(
     {
       year: person.birthYear,

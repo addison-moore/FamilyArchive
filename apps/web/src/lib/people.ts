@@ -8,7 +8,6 @@ import {
 import { and, asc, count, eq, ilike, inArray, isNull, or, type SQL } from "drizzle-orm";
 
 export type PersonRow = typeof people.$inferSelect;
-export type PersonNameRow = typeof personNames.$inferSelect;
 
 /** A person's birth date as a number that sorts chronologically (see dateSortKey). */
 export function personBirthSortKey(
@@ -17,19 +16,41 @@ export function personBirthSortKey(
   return dateSortKey({ year: person.birthYear, month: person.birthMonth, day: person.birthDay });
 }
 
-/** Not-deleted people in a tree, optionally filtered by name, ordered by name. */
-export async function listPeople(treeId: string, query?: string): Promise<PersonRow[]> {
-  const conditions = [eq(people.treeId, treeId), isNull(people.deletedAt)];
-  if (query) conditions.push(ilike(people.fullName, `%${query}%`));
-  return getDb()
-    .select()
-    .from(people)
-    .where(and(...conditions))
-    .orderBy(asc(people.fullName));
+/** Escape LIKE wildcards in user input and match it anywhere in the value. */
+export function likePattern(query: string): string {
+  return `%${query.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
 }
 
+export const PERSON_OPTION_COLUMNS = {
+  id: people.id,
+  fullName: people.fullName,
+  birthYear: people.birthYear,
+  birthMonth: people.birthMonth,
+  birthDay: people.birthDay,
+  birthApprox: people.birthApprox,
+  deathYear: people.deathYear,
+  deathMonth: people.deathMonth,
+  deathDay: people.deathDay,
+  deathApprox: people.deathApprox,
+};
+
+/**
+ * Everyone in a tree, by name, with just what a person picker shows. Pickers appear
+ * on most pages, and selecting whole rows carried every biography and preserved raw
+ * GEDCOM record along with them on each page load.
+ */
+export async function listPeopleOptions(treeId: string) {
+  return getDb()
+    .select(PERSON_OPTION_COLUMNS)
+    .from(people)
+    .where(and(eq(people.treeId, treeId), isNull(people.deletedAt)))
+    .orderBy(asc(people.fullName), asc(people.id));
+}
+
+export type PersonOption = Awaited<ReturnType<typeof listPeopleOptions>>[number];
+
 /** Filters shared by the People list's count and page queries. */
-export interface PeopleFilter {
+interface PeopleFilter {
   /** Case-insensitive substring match on the full name. */
   query?: string;
   /** Restrict to a branch view's person ids; null/undefined means the whole tree. */
@@ -38,7 +59,7 @@ export interface PeopleFilter {
 
 function peopleFilterConditions(treeId: string, filter: PeopleFilter): SQL[] {
   const conditions: SQL[] = [eq(people.treeId, treeId), isNull(people.deletedAt)];
-  if (filter.query) conditions.push(ilike(people.fullName, `%${filter.query}%`));
+  if (filter.query) conditions.push(ilike(people.fullName, likePattern(filter.query)));
   if (filter.ids) conditions.push(inArray(people.id, [...filter.ids]));
   return conditions;
 }
@@ -81,7 +102,7 @@ export async function getPerson(treeId: string, personId: string): Promise<Perso
   return rows[0] ?? null;
 }
 
-export async function getPersonNames(personId: string): Promise<PersonNameRow[]> {
+export async function getPersonNames(personId: string) {
   return getDb()
     .select()
     .from(personNames)

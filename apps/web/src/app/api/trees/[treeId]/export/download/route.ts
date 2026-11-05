@@ -2,6 +2,7 @@ import { Readable } from "node:stream";
 
 import { AuthorizationError, requireMemberRole } from "@familyarchive/auth";
 import { getDb, trees } from "@familyarchive/db";
+import { isMissingObject } from "@familyarchive/media";
 import { eq } from "drizzle-orm";
 
 import { recordAudit } from "@/lib/audit";
@@ -37,7 +38,15 @@ export async function GET(
   const [tree] = await getDb().select().from(trees).where(eq(trees.id, treeId));
   const baseName = (tree?.name ?? "archive").replace(/[^\w-]+/g, "-").replace(/^-+|-+$/g, "");
   const driver = getStorageDriverFor(row.storageDriver === "s3" ? "s3" : "local");
-  const object = await driver.getStream(row.storageKey);
+  let object;
+  try {
+    object = await driver.getStream(row.storageKey);
+  } catch (error) {
+    if (isMissingObject(error)) {
+      return Response.json({ error: "This export is no longer available" }, { status: 410 });
+    }
+    throw error;
+  }
 
   await recordAudit({
     treeId,

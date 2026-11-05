@@ -13,8 +13,29 @@ import { getDb, treeMemberships } from "@familyarchive/db";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { getValidInvite } from "@/lib/invites";
+import { recordAudit } from "@/lib/audit";
+import { getValidInvite, type InviteRow } from "@/lib/invites";
 import { createUser, registrationSchema } from "@/lib/users";
+
+/** Grant the invite's role. An existing member keeps the role they already hold. */
+async function joinArchive(invite: InviteRow, userId: string): Promise<void> {
+  const joined = await getDb()
+    .insert(treeMemberships)
+    .values({ treeId: invite.treeId, userId, role: invite.role })
+    .onConflictDoNothing()
+    .returning({ id: treeMemberships.id });
+  if (joined[0]) {
+    await recordAudit({
+      treeId: invite.treeId,
+      actorId: userId,
+      action: "membership.joined",
+      targetType: "membership",
+      targetId: joined[0].id,
+      summary: `Joined as ${invite.role} through an invite link`,
+      metadata: { inviteId: invite.id },
+    });
+  }
+}
 
 /** Logged-in user accepts an invite. */
 export async function acceptInviteAction(formData: FormData): Promise<void> {
@@ -23,10 +44,7 @@ export async function acceptInviteAction(formData: FormData): Promise<void> {
   const invite = await getValidInvite(token);
   if (!invite) redirect(`/invite/${encodeURIComponent(token)}`);
 
-  await getDb()
-    .insert(treeMemberships)
-    .values({ treeId: invite.treeId, userId: user.id, role: invite.role })
-    .onConflictDoNothing();
+  await joinArchive(invite, user.id);
   redirect(`/trees/${invite.treeId}`);
 }
 
@@ -65,10 +83,7 @@ export async function registerViaInviteAction(formData: FormData): Promise<void>
     redirect(`${invitePath}?error=${encodeURIComponent(message)}`);
   }
 
-  await getDb()
-    .insert(treeMemberships)
-    .values({ treeId: invite.treeId, userId, role: invite.role })
-    .onConflictDoNothing();
+  await joinArchive(invite, userId);
 
   try {
     await signIn("credentials", {

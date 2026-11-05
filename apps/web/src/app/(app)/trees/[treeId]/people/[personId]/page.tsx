@@ -33,8 +33,8 @@ import {
   getPersonNames,
   getPlaceName,
   getRelationshipGraph,
-  listPeople,
-  type PersonRow,
+  listPeopleOptions,
+  type PersonOption,
   type RelatedPerson,
 } from "@/lib/people";
 
@@ -103,7 +103,7 @@ function AddRelationshipForm({
   direction: "parent" | "child" | "partner";
   label: string;
   types: readonly RelationshipType[];
-  candidates: PersonRow[];
+  candidates: PersonOption[];
 }) {
   return (
     <details className={disclosureClass}>
@@ -153,7 +153,7 @@ export default async function PersonProfilePage({
   searchParams: Promise<{ error?: string; dupWarning?: string; merged?: string }>;
 }) {
   const { treeId, personId } = await params;
-  const { user, role } = await requireTreeRole(treeId, "viewer");
+  const { role, isMember } = await requireTreeRole(treeId, "viewer");
   const { error, dupWarning, merged } = await searchParams;
 
   const person = await getPerson(treeId, personId);
@@ -177,7 +177,7 @@ export default async function PersonProfilePage({
       getPersonNames(personId),
       getPlaceName(person.birthPlaceId),
       getPlaceName(person.deathPlaceId),
-      listPeople(treeId),
+      listPeopleOptions(treeId),
       listMediaForPerson(treeId, personId),
       profilePhotoUrl(treeId, person.profileMediaId),
     ]);
@@ -420,7 +420,7 @@ export default async function PersonProfilePage({
         )}
       </Card>
 
-      {user && !canEdit && (
+      {isMember && !canEdit && (
         <SuggestForm
           treeId={treeId}
           targetType="person"

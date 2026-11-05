@@ -23,7 +23,7 @@ import { ScopeToggle } from "@/components/scope-toggle";
 import { Alert, PageHeader, SegmentedLinks } from "@/components/ui";
 import { resolveView } from "@/lib/branch";
 import { countMedia, listMedia, thumbUrls } from "@/lib/media";
-import { listPeople } from "@/lib/people";
+import { listPeopleOptions } from "@/lib/people";
 
 /** Media library grid: all/my-uploads, type, tag, person filters. */
 export default async function MediaPage({
@@ -77,7 +77,7 @@ export default async function MediaPage({
   const [mediaList, treeTags, peopleList] = await Promise.all([
     listMedia(treeId, filters, { limit: size, offset: (page - 1) * size }),
     getDb().select().from(tags).where(eq(tags.treeId, treeId)).orderBy(asc(tags.name)),
-    listPeople(treeId),
+    listPeopleOptions(treeId),
   ]);
 
   const thumbs = await thumbUrls(
@@ -119,13 +119,15 @@ export default async function MediaPage({
       )}
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <SegmentedLinks
-          label="Whose uploads to show"
-          items={[
-            { href: viewQuery(false), label: "All media", active: !mine },
-            { href: viewQuery(true), label: "My uploads", active: Boolean(mine) },
-          ]}
-        />
+        {user && (
+          <SegmentedLinks
+            label="Whose uploads to show"
+            items={[
+              { href: viewQuery(false), label: "All media", active: !mine },
+              { href: viewQuery(true), label: "My uploads", active: Boolean(mine) },
+            ]}
+          />
+        )}
         {user && (
           <ScopeToggle
             basePath={`/trees/${treeId}/media`}

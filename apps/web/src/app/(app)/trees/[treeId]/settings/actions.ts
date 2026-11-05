@@ -1,7 +1,14 @@
 "use server";
 
 import { requireOwner, requireMemberRole } from "@familyarchive/auth";
-import { getDb, invites, mediaItems, treeMemberships, trees } from "@familyarchive/db";
+import {
+  archiveExports,
+  getDb,
+  invites,
+  mediaItems,
+  treeMemberships,
+  trees,
+} from "@familyarchive/db";
 import { isTreeRole } from "@familyarchive/shared";
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -10,11 +17,10 @@ import { z } from "zod";
 
 import { recordAudit } from "@/lib/audit";
 import { requestArchiveExport } from "@/lib/export";
-import { enqueueEmail, smtpConfigured } from "@/lib/email";
 import { renderBrandedEmail } from "@familyarchive/shared";
 import { DEFAULT_INVITE_EXPIRY_DAYS, generateInviteToken } from "@/lib/invites";
-import { enqueueTreeCleanup } from "@/lib/jobs";
-import { getEnv } from "@familyarchive/config";
+import { enqueueEmail, enqueueTreeCleanup } from "@/lib/jobs";
+import { getEnv, smtpConfigured } from "@familyarchive/config";
 
 function settingsPath(treeId: string): string {
   return `/trees/${treeId}/settings`;
@@ -58,10 +64,10 @@ const LAST_ADMIN_MESSAGE =
  * page, invites, public mode and suggestion review are all admin-gated, so only
  * the instance Owner could undo it.
  *
- * Expressed as a WHERE clause rather than a read-then-write so the check and
- * the mutation are one statement — atomic against two concurrent demotions,
- * and no extra round trips on the common path where the target is not an admin.
- * The caller treats "no rows affected" as blocked.
+ * Expressed as a WHERE clause so no separate read can go stale; the caller treats
+ * "no rows affected" as blocked. One statement alone is not enough, though: two
+ * demotions running together each count the other's target as still an admin, and
+ * both succeed. Callers therefore run it after `lockAdmins`, in one transaction.
  */
 function notTheLastAdmin(treeId: string) {
   return sql`(
@@ -69,6 +75,11 @@ function notTheLastAdmin(treeId: string) {
     or (select count(*) from ${treeMemberships} others
         where others.tree_id = ${treeId} and others.role = 'admin') > 1
   )`;
+}
+
+/** Serializes changes to who is an admin, so `notTheLastAdmin` counts committed state. */
+function lockAdmins(treeId: string) {
+  return sql`select 1 from ${treeMemberships} where tree_id = ${treeId} and role = 'admin' for update`;
 }
 
 /**
@@ -94,18 +105,21 @@ export async function changeMemberRoleAction(formData: FormData): Promise<void> 
   if (!isTreeRole(role)) return;
 
   // treeId in the filter keeps the mutation tree-scoped.
-  const updated = await getDb()
-    .update(treeMemberships)
-    .set({ role, updatedAt: new Date() })
-    .where(
-      and(
-        eq(treeMemberships.id, membershipId),
-        eq(treeMemberships.treeId, treeId),
-        // Promoting to admin can never remove the last one.
-        ...(role === "admin" ? [] : [notTheLastAdmin(treeId)]),
-      ),
-    )
-    .returning({ id: treeMemberships.id });
+  const updated = await getDb().transaction(async (tx) => {
+    await tx.execute(lockAdmins(treeId));
+    return tx
+      .update(treeMemberships)
+      .set({ role, updatedAt: new Date() })
+      .where(
+        and(
+          eq(treeMemberships.id, membershipId),
+          eq(treeMemberships.treeId, treeId),
+          // Promoting to admin can never remove the last one.
+          ...(role === "admin" ? [] : [notTheLastAdmin(treeId)]),
+        ),
+      )
+      .returning({ id: treeMemberships.id });
+  });
   if (updated.length === 0) {
     const message = (await membershipStillExists(treeId, membershipId))
       ? LAST_ADMIN_MESSAGE
@@ -128,16 +142,19 @@ export async function removeMemberAction(formData: FormData): Promise<void> {
   const membershipId = String(formData.get("membershipId") ?? "");
   const { user } = await requireMemberRole(treeId, "admin");
 
-  const removed = await getDb()
-    .delete(treeMemberships)
-    .where(
-      and(
-        eq(treeMemberships.id, membershipId),
-        eq(treeMemberships.treeId, treeId),
-        notTheLastAdmin(treeId),
-      ),
-    )
-    .returning({ id: treeMemberships.id });
+  const removed = await getDb().transaction(async (tx) => {
+    await tx.execute(lockAdmins(treeId));
+    return tx
+      .delete(treeMemberships)
+      .where(
+        and(
+          eq(treeMemberships.id, membershipId),
+          eq(treeMemberships.treeId, treeId),
+          notTheLastAdmin(treeId),
+        ),
+      )
+      .returning({ id: treeMemberships.id });
+  });
   if (removed.length === 0) {
     const message = (await membershipStillExists(treeId, membershipId))
       ? LAST_ADMIN_MESSAGE
@@ -199,6 +216,8 @@ export async function createInviteAction(formData: FormData): Promise<void> {
       const treeName = treeRows[0]?.name ?? "a family archive";
       const inviteUrl = `${getEnv().APP_URL}/invite/${token}`;
       const inviter = user.name ?? user.email;
+      // Best-effort: the invite exists either way, and the page shows its link.
+      emailStatus = "&emailed=1";
       await enqueueEmail({
         to: email,
         subject: `You're invited to join "${treeName}" on FamilyArchive`,
@@ -215,8 +234,10 @@ export async function createInviteAction(formData: FormData): Promise<void> {
           cta: { label: "Join the archive", url: inviteUrl },
           footerNote: `This invite expires on ${expiresAt.toDateString()}.`,
         }),
+      }).catch((error) => {
+        console.error("invite: could not queue the email:", error);
+        emailStatus = "&smtp=0";
       });
-      emailStatus = "&emailed=1";
     } else {
       emailStatus = "&smtp=0";
     }
@@ -300,21 +321,28 @@ export async function deleteTreeAction(formData: FormData): Promise<void> {
 
   // Which drivers hold this archive's bytes has to be read before the delete:
   // media/derivative/export rows cascade away with the tree, taking the only
-  // record of every storage key with them. Enqueue only after the delete
-  // succeeds — sweeping storage for an archive that still exists is worse than
-  // leaving bytes behind.
-  const drivers = await getDb()
-    .selectDistinct({ storageDriver: mediaItems.storageDriver })
-    .from(mediaItems)
-    .where(eq(mediaItems.treeId, treeId));
+  // record of every storage key with them. Exports count too: an export bundle
+  // holds the whole archive, and one whose archive had no media used to stay on
+  // disk forever. Enqueue only after the delete succeeds — sweeping storage for
+  // an archive that still exists is worse than leaving bytes behind.
+  const [mediaDrivers, exportDrivers] = await Promise.all([
+    getDb()
+      .selectDistinct({ storageDriver: mediaItems.storageDriver })
+      .from(mediaItems)
+      .where(eq(mediaItems.treeId, treeId)),
+    getDb()
+      .selectDistinct({ storageDriver: archiveExports.storageDriver })
+      .from(archiveExports)
+      .where(eq(archiveExports.treeId, treeId)),
+  ]);
+  const drivers = new Set(
+    [...mediaDrivers, ...exportDrivers].map((row) => (row.storageDriver === "s3" ? "s3" : "local")),
+  );
 
   await getDb().delete(trees).where(eq(trees.id, treeId));
 
-  for (const { storageDriver } of drivers) {
-    await enqueueTreeCleanup({
-      treeId,
-      storageDriver: storageDriver === "s3" ? "s3" : "local",
-    });
+  for (const storageDriver of drivers) {
+    await enqueueTreeCleanup({ treeId, storageDriver });
   }
   redirect("/trees");
 }

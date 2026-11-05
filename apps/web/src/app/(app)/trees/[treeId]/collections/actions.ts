@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { recordAudit } from "@/lib/audit";
 import { getCollection } from "@/lib/collections";
 import { getMediaItem } from "@/lib/media";
 
@@ -85,11 +86,22 @@ export async function updateCollectionAction(formData: FormData): Promise<void> 
 export async function deleteCollectionAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const collectionId = String(formData.get("collectionId") ?? "");
-  await requireMemberRole(treeId, "editor");
+  const { user } = await requireMemberRole(treeId, "editor");
 
-  await getDb()
+  const deleted = await getDb()
     .delete(collections)
-    .where(and(eq(collections.id, collectionId), eq(collections.treeId, treeId)));
+    .where(and(eq(collections.id, collectionId), eq(collections.treeId, treeId)))
+    .returning({ name: collections.name });
+  if (deleted[0]) {
+    await recordAudit({
+      treeId,
+      actorId: user.id,
+      action: "collection.deleted",
+      targetType: "collection",
+      targetId: collectionId,
+      summary: `Deleted collection ${deleted[0].name}`,
+    });
+  }
   redirect(`/trees/${treeId}/collections`);
 }
 
@@ -146,6 +158,11 @@ export async function removeMediaFromCollectionAction(formData: FormData): Promi
     .where(
       and(eq(collectionMedia.collectionId, collectionId), eq(collectionMedia.mediaId, mediaId)),
     );
+  // A cover has to be an image in the collection, so leaving the collection ends it.
+  await getDb()
+    .update(collections)
+    .set({ coverMediaId: null, updatedAt: new Date() })
+    .where(and(eq(collections.id, collectionId), eq(collections.coverMediaId, mediaId)));
   revalidatePath(`/trees/${treeId}/media/${mediaId}`);
   revalidatePath(`/trees/${treeId}/collections/${collectionId}`);
 }

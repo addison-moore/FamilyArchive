@@ -1,8 +1,8 @@
 name: Release images
 
 # Builds and publishes versioned, multi-arch images to GHCR when a version tag
-# is pushed. Images are always pinned by version — no `latest` tag, ever
-# (partners and hosted fleets must pin releases deliberately).
+# is pushed. Images are always pinned by version — no `latest` tag, ever, so an
+# upgrade is always something an instance's operator chose to do.
 
 on:
   push:
@@ -24,20 +24,20 @@ jobs:
           - app: worker
             dockerfile: docker/worker.Dockerfile
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository_owner }}/familyarchive-${{ matrix.app }}
           # Semver tags only — deliberately no `latest`.
@@ -48,7 +48,7 @@ jobs:
             type=semver,pattern={{major}}
             type=sha
 
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           file: ${{ matrix.dockerfile }}
@@ -70,7 +70,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Render self-hosting artifacts
         run: |
@@ -84,7 +84,7 @@ jobs:
           cp install.sh dist/install.sh
           (cd dist && sha256sum docker-compose.yml example.env install.sh > checksums.txt)
 
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
           # Semver prereleases (v1.2.0-rc.1) must not become the release that

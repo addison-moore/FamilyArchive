@@ -49,7 +49,7 @@ export default async function TreePage({
   }>;
 }) {
   const { treeId } = await params;
-  const { user, role } = await requireTreeRole(treeId, "viewer");
+  const { user, role, isMember } = await requireTreeRole(treeId, "viewer");
   const { selected, mode: modeRaw, error, imported, people, rels, warn } = await searchParams;
   const mode: TreeViewMode = isTreeViewMode(modeRaw) ? modeRaw : "both";
 
@@ -163,7 +163,7 @@ export default async function TreePage({
           />
         }
         actions={
-          user && (
+          isMember && (
             <TreeNodeActions
               treeId={treeId}
               personId={selectedPerson.id}

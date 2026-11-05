@@ -1,12 +1,13 @@
 import { requireTreeRole } from "@familyarchive/auth";
 import { getDb, mediaPeople, mediaTags, people, tags, users } from "@familyarchive/db";
 import {
+  formatBytes,
   formatDateParts,
   isBrowserRenderableImage,
   isImageMime,
   isOcrEligible,
   MEDIA_TYPE_LABELS,
-  MEDIA_TYPES,
+  mediaTypesForMime,
   treeRoleAtLeast,
 } from "@familyarchive/shared";
 import { and, eq, isNull } from "drizzle-orm";
@@ -44,7 +45,7 @@ import {
   listDerivatives,
   mediaUrl,
 } from "@/lib/media";
-import { getPlaceName, listPeople } from "@/lib/people";
+import { getPlaceName, listPeopleOptions } from "@/lib/people";
 
 import { aiConfigured } from "@/lib/jobs";
 
@@ -75,12 +76,11 @@ const chipRemoveClass =
   "flex size-6 items-center justify-center rounded-full text-archive-700 " +
   "hover:bg-danger-soft hover:text-danger";
 
-function formatBytes(bytes: number): string {
-  if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
-  if (bytes >= 1024 * 1024) return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
-  if (bytes >= 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${bytes} B`;
-}
+/**
+ * Past this an item still "preparing" has probably lost its job (Valkey down at
+ * upload, or restarted without its data), and without a retry it would stay that way.
+ */
+const STALLED_PROCESSING_MS = 15 * 60 * 1000;
 
 export default async function MediaDetailPage({
   params,
@@ -90,7 +90,7 @@ export default async function MediaDetailPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { treeId, mediaId } = await params;
-  const { user, role } = await requireTreeRole(treeId, "viewer");
+  const { user, role, isMember } = await requireTreeRole(treeId, "viewer");
   const { error } = await searchParams;
 
   const media = await getMediaItem(treeId, mediaId);
@@ -121,11 +121,13 @@ export default async function MediaDetailPage({
           .limit(1)
       : Promise.resolve([]),
     getPlaceName(media.placeId),
-    listPeople(treeId),
+    listPeopleOptions(treeId),
   ]);
   const derivatives = await listDerivatives(mediaId);
   const { prevId, nextId } = await adjacentMedia(treeId, media);
   const pdfPages = derivatives.filter((d) => d.kind === "pdf_page");
+  const videoThumb = derivatives.find((d) => d.kind === "video_thumb");
+  const thumb = derivatives.find((d) => d.kind === "thumb");
   const [memberOf, allCollections] = await Promise.all([
     collectionsForMedia(treeId, mediaId),
     listCollections(treeId),
@@ -134,11 +136,19 @@ export default async function MediaDetailPage({
   const faces = isImageMime(media.mimeType) ? await listFaces(mediaId) : [];
   const meta = media.metadata as {
     processing?: { error?: string | null };
-    ocr?: { status?: string; error?: string | null; pages?: number };
+    ocr?: { status?: string; error?: string | null; pages?: number; totalPages?: number | null };
     ai?: { status?: string; error?: string | null; provider?: string };
     faces?: { status?: string; error?: string | null; count?: number };
   };
   const processingError = meta.processing?.error ?? null;
+  const processingStalled =
+    (media.processingStatus === "pending" ||
+      media.processingStatus === "processing" ||
+      media.processingStatus === "retrying") &&
+    Date.now() - media.updatedAt.getTime() > STALLED_PROCESSING_MS;
+  const ocrPages = meta.ocr?.pages ?? 0;
+  const ocrTotalPages = meta.ocr?.totalPages ?? 0;
+  const typeOptions = [...new Set([...mediaTypesForMime(media.mimeType), media.mediaType])];
   const showText = isOcrEligible(media.mediaType);
   const aiAvailable = aiConfigured();
 
@@ -181,15 +191,30 @@ export default async function MediaDetailPage({
               addAction={addFaceBoxAction}
               hiddenFields={{ treeId, mediaId }}
             />
-          ) : media.mediaType === "video" ? (
-            <video controls src={url} className="max-h-[70vh] w-full" />
-          ) : media.mediaType === "audio" ? (
+          ) : media.mimeType.startsWith("video/") ? (
+            <video
+              controls
+              preload="metadata"
+              src={url}
+              poster={videoThumb ? derivativeUrl(treeId, mediaId, videoThumb.id) : undefined}
+              className="max-h-[70vh] w-full"
+            />
+          ) : media.mimeType.startsWith("audio/") ? (
             <div className="w-full px-6 py-10">
               <audio controls src={url} className="w-full" />
             </div>
           ) : (
             <div className="py-14 text-center">
-              <div className="text-5xl">📄</div>
+              {thumb ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={derivativeUrl(treeId, mediaId, thumb.id)}
+                  alt={media.title ?? media.originalFilename}
+                  className="mx-auto max-h-[60vh] rounded"
+                />
+              ) : (
+                <div className="text-5xl">📄</div>
+              )}
               <a
                 href={url}
                 target="_blank"
@@ -274,8 +299,12 @@ export default async function MediaDetailPage({
                 <div>
                   <dt className="inline font-medium">Added: </dt>
                   <dd className="inline text-archive-700">
-                    by {uploaderRows[0]?.name ?? uploaderRows[0]?.email ?? "unknown"} on{" "}
-                    {media.createdAt.toLocaleDateString("en-US", { dateStyle: "medium" })}
+                    {/* An address is for fellow members, not visitors to a public archive. */}
+                    by{" "}
+                    {uploaderRows[0]?.name ??
+                      (isMember ? uploaderRows[0]?.email : null) ??
+                      "unknown"}{" "}
+                    on {media.createdAt.toLocaleDateString("en-US", { dateStyle: "medium" })}
                   </dd>
                 </div>
                 <div>
@@ -426,7 +455,7 @@ export default async function MediaDetailPage({
                   </Field>
                   <Field label="Type">
                     <select name="mediaType" defaultValue={media.mediaType} className={inputClass}>
-                      {MEDIA_TYPES.map((mediaType) => (
+                      {typeOptions.map((mediaType) => (
                         <option key={mediaType} value={mediaType}>
                           {MEDIA_TYPE_LABELS[mediaType]}
                         </option>
@@ -576,9 +605,23 @@ export default async function MediaDetailPage({
       {media.processingStatus !== "processed" && media.processingStatus !== "failed" && (
         <Card>
           <p className="text-sm text-archive-700">
-            We&apos;re preparing this file — previews and text appear here automatically in a
-            moment.
+            {processingStalled
+              ? "This file is taking longer than expected to prepare."
+              : "We're preparing this file — previews and text appear here automatically in a moment."}
           </p>
+          {processingStalled && isEditor && (
+            <form action={reprocessMediaAction} className="mt-3">
+              <input type="hidden" name="treeId" value={treeId} />
+              <input type="hidden" name="mediaId" value={mediaId} />
+              <button
+                type="submit"
+                title="Prepares the file again from the original"
+                className={subtleButtonClass}
+              >
+                Try again
+              </button>
+            </form>
+          )}
         </Card>
       )}
       {media.processingStatus === "failed" && (
@@ -639,6 +682,12 @@ export default async function MediaDetailPage({
           {meta.ocr?.status === "failed" && (
             <Alert tone="danger" className="mb-3">
               We couldn&apos;t read the text in this document automatically.
+            </Alert>
+          )}
+          {ocrTotalPages > ocrPages && ocrPages > 0 && (
+            <Alert tone="warn" className="mb-3">
+              Text was read from the first {ocrPages} of {ocrTotalPages} pages. The rest of this
+              document isn&apos;t searchable.
             </Alert>
           )}
           {meta.ai?.status === "failed" && (
@@ -731,7 +780,7 @@ export default async function MediaDetailPage({
         </Card>
       )}
 
-      {user && !isEditor && (
+      {isMember && !isEditor && (
         <SuggestForm
           treeId={treeId}
           targetType="media"
