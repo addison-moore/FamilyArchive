@@ -18,12 +18,13 @@ import { Card, inputClass, subtleButtonClass } from "@/components/form";
 import { ListPager } from "@/components/list-pager";
 import { MediaThumb } from "@/components/media-thumb";
 import { MediaUpload } from "@/components/media-upload";
+import { PersonPicker } from "@/components/person-picker";
 import { QUOTA_FULL_MESSAGE, quotaState } from "@/lib/quota";
 import { ScopeToggle } from "@/components/scope-toggle";
 import { Alert, PageHeader, SegmentedLinks } from "@/components/ui";
 import { resolveView } from "@/lib/branch";
 import { countMedia, listMedia, thumbUrls } from "@/lib/media";
-import { listPeopleOptions } from "@/lib/people";
+import { getPersonChoice } from "@/lib/people";
 
 /** Media library grid: all/my-uploads, type, tag, person filters. */
 export default async function MediaPage({
@@ -74,10 +75,10 @@ export default async function MediaPage({
 
   // Previously the grid loaded every media row in the archive, then fanned out
   // two more unbounded id lookups over the result.
-  const [mediaList, treeTags, peopleList] = await Promise.all([
+  const [mediaList, treeTags, filteredPerson] = await Promise.all([
     listMedia(treeId, filters, { limit: size, offset: (page - 1) * size }),
     getDb().select().from(tags).where(eq(tags.treeId, treeId)).orderBy(asc(tags.name)),
-    listPeopleOptions(treeId),
+    person ? getPersonChoice(treeId, person) : null,
   ]);
 
   const thumbs = await thumbUrls(
@@ -162,18 +163,16 @@ export default async function MediaPage({
               </option>
             ))}
           </select>
-          <select
+          <PersonPicker
+            // A new filter in the URL means a new starting point, not an edit of this one.
+            key={person ?? ""}
+            treeId={treeId}
             name="person"
-            defaultValue={person ?? ""}
-            className={`${inputClass} sm:w-auto sm:max-w-56`}
-          >
-            <option value="">Anyone</option>
-            {peopleList.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.fullName}
-              </option>
-            ))}
-          </select>
+            ariaLabel="Filter by person"
+            placeholder="Anyone"
+            initial={filteredPerson}
+            className="sm:w-72"
+          />
           <button type="submit" className={subtleButtonClass}>
             Filter
           </button>

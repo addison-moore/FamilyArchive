@@ -5,6 +5,7 @@ import {
   createInvite,
   login,
   OWNER,
+  pickPerson,
   registerViaInvite,
   samplePng,
   submitAction,
@@ -53,11 +54,7 @@ test.beforeAll(async ({ browser }) => {
   await ownerPage.waitForURL(/\/people\/[0-9a-f-]{36}$/);
   const addParent = ownerPage.locator("details", { hasText: "Add parent" }).first();
   await addParent.locator("summary").click();
-  // Option labels append the lifespan, so resolve the option's value first.
-  const augusta = await addParent
-    .locator('select[name="otherPersonId"] option', { hasText: "Augusta Pemberton" })
-    .getAttribute("value");
-  await addParent.locator('select[name="otherPersonId"]').selectOption(augusta!);
+  await pickPerson(addParent.getByRole("combobox", { name: "Person" }), "Augusta Pemberton");
   await addParent.getByRole("button", { name: "Add", exact: true }).click();
   await expect(ownerPage.getByRole("heading", { name: "Parents" })).toBeVisible();
 });

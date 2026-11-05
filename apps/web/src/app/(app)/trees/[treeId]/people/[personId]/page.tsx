@@ -24,17 +24,18 @@ import {
   textButtonClass,
 } from "@/components/form";
 import { MediaThumb } from "@/components/media-thumb";
+import { PersonPicker } from "@/components/person-picker";
 import { SuggestForm } from "@/components/suggest-form";
-import { PersonAvatar, personLifespan } from "@/components/person-summary";
+import { PersonAvatar } from "@/components/person-summary";
 import { Alert } from "@/components/ui";
 import { listMediaForPerson, profilePhotoUrl, thumbUrls } from "@/lib/media";
 import {
+  countPeople,
   getPerson,
   getPersonNames,
   getPlaceName,
   getRelationshipGraph,
-  listPeopleOptions,
-  type PersonOption,
+  personLifespan,
   type RelatedPerson,
 } from "@/lib/people";
 
@@ -96,14 +97,12 @@ function AddRelationshipForm({
   direction,
   label,
   types,
-  candidates,
 }: {
   treeId: string;
   personId: string;
   direction: "parent" | "child" | "partner";
   label: string;
   types: readonly RelationshipType[];
-  candidates: PersonOption[];
 }) {
   return (
     <details className={disclosureClass}>
@@ -113,17 +112,13 @@ function AddRelationshipForm({
         <input type="hidden" name="personId" value={personId} />
         <input type="hidden" name="direction" value={direction} />
         <div className="grid gap-3 sm:grid-cols-3">
-          <Field label="Person">
-            <select name="otherPersonId" required className={inputClass}>
-              <option value="">Select…</option>
-              {candidates.map((candidate) => (
-                <option key={candidate.id} value={candidate.id}>
-                  {candidate.fullName}
-                  {personLifespan(candidate) ? ` (${personLifespan(candidate)})` : ""}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <PersonPicker
+            treeId={treeId}
+            name="otherPersonId"
+            label="Person"
+            required
+            excludeIds={[personId]}
+          />
           <Field label="Type">
             <select name="type" className={inputClass}>
               {types.map((type) => (
@@ -171,13 +166,14 @@ export default async function PersonProfilePage({
       ).filter((p): p is NonNullable<typeof p> => p !== null)
     : [];
 
-  const [graph, names, birthPlace, deathPlace, allPeople, taggedMedia, photoUrl] =
+  const canEdit = treeRoleAtLeast(role, "editor");
+  const [graph, names, birthPlace, deathPlace, peopleCount, taggedMedia, photoUrl] =
     await Promise.all([
       getRelationshipGraph(treeId, personId),
       getPersonNames(personId),
       getPlaceName(person.birthPlaceId),
       getPlaceName(person.deathPlaceId),
-      listPeopleOptions(treeId),
+      canEdit ? countPeople(treeId) : 0,
       listMediaForPerson(treeId, personId),
       profilePhotoUrl(treeId, person.profileMediaId),
     ]);
@@ -185,8 +181,6 @@ export default async function PersonProfilePage({
     treeId,
     taggedMedia.slice(0, 10).map((m) => m.id),
   );
-  const candidates = allPeople.filter((p) => p.id !== personId);
-  const canEdit = treeRoleAtLeast(role, "editor");
 
   const birthText = formatDateParts({
     year: person.birthYear,
@@ -393,7 +387,6 @@ export default async function PersonProfilePage({
               direction="parent"
               label="Add parent"
               types={PARENT_RELATIONSHIP_TYPES}
-              candidates={candidates}
             />
             <AddRelationshipForm
               treeId={treeId}
@@ -401,7 +394,6 @@ export default async function PersonProfilePage({
               direction="partner"
               label="Add spouse / partner"
               types={PARTNER_RELATIONSHIP_TYPES}
-              candidates={candidates}
             />
             <AddRelationshipForm
               treeId={treeId}
@@ -409,9 +401,8 @@ export default async function PersonProfilePage({
               direction="child"
               label="Add child"
               types={PARENT_RELATIONSHIP_TYPES}
-              candidates={candidates}
             />
-            {candidates.length === 0 && (
+            {peopleCount <= 1 && (
               <p className="text-xs text-archive-700">
                 Add more people to the archive to connect them here.
               </p>

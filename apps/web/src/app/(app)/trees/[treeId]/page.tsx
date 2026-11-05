@@ -4,12 +4,12 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { buttonClass, Card, FormError } from "@/components/form";
-import { PersonSummary, personLifespan } from "@/components/person-summary";
+import { PersonSummary } from "@/components/person-summary";
 import { TreeNodeActions } from "@/components/tree-node-actions";
 import { TreeWorkspace } from "@/components/tree-workspace";
 import { Alert, SegmentedLinks } from "@/components/ui";
 import { profilePhotoUrl } from "@/lib/media";
-import { getPerson, getRelationshipGraph, personBirthSortKey } from "@/lib/people";
+import { getPerson, getRelationshipGraph, personBirthSortKey, personLifespan } from "@/lib/people";
 import {
   buildTreeGraph,
   isTreeViewMode,

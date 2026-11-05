@@ -6,9 +6,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { buttonClass, Card, Field, FormError, inputClass } from "@/components/form";
-import { PersonAvatar, personLifespan } from "@/components/person-summary";
+import { PersonAvatar } from "@/components/person-summary";
 import { Badge, PageHeader } from "@/components/ui";
-import { getPerson, getPlaceName, type PersonRow } from "@/lib/people";
+import { getPerson, getPlaceName, personLifespan, type PersonRow } from "@/lib/people";
 
 import { mergePeopleAction } from "./actions";
 

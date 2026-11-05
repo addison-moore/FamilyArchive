@@ -10,6 +10,7 @@ import {
   INVITEE,
   login,
   OWNER,
+  pickPerson,
   SAMPLE_GEDCOM,
   samplePdf,
   samplePng,
@@ -112,7 +113,7 @@ test("user can create a relationship", async () => {
 
   const addParent = page.locator("details", { hasText: "Add parent" }).first();
   await addParent.locator("summary").click();
-  await addParent.locator('select[name="otherPersonId"]').selectOption({ index: 1 });
+  await pickPerson(addParent.getByRole("combobox", { name: "Person" }), "Arthur Ashford");
   await addParent.getByRole("button", { name: "Add", exact: true }).click();
 
   await expect(page.getByRole("heading", { name: "Parents" })).toBeVisible();

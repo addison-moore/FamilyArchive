@@ -3,9 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Card, subtleButtonClass } from "@/components/form";
-import { PersonAvatar, personLifespan } from "@/components/person-summary";
+import { PersonAvatar } from "@/components/person-summary";
 import { PageHeader } from "@/components/ui";
 import { findDuplicatePairs } from "@/lib/duplicates";
+import { personLifespan } from "@/lib/people";
 
 /** Possible-duplicates review with merge entry points. */
 export default async function DuplicatesPage({ params }: { params: Promise<{ treeId: string }> }) {

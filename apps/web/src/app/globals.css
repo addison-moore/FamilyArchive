@@ -134,8 +134,10 @@
   }
 
   /* A native select sets its own height, indent and arrow, so its text wouldn't
-     line up with the inputs around it. */
-  select.input {
+     line up with the inputs around it. An empty person picker wears the same arrow,
+     so it reads as a choice among the selects beside it. */
+  select.input,
+  input.input-chevron {
     @apply appearance-none truncate bg-no-repeat pr-8;
     background-image: var(--select-chevron);
     background-position: right 0.625rem center;

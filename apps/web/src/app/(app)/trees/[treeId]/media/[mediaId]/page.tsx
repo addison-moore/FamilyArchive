@@ -29,6 +29,7 @@ import {
 } from "@/components/form";
 import { FaceTagger } from "@/components/face-tagger";
 import { MediaNav } from "@/components/media-nav";
+import { PersonPicker } from "@/components/person-picker";
 import { SuggestForm } from "@/components/suggest-form";
 import { Alert, Badge } from "@/components/ui";
 import {
@@ -45,7 +46,7 @@ import {
   listDerivatives,
   mediaUrl,
 } from "@/lib/media";
-import { getPlaceName, listPeopleOptions } from "@/lib/people";
+import { countPeople, getPlaceName } from "@/lib/people";
 
 import { aiConfigured } from "@/lib/jobs";
 
@@ -97,7 +98,8 @@ export default async function MediaDetailPage({
   if (!media) notFound();
 
   const db = getDb();
-  const [itemTags, taggedPeople, uploaderRows, placeName, allPeople] = await Promise.all([
+  const canTag = treeRoleAtLeast(role, "contributor");
+  const [itemTags, taggedPeople, uploaderRows, placeName, peopleCount] = await Promise.all([
     db
       .select({ id: tags.id, name: tags.name })
       .from(mediaTags)
@@ -121,7 +123,7 @@ export default async function MediaDetailPage({
           .limit(1)
       : Promise.resolve([]),
     getPlaceName(media.placeId),
-    listPeopleOptions(treeId),
+    canTag ? countPeople(treeId) : 0,
   ]);
   const derivatives = await listDerivatives(mediaId);
   const { prevId, nextId } = await adjacentMedia(treeId, media);
@@ -153,13 +155,11 @@ export default async function MediaDetailPage({
   const aiAvailable = aiConfigured();
 
   const canEdit = canEditMedia(user, role, media);
-  const canTag = treeRoleAtLeast(role, "contributor");
   const isEditor = treeRoleAtLeast(role, "editor");
   const chipClass = `flex min-h-7 items-center gap-1 rounded-full py-0.5 pl-3 text-sm ${
     canTag ? "pr-1" : "pr-3"
   }`;
   const url = mediaUrl(treeId, mediaId);
-  const untaggedPeople = allPeople.filter((p) => !taggedPeople.some((t) => t.personId === p.id));
   const dateText = formatDateParts({
     year: media.dateYear,
     month: media.dateMonth,
@@ -184,7 +184,7 @@ export default async function MediaDetailPage({
               imageUrl={url}
               alt={media.title ?? media.originalFilename}
               faces={faces}
-              people={allPeople.map((p) => ({ id: p.id, fullName: p.fullName }))}
+              treeId={treeId}
               canTag={canTag}
               assignAction={assignFacePersonAction}
               removeAction={removeFaceAction}
@@ -568,7 +568,7 @@ export default async function MediaDetailPage({
             )}
           </span>
         ))}
-        {canTag && untaggedPeople.length > 0 && (
+        {canTag && peopleCount > taggedPeople.length && (
           <details className="xl:relative">
             <summary
               className="cursor-pointer list-none rounded-full border border-dashed border-archive-200 px-3 py-1 text-sm text-archive-700 hover:bg-archive-50"
@@ -586,14 +586,14 @@ export default async function MediaDetailPage({
             >
               <input type="hidden" name="treeId" value={treeId} />
               <input type="hidden" name="mediaId" value={mediaId} />
-              <select name="personId" required className={`${inputClass} min-w-0 flex-1`}>
-                <option value="">Select a person…</option>
-                {untaggedPeople.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.fullName}
-                  </option>
-                ))}
-              </select>
+              <PersonPicker
+                treeId={treeId}
+                name="personId"
+                ariaLabel="Person to tag"
+                required
+                excludeIds={taggedPeople.map((t) => t.personId)}
+                className="min-w-0 flex-1"
+              />
               <button type="submit" className={subtleButtonClass}>
                 Tag
               </button>
