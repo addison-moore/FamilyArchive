@@ -35,7 +35,7 @@ describe("aiConfig — external AI disabled by default", () => {
     expect(anthropic()).toEqual({
       provider: "anthropic",
       apiKey: "k",
-      model: "claude-haiku-4-5-20251001",
+      model: "claude-haiku-5-5",
     });
 
     const openai = await loadAiConfig({ AI_PROVIDER: "openai", AI_API_KEY: "k" });

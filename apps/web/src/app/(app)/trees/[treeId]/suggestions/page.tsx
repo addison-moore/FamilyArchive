@@ -32,15 +32,19 @@ export default async function SuggestionsPage({
   searchParams: Promise<{ error?: string; suggested?: string }>;
 }) {
   const { treeId } = await params;
-  const { user, role } = await requireTreeRole(treeId, "viewer");
+  const { user, role, isMember } = await requireTreeRole(treeId, "viewer");
   const { error, suggested } = await searchParams;
   const isAdmin = treeRoleAtLeast(role, "admin");
 
-  if (!user) {
-    // Public visitors cannot suggest or view suggestions.
+  if (!user || !isMember) {
+    // Visitors to a public archive cannot suggest or view suggestions, signed in or not.
     return (
       <Card>
-        <p className="text-sm text-archive-700">Sign in to view and submit suggestions.</p>
+        <p className="text-sm text-archive-700">
+          {user
+            ? "Only members of this archive can view and submit suggestions."
+            : "Sign in to view and submit suggestions."}
+        </p>
       </Card>
     );
   }

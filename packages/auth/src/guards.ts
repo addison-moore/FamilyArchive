@@ -64,7 +64,7 @@ export async function getTreeRole(user: SessionUser, treeId: string): Promise<Tr
 }
 
 /** True when the archive is in explicit public read-only mode. */
-export async function isTreePublic(treeId: string): Promise<boolean> {
+async function isTreePublic(treeId: string): Promise<boolean> {
   const rows = await getDb()
     .select({ isPublic: trees.isPublic })
     .from(trees)
@@ -87,17 +87,19 @@ export async function isTreePublic(treeId: string): Promise<boolean> {
 export async function requireTreeRole(
   treeId: string,
   minimum: TreeRole,
-): Promise<{ user: SessionUser | null; role: TreeRole }> {
+): Promise<{ user: SessionUser | null; role: TreeRole; isMember: boolean }> {
   const user = await getSessionUser();
   const role = user ? await getTreeRole(user, treeId) : null;
   if (role) {
     if (!treeRoleAtLeast(role, minimum)) {
       throw new AuthorizationError(`Requires ${minimum} access to this archive`);
     }
-    return { user, role };
+    return { user, role, isMember: true };
   }
   if (minimum === "viewer" && (await isTreePublic(treeId))) {
-    return { user, role: "viewer" };
+    // `user` can be set here: a signed-in visitor to someone else's public
+    // archive. Pages must offer member-only actions on `isMember`, not `user`.
+    return { user, role: "viewer", isMember: false };
   }
   throw new AuthorizationError(
     user ? `Requires ${minimum} access to this archive` : "Sign in required",

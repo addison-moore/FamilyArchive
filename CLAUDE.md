@@ -43,7 +43,7 @@ even if they seem like natural extensions. Out of scope for v1 (PRD §3), includ
 - Timeline view, map view, comments, activity feeds
 - Sharing people/data across _archives_ (merge within an archive IS in scope, PRD §10.5)
 - Living-person privacy rules, configurable media visibility
-- Full archive export, native JSON backup/import
+- Native JSON backup/import (full archive export itself is in scope, PRD §3 amended 2026-07-09)
 - DNA features, advanced genealogy reports/citations
 - Setup wizard, hosted demo
 - Face recognition/person suggestions (detection only in v1)

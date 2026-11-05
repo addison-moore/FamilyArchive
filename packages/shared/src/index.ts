@@ -9,6 +9,7 @@ export * from "./jobs";
 export * from "./people";
 export * from "./dates";
 export * from "./media";
+export * from "./media-signature";
 export * from "./processing";
 export * from "./ocr";
 export * from "./faces";

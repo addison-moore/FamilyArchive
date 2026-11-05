@@ -1,13 +1,13 @@
 "use server";
 
 import { clientIp, consumeRateLimit, RESET_PER_EMAIL, RESET_PER_IP } from "@familyarchive/auth";
-import { getEnv } from "@familyarchive/config";
+import { getEnv, smtpConfigured } from "@familyarchive/config";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { enqueueEmail, smtpConfigured } from "@/lib/email";
 import { renderBrandedEmail } from "@familyarchive/shared";
+import { enqueueEmail } from "@/lib/jobs";
 import { createPasswordResetToken } from "@/lib/password-reset";
 
 /**

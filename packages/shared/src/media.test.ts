@@ -1,6 +1,41 @@
 import { describe, expect, it } from "vitest";
 
-import { isBrowserRenderableImage, isImageMime, isMediaType, UPLOAD_MIME_TYPES } from "./media";
+import {
+  formatBytes,
+  isBrowserRenderableImage,
+  isImageMime,
+  isMediaType,
+  mediaTypesForMime,
+  UPLOAD_MIME_TYPES,
+} from "./media";
+
+describe("mediaTypesForMime", () => {
+  it("never offers a label that contradicts the file", () => {
+    expect(mediaTypesForMime("video/mp4")).toEqual(["video"]);
+    expect(mediaTypesForMime("audio/mpeg")).toEqual(["audio"]);
+  });
+
+  it("lets a scan or a PDF be filed as a document", () => {
+    expect(mediaTypesForMime("image/jpeg")).toEqual(["photo", "document"]);
+    expect(mediaTypesForMime("application/pdf")).toEqual(["pdf", "document"]);
+  });
+
+  it("offers each type its own upload default", () => {
+    for (const [mime, entry] of Object.entries(UPLOAD_MIME_TYPES)) {
+      expect(mediaTypesForMime(mime), mime).toContain(entry.mediaType);
+    }
+  });
+});
+
+describe("formatBytes", () => {
+  it("picks the largest whole unit", () => {
+    expect(formatBytes(0)).toBe("0 B");
+    expect(formatBytes(512)).toBe("512 B");
+    expect(formatBytes(1536)).toBe("2 KB");
+    expect(formatBytes(5 * 1024 ** 2)).toBe("5.0 MB");
+    expect(formatBytes(1.5 * 1024 ** 3)).toBe("1.5 GB");
+  });
+});
 
 describe("UPLOAD_MIME_TYPES (allowlist)", () => {
   it("maps every allowlisted MIME to a valid media type and clean extension", () => {

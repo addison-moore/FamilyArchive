@@ -4,7 +4,7 @@ import { requireMemberRole } from "@familyarchive/auth";
 import { redirect } from "next/navigation";
 
 import { recordAudit } from "@/lib/audit";
-import { mergePeople, type MergeFieldChoices } from "@/lib/merge";
+import { MergeError, mergePeople, type MergeFieldChoices } from "@/lib/merge";
 import { getPerson } from "@/lib/people";
 
 function choice(
@@ -53,8 +53,9 @@ export async function mergePeopleAction(formData: FormData): Promise<void> {
   try {
     await mergePeople(treeId, survivorId, otherId, choices, user.id);
   } catch (error) {
-    if (error instanceof Error && "digest" in error) throw error;
-    return fail(error instanceof Error ? error.message : "Merge failed");
+    if (error instanceof MergeError) return fail(error.message);
+    console.error("person merge failed:", error);
+    return fail("The merge failed and nothing was changed.");
   }
   await recordAudit({
     treeId,

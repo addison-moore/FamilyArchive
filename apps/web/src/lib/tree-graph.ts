@@ -2,7 +2,7 @@ import { getDb, people, relationships, userTreePreferences } from "@familyarchiv
 import { isParentRelationshipType, isPartnerRelationshipType } from "@familyarchive/shared";
 import { and, asc, eq, isNull } from "drizzle-orm";
 
-import type { PersonRow } from "@/lib/people";
+import { PERSON_OPTION_COLUMNS, type PersonOption, type PersonRow } from "@/lib/people";
 
 export const TREE_VIEW_MODES = ["both", "ancestors", "descendants"] as const;
 export type TreeViewMode = (typeof TREE_VIEW_MODES)[number];
@@ -16,7 +16,7 @@ const MAX_GENERATIONS = 12;
 
 export interface TreeGraph {
   /** Included people with their generation relative to the start (ancestors < 0). */
-  people: { person: PersonRow; generation: number }[];
+  people: { person: PersonOption & Pick<PersonRow, "verified">; generation: number }[];
   /** parent → child edges among included people. */
   parentEdges: { id: string; fromPersonId: string; toPersonId: string }[];
   /** Symmetric partner edges among included people. */
@@ -134,7 +134,9 @@ export function computeGenerations(
  * Build the visible graph around a starting person: ancestors,
  * descendants, and non-recursive "immediate family context" — partners of
  * everyone shown, co-parents of included children, and the start's siblings.
- * Loads the whole tree's people/edges in two queries; family trees are small.
+ * Loads the whole tree's people/edges in two queries, with only the columns the
+ * canvas draws: this runs on every view, and a full row carries a biography and the
+ * preserved raw GEDCOM record.
  *
  * Both queries are ordered, by creation time and then id (a GEDCOM import
  * creates everyone in one transaction), and people come back in that order, not
@@ -150,12 +152,17 @@ export async function buildTreeGraph(
   const db = getDb();
   const [allPeople, allEdges] = await Promise.all([
     db
-      .select()
+      .select({ ...PERSON_OPTION_COLUMNS, verified: people.verified })
       .from(people)
       .where(and(eq(people.treeId, treeId), isNull(people.deletedAt)))
       .orderBy(asc(people.createdAt), asc(people.id)),
     db
-      .select()
+      .select({
+        id: relationships.id,
+        fromPersonId: relationships.fromPersonId,
+        toPersonId: relationships.toPersonId,
+        type: relationships.type,
+      })
       .from(relationships)
       .where(eq(relationships.treeId, treeId))
       .orderBy(asc(relationships.createdAt), asc(relationships.id)),

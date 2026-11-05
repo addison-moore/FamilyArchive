@@ -1,9 +1,9 @@
 import { Readable } from "node:stream";
 
 import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
-import { UnsatisfiableRangeError } from "@familyarchive/media";
+import { isMissingObject, UnsatisfiableRangeError } from "@familyarchive/media";
 
-import { contentDisposition } from "@/lib/http";
+import { contentDisposition, parseByteRange } from "@/lib/http";
 import { getMediaItem, getStorageDriverFor } from "@/lib/media";
 
 /**
@@ -30,11 +30,7 @@ export async function GET(
     return Response.json({ error: "Not found" }, { status: 404 });
   }
 
-  const rangeHeader = request.headers.get("range");
-  const rangeMatch = rangeHeader?.match(/^bytes=(\d+)-(\d*)$/);
-  const range = rangeMatch
-    ? { start: Number(rangeMatch[1]), end: rangeMatch[2] ? Number(rangeMatch[2]) : undefined }
-    : undefined;
+  const range = parseByteRange(request.headers.get("range"));
 
   const driver = getStorageDriverFor(media.storageDriver === "s3" ? "s3" : "local");
   let object;
@@ -48,6 +44,7 @@ export async function GET(
         headers: { "Content-Range": `bytes */${error.totalSize}`, "Accept-Ranges": "bytes" },
       });
     }
+    if (isMissingObject(error)) return Response.json({ error: "Not found" }, { status: 404 });
     throw error;
   }
   const headers: Record<string, string> = {

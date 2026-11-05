@@ -146,10 +146,10 @@ export async function createPersonAction(formData: FormData): Promise<void> {
     redirect(`${peoplePath(treeId)}/new?error=${encodeURIComponent(form)}`);
   }
 
-  const [birthPlaceId, deathPlaceId] = await Promise.all([
-    resolvePlaceId(treeId, form.fields.birthPlace ?? null),
-    resolvePlaceId(treeId, form.fields.deathPlace ?? null),
-  ]);
+  // One after the other: run together, a new place used for both birth and death
+  // missed the lookup twice and was created twice.
+  const birthPlaceId = await resolvePlaceId(treeId, form.fields.birthPlace ?? null);
+  const deathPlaceId = await resolvePlaceId(treeId, form.fields.deathPlace ?? null);
 
   const rows = await getDb()
     .insert(people)
@@ -192,10 +192,8 @@ export async function updatePersonAction(formData: FormData): Promise<void> {
     redirect(`${peoplePath(treeId)}/${personId}/edit?error=${encodeURIComponent(form)}`);
   }
 
-  const [birthPlaceId, deathPlaceId] = await Promise.all([
-    resolvePlaceId(treeId, form.fields.birthPlace ?? null),
-    resolvePlaceId(treeId, form.fields.deathPlace ?? null),
-  ]);
+  const birthPlaceId = await resolvePlaceId(treeId, form.fields.birthPlace ?? null);
+  const deathPlaceId = await resolvePlaceId(treeId, form.fields.deathPlace ?? null);
 
   await getDb()
     .update(people)
@@ -273,8 +271,11 @@ export async function addRelationshipAction(formData: FormData): Promise<void> {
   const otherPersonId = String(formData.get("otherPersonId") ?? "");
   const direction = String(formData.get("direction") ?? "");
   const type = String(formData.get("type") ?? "");
-  const notes = String(formData.get("notes") ?? "").trim() || null;
-  await requireMemberRole(treeId, "editor");
+  const notes =
+    String(formData.get("notes") ?? "")
+      .trim()
+      .slice(0, 2000) || null;
+  const { user } = await requireMemberRole(treeId, "editor");
 
   const profilePath = `${peoplePath(treeId)}/${personId}`;
   const fail = (message: string): never =>
@@ -314,10 +315,21 @@ export async function addRelationshipAction(formData: FormData): Promise<void> {
     if (mirrored.length > 0) return fail("That relationship already exists");
   }
 
-  await getDb()
+  const added = await getDb()
     .insert(relationships)
     .values({ treeId, fromPersonId, toPersonId, type, notes })
-    .onConflictDoNothing();
+    .onConflictDoNothing()
+    .returning({ id: relationships.id });
+  if (added[0]) {
+    await recordAudit({
+      treeId,
+      actorId: user.id,
+      action: "relationship.created",
+      targetType: "relationship",
+      targetId: added[0].id,
+      summary: `Linked ${anchor.fullName} and ${other.fullName} (${type.replace(/_/g, " ")})`,
+    });
+  }
   redirect(profilePath);
 }
 
@@ -325,10 +337,21 @@ export async function removeRelationshipAction(formData: FormData): Promise<void
   const treeId = String(formData.get("treeId") ?? "");
   const personId = String(formData.get("personId") ?? "");
   const relationshipId = String(formData.get("relationshipId") ?? "");
-  await requireMemberRole(treeId, "editor");
+  const { user } = await requireMemberRole(treeId, "editor");
 
-  await getDb()
+  const removed = await getDb()
     .delete(relationships)
-    .where(and(eq(relationships.id, relationshipId), eq(relationships.treeId, treeId)));
+    .where(and(eq(relationships.id, relationshipId), eq(relationships.treeId, treeId)))
+    .returning({ type: relationships.type });
+  if (removed[0]) {
+    await recordAudit({
+      treeId,
+      actorId: user.id,
+      action: "relationship.deleted",
+      targetType: "relationship",
+      targetId: relationshipId,
+      summary: `Removed a ${removed[0].type.replace(/_/g, " ")} relationship`,
+    });
+  }
   revalidatePath(`${peoplePath(treeId)}/${personId}`);
 }

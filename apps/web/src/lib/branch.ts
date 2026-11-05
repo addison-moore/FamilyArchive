@@ -12,14 +12,21 @@ export type ViewScope = "branch" | "all";
  * the included people. Traversal never continues through a partner, so in-law
  * branches stay out. A browsing convenience only — never a privacy boundary.
  */
-export async function branchPersonIds(treeId: string, anchorId: string): Promise<Set<string>> {
+async function branchPersonIds(treeId: string, anchorId: string): Promise<Set<string>> {
   const db = getDb();
   const [allPeople, allEdges] = await Promise.all([
     db
       .select({ id: people.id })
       .from(people)
       .where(and(eq(people.treeId, treeId), isNull(people.deletedAt))),
-    db.select().from(relationships).where(eq(relationships.treeId, treeId)),
+    db
+      .select({
+        fromPersonId: relationships.fromPersonId,
+        toPersonId: relationships.toPersonId,
+        type: relationships.type,
+      })
+      .from(relationships)
+      .where(eq(relationships.treeId, treeId)),
   ]);
   const alive = new Set(allPeople.map((p) => p.id));
 

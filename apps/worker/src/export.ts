@@ -235,15 +235,18 @@ async function runExport(job: Job<ArchiveExportJob>, logger: pino.Logger, emailQ
     },
   });
   const archive = new ZipArchive({ zlib: { level: 6 } });
-  const archiveFailed = new Promise<never>((_, reject) => {
-    archive.on("error", (error) => reject(error));
-  });
   archive.pipe(counter);
   const putPromise = targetDriver.putStream(row.storageKey, counter, { overwrite: true });
-  // Both promises are awaited via race() below; pre-register handlers so an
-  // early rejection can't surface as an unhandled rejection in the meantime.
-  archiveFailed.catch(() => {});
-  putPromise.catch(() => {});
+  // Rejects when either end of the pipe fails, and every wait below races it. The
+  // storage write has to be in here: once it dies nothing consumes the archive,
+  // so "entry" never fires, and a full disk used to leave the job waiting forever
+  // and, at concurrency 1, every later export queued behind it.
+  const aborted = new Promise<never>((_, reject) => {
+    archive.on("error", reject);
+    putPromise.catch(reject);
+  });
+  // Raced below; registered now so an early rejection isn't reported as unhandled.
+  aborted.catch(() => {});
 
   archive.append(readmeText(tree.name), { name: "README.txt" });
   archive.append(JSON.stringify(manifest, null, 2), { name: "manifest.json" });
@@ -272,13 +275,13 @@ async function runExport(job: Job<ArchiveExportJob>, logger: pino.Logger, emailQ
         name: mediaEntryName(media.id, media.originalFilename),
         store: true,
       });
-      await Promise.race([finished, archiveFailed]);
+      await Promise.race([finished, aborted]);
       done += 1;
       await job.updateProgress(Math.round((done / Math.max(allMedia.length, 1)) * 90));
     }
 
-    await archive.finalize();
-    await Promise.race([putPromise, archiveFailed]);
+    await Promise.race([archive.finalize(), aborted]);
+    await Promise.race([putPromise, aborted]);
   } catch (error) {
     // Without this the ZIP stream stayed open and a truncated bundle was left
     // at the export's storage key, which the download route would happily serve
@@ -358,11 +361,19 @@ async function cleanupExports(logger: pino.Logger): Promise<void> {
   if (expired.length > 0)
     logger.info({ removed: expired.length }, "expired export bundles removed");
 
+  // "pending" as well as "running": a row whose job was lost (the enqueue failed,
+  // or Valkey restarted without its data) never leaves pending by itself, and the
+  // in-progress check would then refuse every new export for that archive.
   const staleCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
   await db
     .update(archiveExports)
     .set({ status: "failed", error: "Export did not finish — request it again" })
-    .where(and(eq(archiveExports.status, "running"), lt(archiveExports.createdAt, staleCutoff)));
+    .where(
+      and(
+        inArray(archiveExports.status, ["pending", "running"]),
+        lt(archiveExports.createdAt, staleCutoff),
+      ),
+    );
 }
 
 export function startExportWorker(connection: ConnectionOptions, logger: pino.Logger): Worker[] {
@@ -379,10 +390,16 @@ export function startExportWorker(connection: ConnectionOptions, logger: pino.Lo
   exportWorker.on("failed", (job, error) => {
     logger.error({ jobId: job?.id, err: error }, "archive export failed");
     if (!job || job.attemptsMade < (job.opts.attempts ?? 1)) return;
-    void getDb()
+    // The .catch is what runs this: a Drizzle query does nothing until it is awaited
+    // or chained, so `void query` left every failed export marked "running", and the
+    // in-progress check then refused new exports until the daily cleanup caught it.
+    getDb()
       .update(archiveExports)
       .set({ status: "failed", error: error.message.slice(0, 500) })
-      .where(eq(archiveExports.id, job.data.exportId));
+      .where(eq(archiveExports.id, job.data.exportId))
+      .catch((statusError: unknown) =>
+        logger.error({ err: statusError }, "failed to record export failure"),
+      );
   });
 
   const cleanupQueue = new Queue(CLEANUP_QUEUE, { connection });

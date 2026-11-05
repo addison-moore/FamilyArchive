@@ -57,6 +57,16 @@ export function parseGedcomDate(raw: string): GedcomDateParts | null {
     text = toMatch[1];
   }
 
+  // Calendar escape ("@#DJULIAN@ 1 JAN 1700"), which follows any qualifier. Julian
+  // shares Gregorian's month names, so it parses as stated. Hebrew and French
+  // Republican years are a different count: salvaging the number below stored
+  // "@#DHEBREW@ 1 TSH 5600" as the year 5600. The raw value is kept in metadata.
+  const calendar = text.match(/^@#D([A-Z ]+)@\s*(.*)$/);
+  if (calendar) {
+    if (calendar[1]!.trim() !== "GREGORIAN" && calendar[1]!.trim() !== "JULIAN") return null;
+    text = calendar[2]!;
+  }
+
   // A BC/BCE date cannot be represented by these fields, and salvaging the
   // number below would silently store it as an AD year. The raw value is kept
   // in metadata either way, so returning null loses nothing recoverable.

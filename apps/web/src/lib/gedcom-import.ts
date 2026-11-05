@@ -13,7 +13,10 @@ import { parseGedcom, type GedcomEvent, type GedcomIndividual } from "@familyarc
 import type { RelationshipType } from "@familyarchive/shared";
 import { and, eq } from "drizzle-orm";
 
-export interface GedcomImportResult {
+/** An import failure the person importing can act on; its message is shown to them. */
+export class GedcomImportError extends Error {}
+
+interface GedcomImportResult {
   treeId: string;
   sourceId: string;
   peopleCount: number;
@@ -57,7 +60,7 @@ export async function importGedcom(
 ): Promise<GedcomImportResult> {
   const parsed = parseGedcom(text);
   if (parsed.individuals.length === 0) {
-    throw new Error("No people found in this file — is it a GEDCOM export?");
+    throw new GedcomImportError("No people found in this file — is it a GEDCOM export?");
   }
 
   const individualsByXref = new Map(parsed.individuals.map((i) => [i.xref, i]));

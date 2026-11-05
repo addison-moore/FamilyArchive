@@ -3,13 +3,12 @@
 import { describeRetryAfter, isAuthError, rateLimitedSeconds, signIn } from "@familyarchive/auth";
 import { redirect } from "next/navigation";
 
+import { safeRedirectPath } from "@/lib/http";
+
 export async function loginAction(formData: FormData): Promise<void> {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const callbackUrl = String(formData.get("callbackUrl") ?? "/");
-  // Only allow same-origin relative redirect targets.
-  const redirectTo =
-    callbackUrl.startsWith("/") && !callbackUrl.startsWith("//") ? callbackUrl : "/";
+  const redirectTo = safeRedirectPath(String(formData.get("callbackUrl") ?? "/"), "/");
 
   try {
     await signIn("credentials", { email, password, redirectTo });

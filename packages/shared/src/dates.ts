@@ -26,6 +26,9 @@ const MONTH_NAMES = [
   "December",
 ] as const;
 
+/** Longest each month runs; February allows the 29th, since the year may be a leap year. */
+const MONTH_LENGTHS = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const;
+
 /** Validate parts: month/day require the coarser parts; ranges checked. */
 export function validateDateParts(parts: DateParts): string | null {
   const { year, month, day } = parts;
@@ -33,7 +36,10 @@ export function validateDateParts(parts: DateParts): string | null {
   if (day !== null && month === null) return "A day requires a month";
   if (year !== null && (year < 1 || year > 9999)) return "Year must be between 1 and 9999";
   if (month !== null && (month < 1 || month > 12)) return "Month must be between 1 and 12";
-  if (day !== null && (day < 1 || day > 31)) return "Day must be between 1 and 31";
+  if (day !== null && month !== null) {
+    const longest = MONTH_LENGTHS[month - 1] ?? 31;
+    if (day < 1 || day > longest) return `Day must be between 1 and ${longest} for that month`;
+  }
   return null;
 }
 

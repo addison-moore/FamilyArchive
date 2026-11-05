@@ -1,6 +1,5 @@
 import { getEnv } from "@familyarchive/config";
-import { HEARTBEAT_QUEUE, redisConnectionOptions } from "@familyarchive/shared";
-import { Queue, Worker } from "bullmq";
+import { redisConnectionOptions } from "@familyarchive/shared";
 import pino from "pino";
 
 import { startAuditCleanup } from "./audit-cleanup";
@@ -13,32 +12,13 @@ import { startTreeCleanupWorker } from "./tree-cleanup";
 import { startUsageReconcile } from "./usage";
 
 /**
- * FamilyArchive job worker: heartbeat (plumbing check), email delivery, media
- * processing, OCR/AI text jobs, and face detection.
+ * FamilyArchive job worker: email delivery, media processing, OCR/AI text jobs,
+ * face detection, exports, and the daily maintenance tasks.
  */
 
 const logger = pino({ name: "familyarchive-worker" });
 const env = getEnv();
 const connection = redisConnectionOptions(env.REDIS_URL);
-
-const heartbeatQueue = new Queue(HEARTBEAT_QUEUE, {
-  connection,
-  // One job a minute forever: without these caps Valkey retains roughly 525k
-  // completed heartbeat records a year, none of which anything reads.
-  defaultJobOptions: { removeOnComplete: 10, removeOnFail: 50 },
-});
-
-const heartbeatWorker = new Worker(
-  HEARTBEAT_QUEUE,
-  async (job) => {
-    logger.info({ jobId: job.id }, "heartbeat");
-  },
-  { connection },
-);
-
-heartbeatWorker.on("failed", (job, error) => {
-  logger.error({ jobId: job?.id, err: error }, "job failed");
-});
 
 const emailWorker = startEmailWorker(connection, logger);
 const mediaWorker = startMediaWorker(connection, logger);
@@ -50,7 +30,6 @@ const usageWorker = startUsageReconcile(connection, logger);
 const treeCleanupWorker = startTreeCleanupWorker(connection, logger);
 
 const workers = [
-  heartbeatWorker,
   emailWorker,
   mediaWorker,
   ...textWorkers,
@@ -61,19 +40,16 @@ const workers = [
   treeCleanupWorker,
 ];
 
-async function main() {
-  await heartbeatQueue.upsertJobScheduler("heartbeat-every-minute", { every: 60_000 });
-  logger.info({ queues: workers.map((w) => w.name) }, "worker started");
-}
+logger.info({ queues: workers.map((w) => w.name) }, "worker started");
 
 let shuttingDown = false;
 
-async function shutdown(signal: string) {
+async function shutdown(signal: string, exitCode = 0) {
   if (shuttingDown) return;
   shuttingDown = true;
   logger.info({ signal }, "shutting down");
-  await Promise.all([...workers.map((w) => w.close()), heartbeatQueue.close()]);
-  process.exit(0);
+  await Promise.all(workers.map((w) => w.close()));
+  process.exit(exitCode);
 }
 
 process.on("SIGTERM", () => void shutdown("SIGTERM"));
@@ -86,10 +62,6 @@ process.on("unhandledRejection", (reason) => {
 });
 process.on("uncaughtException", (error) => {
   logger.fatal({ err: error }, "uncaught exception — shutting down");
-  void shutdown("uncaughtException");
-});
-
-main().catch((error) => {
-  logger.error({ err: error }, "worker failed to start");
-  process.exit(1);
+  // Non-zero so a crash reads as a crash to anything watching the exit status.
+  void shutdown("uncaughtException", 1);
 });

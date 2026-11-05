@@ -2,6 +2,28 @@ import { describe, expect, it } from "vitest";
 
 import { formatGedcomDate, parseGedcomDate } from "./dates";
 
+describe("parseGedcomDate calendar escapes", () => {
+  it("reads Julian and Gregorian dates as stated", () => {
+    expect(parseGedcomDate("@#DJULIAN@ 1 JAN 1700")).toEqual({
+      year: 1700,
+      month: 1,
+      day: 1,
+      approx: false,
+    });
+    expect(parseGedcomDate("ABT @#DGREGORIAN@ MAR 1802")).toEqual({
+      year: 1802,
+      month: 3,
+      day: null,
+      approx: true,
+    });
+  });
+
+  it("refuses calendars whose years are a different count", () => {
+    expect(parseGedcomDate("@#DHEBREW@ 1 TSH 5600")).toBeNull();
+    expect(parseGedcomDate("@#DFRENCH R@ 1 VEND 1802")).toBeNull();
+  });
+});
+
 describe("parseGedcomDate", () => {
   it("parses exact day/month/year dates", () => {
     expect(parseGedcomDate("12 JAN 1888")).toEqual({

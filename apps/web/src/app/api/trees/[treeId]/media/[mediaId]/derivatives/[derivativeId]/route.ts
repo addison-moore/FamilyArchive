@@ -2,6 +2,7 @@ import { Readable } from "node:stream";
 
 import { AuthorizationError, requireTreeRole } from "@familyarchive/auth";
 import { getDb, mediaDerivatives } from "@familyarchive/db";
+import { isMissingObject } from "@familyarchive/media";
 import { and, eq } from "drizzle-orm";
 
 import { getMediaItem, getStorageDriverFor } from "@/lib/media";
@@ -34,7 +35,13 @@ export async function GET(
   if (!derivative) return Response.json({ error: "Not found" }, { status: 404 });
 
   const driver = getStorageDriverFor(derivative.storageDriver === "s3" ? "s3" : "local");
-  const object = await driver.getStream(derivative.storageKey);
+  let object;
+  try {
+    object = await driver.getStream(derivative.storageKey);
+  } catch (error) {
+    if (isMissingObject(error)) return Response.json({ error: "Not found" }, { status: 404 });
+    throw error;
+  }
   return new Response(Readable.toWeb(object.stream) as ReadableStream, {
     headers: {
       "Content-Type": derivative.mimeType,

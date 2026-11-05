@@ -51,7 +51,7 @@ the canvas footer.
 ## Export
 
 **Archive settings → GEDCOM export**, or `GET /api/trees/<archive-id>/gedcom`
-as any member of the archive. The export contains people (names, gender,
+as any member of the archive (or anyone, if the archive is public). The export contains people (names, gender,
 birth/death dates and places, notes + biography as `NOTE`s), reconstructed `FAM`
 records with `MARR`/`DIV` from relationship types, and `PEDI adopted`/`foster`
 for adoptive/foster children. Media is not included.

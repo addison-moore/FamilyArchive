@@ -35,6 +35,31 @@ export function timingSafeEqualString(a: string, b: string): boolean {
 }
 
 /**
+ * A same-origin path from untrusted input, or `fallback`. Checking for a leading
+ * "/" and rejecting "//" is not enough: browsers read a backslash as a slash and
+ * strip tabs and newlines before parsing, so "/\\evil.test" and "/\t/evil.test"
+ * both leave the site.
+ */
+export function safeRedirectPath(value: string, fallback: string): string {
+  // eslint-disable-next-line no-control-regex
+  if (!value.startsWith("/") || /[\\\u0000-\u001f]/.test(value)) return fallback;
+  return value.startsWith("//") ? fallback : value;
+}
+
+/**
+ * The single byte range in a Range header, or undefined to serve the whole file.
+ * RFC 9110 has a recipient ignore an invalid range, and one ending before it
+ * starts is invalid: it used to reach createReadStream and come back as a 500.
+ */
+export function parseByteRange(header: string | null): { start: number; end?: number } | undefined {
+  const match = header?.match(/^bytes=(\d+)-(\d*)$/);
+  if (!match) return undefined;
+  const start = Number(match[1]);
+  const end = match[2] ? Number(match[2]) : undefined;
+  return end !== undefined && end < start ? undefined : { start, end };
+}
+
+/**
  * `decodeURIComponent` that yields the raw input instead of throwing. Client
  * headers are attacker-controlled and a stray `%` is enough to raise a
  * URIError, which would surface as a 500 from an otherwise valid request.

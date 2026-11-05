@@ -1,9 +1,9 @@
 import { getSessionUser } from "@familyarchive/auth";
+import { smtpConfigured } from "@familyarchive/config";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { buttonClass, Card, Field, inputClass } from "@/components/form";
-import { smtpConfigured } from "@/lib/email";
 
 import { requestPasswordResetAction } from "./actions";
 

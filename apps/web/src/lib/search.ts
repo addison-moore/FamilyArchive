@@ -2,12 +2,12 @@ import { collections, getDb, mediaItems, people, personNames, places } from "@fa
 import { and, eq, inArray, isNotNull, isNull, or, sql, type SQL } from "drizzle-orm";
 
 import type { CollectionRow } from "@/lib/collections";
-import type { MediaRow } from "@/lib/media";
-import type { PersonRow } from "@/lib/people";
+import { branchMediaCondition, type MediaRow } from "@/lib/media";
+import { likePattern, type PersonRow } from "@/lib/people";
 
 const RESULT_LIMIT = 50;
 
-export interface SearchFilters {
+interface SearchFilters {
   mediaType?: string;
   tagId?: string;
   personId?: string;
@@ -25,11 +25,6 @@ export interface SearchResults {
   media: MediaRow[];
   collections: CollectionRow[];
   places: PlaceResult[];
-}
-
-/** Escape LIKE wildcards in user input; used with ILIKE for name-ish fields. */
-function likePattern(q: string): string {
-  return `%${q.replace(/[%_\\]/g, (c) => `\\${c}`)}%`;
 }
 
 /**
@@ -137,22 +132,14 @@ export async function searchArchive(
         or exists (select 1 from media_faces mf where mf.media_id = ${mediaItems.id} and mf.person_id = ${filters.personId}))`,
     );
   }
-  let mediaResults = await db
+  // In the query, for the reason given on the people query above.
+  if (branchIds) mediaConditions.push(branchMediaCondition(branchIds));
+  const mediaResults = await db
     .select()
     .from(mediaItems)
     .where(and(...mediaConditions))
     .orderBy(sql`${mediaItems.createdAt} desc`)
     .limit(RESULT_LIMIT);
-  if (branchIds) {
-    // Same rule as the media grid: hide items tagged exclusively out-of-branch.
-    const { taggedPersonIdsByMedia } = await import("@/lib/media");
-    const taggedBy = await taggedPersonIdsByMedia(mediaResults.map((m) => m.id));
-    mediaResults = mediaResults.filter((m) => {
-      const tagged = taggedBy.get(m.id);
-      if (!tagged || tagged.length === 0) return true;
-      return tagged.some((personId) => branchIds.has(personId));
-    });
-  }
 
   // --- Collections (name/description; archive-wide in both scopes) ---
   const collectionConditions: SQL[] = [

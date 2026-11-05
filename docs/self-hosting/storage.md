@@ -42,7 +42,8 @@ the dev stack ships an optional MinIO for local testing:
 docker compose --profile minio up -d
 ```
 
-Then create a bucket (e.g. via the MinIO console on port 9001) and point the
+Then create a bucket (e.g. via the MinIO console on `localhost:9001`, which like the
+API is published on the loopback address only) and point the
 `S3_*` variables at `http://minio:9000` from inside the compose network.
 
 ## Upload limits
@@ -52,5 +53,6 @@ MEDIA_MAX_UPLOAD_MB=500   # per-file cap, enforced during streaming
 ```
 
 Accepted upload types: JPEG, PNG, WebP, GIF, HEIC, TIFF images; MP4, WebM,
-QuickTime video; MP3, M4A, WAV, OGG audio; PDF. Files are validated by MIME
-type and stored under generated keys — never under their original filenames.
+QuickTime video; MP3, M4A, WAV, OGG audio; PDF. An upload is refused if its leading
+bytes don't match the type it declares, and files are stored under generated keys —
+never under their original filenames.

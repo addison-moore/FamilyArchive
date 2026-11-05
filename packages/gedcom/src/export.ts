@@ -89,7 +89,9 @@ function sexValue(gender: string): string {
 }
 
 function pushNote(lines: string[], level: number, note: string): void {
-  const [first, ...rest] = escapeValue(note).split("\n");
+  // Browsers submit textareas with CRLF. Splitting on LF alone left a stray CR on
+  // every line but the last, so one file ended its lines two different ways.
+  const [first, ...rest] = escapeValue(note).split(/\r\n?|\n/);
   lines.push(`${level} NOTE ${first ?? ""}`.trimEnd());
   for (const cont of rest) {
     lines.push(`${level + 1} CONT ${cont}`.trimEnd());

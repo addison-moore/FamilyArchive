@@ -70,12 +70,12 @@ export async function AppHeader({ nav, trailing }: { nav?: ReactNode; trailing?:
                     "use server";
                     const current = await getSessionUser();
                     if (!current) return;
+                    // No updatedAt here: the session guard reads a newer updatedAt
+                    // as a password change, so bumping it signed the user out
+                    // of every device.
                     await getDb()
                       .update(users)
-                      .set({
-                        theme: current.theme === "dark" ? "light" : "dark",
-                        updatedAt: new Date(),
-                      })
+                      .set({ theme: current.theme === "dark" ? "light" : "dark" })
                       .where(eq(users.id, current.id));
                     revalidatePath("/", "layout");
                   }}

@@ -1,6 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { derivativeKey, exportKey, originalKey, uploadTempKey } from "./storage";
+import { derivativeKey, exportKey, isMissingObject, originalKey, uploadTempKey } from "./storage";
+
+describe("isMissingObject", () => {
+  const named = (name: string) => Object.assign(new Error("x"), { name });
+
+  it("recognises a missing file on either driver", () => {
+    expect(isMissingObject(Object.assign(new Error("x"), { code: "ENOENT" }))).toBe(true);
+    expect(isMissingObject(named("NoSuchKey"))).toBe(true);
+    expect(isMissingObject(named("NotFound"))).toBe(true);
+  });
+
+  it("leaves real faults alone", () => {
+    expect(isMissingObject(Object.assign(new Error("x"), { code: "EACCES" }))).toBe(false);
+    expect(isMissingObject(named("AccessDenied"))).toBe(false);
+    expect(isMissingObject("ENOENT")).toBe(false);
+  });
+});
 
 describe("storage keys", () => {
   const treeId = "tree-1";

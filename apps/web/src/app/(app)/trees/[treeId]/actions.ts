@@ -10,6 +10,7 @@ import {
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
+import { recordAudit } from "@/lib/audit";
 import { getPerson } from "@/lib/people";
 import { isTreeViewMode } from "@/lib/tree-graph";
 
@@ -76,7 +77,8 @@ export async function quickAddRelativeAction(formData: FormData): Promise<void> 
       ? isPartnerRelationshipType(type)
       : (direction === "parent" || direction === "child") && isParentRelationshipType(type);
   if (!typeMatchesDirection) return fail("Relationship type does not match");
-  if (!(await getPerson(treeId, anchorId))) return fail("Person not found");
+  const anchor = await getPerson(treeId, anchorId);
+  if (!anchor) return fail("Person not found");
 
   const newPersonId = await getDb().transaction(async (tx) => {
     const rows = await tx
@@ -94,6 +96,14 @@ export async function quickAddRelativeAction(formData: FormData): Promise<void> 
       direction === "parent" ? [created.id, anchorId] : [anchorId, created.id];
     await tx.insert(relationships).values({ treeId, fromPersonId, toPersonId, type });
     return created.id;
+  });
+  await recordAudit({
+    treeId,
+    actorId: user.id,
+    action: "person.created",
+    targetType: "person",
+    targetId: newPersonId,
+    summary: `Created person ${parsed.data.fullName}, linked to ${anchor.fullName} (${type.replace(/_/g, " ")})`,
   });
 
   redirect(

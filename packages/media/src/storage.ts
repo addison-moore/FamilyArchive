@@ -58,6 +58,20 @@ export class UnsatisfiableRangeError extends Error {
   }
 }
 
+/**
+ * True when a read failed because the object is not in storage (a volume restored
+ * without its media, a file removed by hand). The record outlives the bytes, so
+ * routes answer 404 rather than reporting a server fault for every request.
+ */
+export function isMissingObject(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  return (
+    (error as NodeJS.ErrnoException).code === "ENOENT" ||
+    error.name === "NoSuchKey" ||
+    error.name === "NotFound"
+  );
+}
+
 /** Generated object keys. Never derived from user input. */
 export function originalKey(
   treeId: string,

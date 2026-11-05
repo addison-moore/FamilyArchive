@@ -3,26 +3,22 @@
  * S3-compatible optional. Originals are immutable.
  */
 
-export { LocalStorageDriver } from "./local";
-export { S3StorageDriver, type S3DriverOptions } from "./s3";
 export {
   derivativeKey,
   exportKey,
+  isMissingObject,
   originalKey,
   treePrefix,
   uploadTempKey,
   UnsatisfiableRangeError,
-  type ByteRange,
-  type PutOptions,
   type StorageDriver,
-  type StorageObjectStream,
 } from "./storage";
 
 import { LocalStorageDriver } from "./local";
 import { S3StorageDriver } from "./s3";
 import type { StorageDriver } from "./storage";
 
-export interface StorageOptions {
+interface StorageOptions {
   driver: "local" | "s3";
   localPath?: string;
   s3?: {
@@ -36,7 +32,7 @@ export interface StorageOptions {
 }
 
 /** The storage-related environment, structurally — avoids a dependency on @familyarchive/config. */
-export interface StorageEnv {
+interface StorageEnv {
   MEDIA_LOCAL_PATH?: string;
   S3_ENDPOINT?: string;
   S3_REGION?: string;
