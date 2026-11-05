@@ -30,3 +30,14 @@ export async function recordAudit(entry: {
     console.error("audit write failed:", error);
   }
 }
+
+/**
+ * Who a removed account's audit entries belong to. Removing an account sets their
+ * `actorId` to null, which would otherwise read as "system"; `removeUser` records
+ * this in each entry's metadata first.
+ */
+export function formerActorLabel(metadata: unknown): string | null {
+  if (typeof metadata !== "object" || metadata === null) return null;
+  const label = (metadata as { formerActor?: unknown }).formerActor;
+  return typeof label === "string" ? label : null;
+}

@@ -62,6 +62,22 @@ export async function emailForResetToken(rawToken: string): Promise<string | nul
   return identifier ? identifier.slice("pwreset:".length) : null;
 }
 
+/**
+ * Burns every reset token for an address. Tokens are keyed on the address rather
+ * than the account, so one left behind can outlive the reason it was issued: after
+ * an email change or an account removal it would reset the password of whoever
+ * holds that address next, and after a password change a link still in someone's
+ * inbox would keep working until it expires.
+ */
+export async function clearResetTokens(
+  db: Pick<ReturnType<typeof getDb>, "delete">,
+  email: string,
+): Promise<void> {
+  await db
+    .delete(verificationTokens)
+    .where(eq(verificationTokens.identifier, identifierFor(email)));
+}
+
 /** Sets the new password hash and burns every reset token for that email. */
 export async function consumeResetToken(email: string, passwordHash: string): Promise<void> {
   const db = getDb();
@@ -70,8 +86,6 @@ export async function consumeResetToken(email: string, passwordHash: string): Pr
       .update(users)
       .set({ passwordHash, updatedAt: new Date() })
       .where(eq(users.email, email));
-    await tx
-      .delete(verificationTokens)
-      .where(eq(verificationTokens.identifier, identifierFor(email)));
+    await clearResetTokens(tx, email);
   });
 }

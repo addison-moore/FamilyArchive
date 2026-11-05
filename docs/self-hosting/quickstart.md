@@ -54,6 +54,10 @@ invite-only: family members join through invite links created by archive admins
 [environment reference](environment.md)), invites can be emailed directly;
 otherwise copy the invite link and share it yourself.
 
+As Owner you can also manage every account under **Manage users** in the account
+menu, including creating password reset links when SMTP isn't configured. See
+[accounts and passwords](accounts.md).
+
 ## Checking status
 
 ```bash

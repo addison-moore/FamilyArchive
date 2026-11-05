@@ -310,9 +310,17 @@ async function runExport(job: Job<ArchiveExportJob>, logger: pino.Logger, emailQ
     .update(archiveExports)
     .set({ status: "complete", fileSize: bundleBytes, counts, completedAt, expiresAt })
     .where(eq(archiveExports.id, exportId));
+  // Read now, not with the row when the job started: an export can outlast the account
+  // that asked for it, and a stale id fails the audit insert's foreign key.
+  const [requester] = row.requestedBy
+    ? await db
+        .select({ id: users.id, email: users.email })
+        .from(users)
+        .where(eq(users.id, row.requestedBy))
+    : [];
   await db.insert(auditLogs).values({
     treeId,
-    actorId: row.requestedBy,
+    actorId: requester?.id ?? null,
     action: "archive.exported",
     targetType: "tree",
     targetId: treeId,
@@ -323,25 +331,22 @@ async function runExport(job: Job<ArchiveExportJob>, logger: pino.Logger, emailQ
   // Tell the requester (silent no-op without SMTP, matching the web app).
   // Checking SMTP_HOST alone was not enough: the sender also needs SMTP_FROM,
   // so a host-only instance enqueued a notification that could never deliver.
-  if (smtpConfigured() && row.requestedBy) {
-    const [requester] = await db.select().from(users).where(eq(users.id, row.requestedBy));
-    if (requester?.email) {
-      const url = `${env.APP_URL}/trees/${treeId}/settings`;
-      const emailJob: EmailJob = {
-        to: requester.email,
-        subject: `Your export of "${tree.name}" is ready`,
-        text: `The archive export you requested is ready to download from the archive settings page: ${url}\n\nThe download stays available for ${EXPORT_RETENTION_DAYS} days.`,
-        html: renderBrandedEmail({
-          heading: `Your export of "${tree.name}" is ready`,
-          bodyLines: [
-            "The complete archive bundle you requested — family tree, original photos and documents, and all details — is ready to download.",
-            `The download stays available for ${EXPORT_RETENTION_DAYS} days.`,
-          ],
-          cta: { label: "Download the export", url },
-        }),
-      };
-      await emailQueue.add("send", emailJob);
-    }
+  if (smtpConfigured() && requester) {
+    const url = `${env.APP_URL}/trees/${treeId}/settings`;
+    const emailJob: EmailJob = {
+      to: requester.email,
+      subject: `Your export of "${tree.name}" is ready`,
+      text: `The archive export you requested is ready to download from the archive settings page: ${url}\n\nThe download stays available for ${EXPORT_RETENTION_DAYS} days.`,
+      html: renderBrandedEmail({
+        heading: `Your export of "${tree.name}" is ready`,
+        bodyLines: [
+          "The complete archive bundle you requested — family tree, original photos and documents, and all details — is ready to download.",
+          `The download stays available for ${EXPORT_RETENTION_DAYS} days.`,
+        ],
+        cta: { label: "Download the export", url },
+      }),
+    };
+    await emailQueue.add("send", emailJob);
   }
 }
 

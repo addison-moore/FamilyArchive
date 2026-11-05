@@ -120,6 +120,13 @@
       "when": 1793063564355,
       "tag": "0016_previous_jean_grey",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793855969412,
+      "tag": "0017_short_quentin_quire",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,9 @@ history and media archive.
 
 - Multi-archive instances with per-archive roles (admin/editor/contributor/
   viewer), invite links, and SMTP invite emails
+- Account settings for name, email and password, and Owner user management:
+  list users and their archives, create one-time password reset links (the
+  recovery path without SMTP), and remove accounts while keeping what they added
 - People, flexible relationships (adoption, step-parents, partners, and more),
   places, notes, soft delete
 - Interactive React Flow family tree with per-user starting person and view

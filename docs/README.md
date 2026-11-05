@@ -11,6 +11,7 @@ and media archive application.
 
 - [Quickstart (Docker Compose)](self-hosting/quickstart.md)
 - [Environment variables reference](self-hosting/environment.md)
+- [Accounts and passwords](self-hosting/accounts.md)
 - [GEDCOM import/export](self-hosting/gedcom.md)
 - [Storage configuration](self-hosting/storage.md)
 - [OCR and AI assistance](self-hosting/ocr-ai.md)

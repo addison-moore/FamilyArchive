@@ -80,16 +80,21 @@ function sourceFiles(): string[] {
 }
 
 describe("session invalidation", () => {
-  it("only a password reset writes users.updatedAt", () => {
+  it("only a password change or reset writes users.updatedAt", () => {
     // getSessionUser rejects any token older than users.updatedAt, so this column
     // doubles as "credentials changed at". Bumping it for anything else signs the
-    // user out of every device, which is what the theme toggle used to do.
+    // user out of every device, which is what the theme toggle used to do. Writes are
+    // counted, not files: account.ts has to bump it for a password change, and its
+    // name and email changes must not start doing the same.
     const writers = sourceFiles()
-      .filter((file) =>
-        /\.update\(users\)\s*\.set\(\{[^}]*updatedAt/.test(readFileSync(file, "utf8")),
-      )
-      .map((file) => path.basename(file));
-    expect(writers).toEqual(["password-reset.ts"]);
+      .flatMap((file) => {
+        const writes = readFileSync(file, "utf8").match(
+          /\.update\(users\)\s*\.set\(\{[^}]*updatedAt/g,
+        );
+        return (writes ?? []).map(() => path.basename(file));
+      })
+      .sort();
+    expect(writers).toEqual(["account.ts", "password-reset.ts"]);
   });
 });
 
