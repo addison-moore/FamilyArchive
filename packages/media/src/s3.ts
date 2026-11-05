@@ -181,9 +181,17 @@ export class S3StorageDriver implements StorageDriver {
       const keys = (listed.Contents ?? []).flatMap((o) => (o.Key ? [{ Key: o.Key }] : []));
       if (keys.length > 0) {
         // DeleteObjects caps at 1000 keys, which is also ListObjectsV2's page size.
-        await this.client.send(
+        const deleted = await this.client.send(
           new DeleteObjectsCommand({ Bucket: this.bucket, Delete: { Objects: keys } }),
         );
+        // It answers 200 even when it refused objects and lists them here. Ignored,
+        // that reported files as gone while they stayed in the bucket.
+        const refused = deleted.Errors ?? [];
+        if (refused.length > 0) {
+          throw new Error(
+            `S3 refused to delete ${refused.length} object(s) under ${prefix}: ${refused[0]?.Code ?? "unknown error"}`,
+          );
+        }
       }
       continuationToken = listed.IsTruncated ? listed.NextContinuationToken : undefined;
     } while (continuationToken);

@@ -1,5 +1,5 @@
 export { getDb } from "./client";
-export { isUniqueViolation } from "./errors";
-export { mergeMediaMetadata } from "./media-metadata";
+export { isForeignKeyViolation, isUniqueViolation } from "./errors";
+export { isPurgeStarted, mergeMediaMetadata } from "./media-metadata";
 export * from "./schema";
 export * from "./usage";

@@ -11,6 +11,7 @@ import {
   UPLOAD_MIME_TYPES,
 } from "@familyarchive/shared";
 import { asc, eq } from "drizzle-orm";
+import Link from "next/link";
 
 import { setMediaPageSizeAction } from "./actions";
 
@@ -18,12 +19,14 @@ import { Card, inputClass, subtleButtonClass } from "@/components/form";
 import { ListPager } from "@/components/list-pager";
 import { MediaThumb } from "@/components/media-thumb";
 import { MediaUpload } from "@/components/media-upload";
-import { QUOTA_FULL_MESSAGE, quotaState } from "@/lib/quota";
+import { QUOTA_FULL_ADMIN_MESSAGE, QUOTA_FULL_MESSAGE, quotaState } from "@/lib/quota";
 import { ScopeToggle } from "@/components/scope-toggle";
+import { TrashedNotice } from "@/components/trashed-notice";
 import { Alert, PageHeader, SegmentedLinks } from "@/components/ui";
 import { resolveView } from "@/lib/branch";
 import { countMedia, listMedia, thumbUrls } from "@/lib/media";
 import { listPeopleOptions } from "@/lib/people";
+import { trashUrl } from "@/lib/trash";
 
 /** Media library grid: all/my-uploads, type, tag, person filters. */
 export default async function MediaPage({
@@ -40,6 +43,7 @@ export default async function MediaPage({
     collection?: string;
     page?: string;
     size?: string;
+    trashed?: string;
   }>;
 }) {
   const { treeId } = await params;
@@ -53,6 +57,7 @@ export default async function MediaPage({
     collection,
     page: pageParam,
     size: sizeParam,
+    trashed,
   } = await searchParams;
 
   const view = await resolveView(user?.id ?? null, treeId, scopeParam);
@@ -85,9 +90,12 @@ export default async function MediaPage({
     mediaList.map((m) => m.id),
   );
   const canUpload = treeRoleAtLeast(role, "contributor");
+  const canOpenTrash = treeRoleAtLeast(role, "editor");
+  const canEmptyTrash = treeRoleAtLeast(role, "admin");
   const accept = Object.keys(UPLOAD_MIME_TYPES).join(",");
   const storage = canUpload ? await quotaState() : null;
   const storagePercent = storage?.percent ?? 0;
+  const showUpload = canUpload && storagePercent < 100;
 
   const viewQuery = (mineValue: boolean) => {
     const params = new URLSearchParams();
@@ -103,12 +111,31 @@ export default async function MediaPage({
   return (
     <div className="mx-auto max-w-6xl">
       <PageHeader title="Media">
-        {canUpload && storagePercent < 100 && <MediaUpload treeId={treeId} accept={accept} />}
+        {showUpload && <MediaUpload treeId={treeId} accept={accept} />}
+        {canOpenTrash && (
+          // The upload button pushes itself to the end of the row. Without it, this has to.
+          <Link
+            href={trashUrl(treeId, "media")}
+            className={`${subtleButtonClass} no-underline ${showUpload ? "" : "ml-auto"}`}
+          >
+            Trash
+          </Link>
+        )}
       </PageHeader>
+
+      {trashed && canOpenTrash && <TrashedNotice treeId={treeId} kind="media" id={trashed} />}
 
       {storagePercent >= 100 ? (
         <Alert tone="danger" className="mb-4">
-          {QUOTA_FULL_MESSAGE}
+          {canEmptyTrash ? QUOTA_FULL_ADMIN_MESSAGE : QUOTA_FULL_MESSAGE}
+          {canEmptyTrash && (
+            <>
+              {" "}
+              <Link href={trashUrl(treeId, "media")} className="underline">
+                Open Trash
+              </Link>
+            </>
+          )}
         </Alert>
       ) : (
         storagePercent >= 90 && (

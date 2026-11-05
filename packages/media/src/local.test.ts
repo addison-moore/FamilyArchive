@@ -6,7 +6,15 @@ import { Readable } from "node:stream";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { LocalStorageDriver } from "./local";
-import { UnsatisfiableRangeError, type StorageObjectStream } from "./storage";
+import {
+  derivativeKey,
+  exportKey,
+  mediaPrefix,
+  originalKey,
+  uploadTempKey,
+  UnsatisfiableRangeError,
+  type StorageObjectStream,
+} from "./storage";
 
 let root: string;
 let driver: LocalStorageDriver;
@@ -103,5 +111,27 @@ describe("LocalStorageDriver", () => {
     await driver.delete("final/spot");
     await expect(driver.getStream("final/spot")).rejects.toThrow(/ENOENT/);
     await expect(driver.delete("never-existed")).resolves.toBeUndefined();
+  });
+
+  it("removes one media item's files and nothing beside them", async () => {
+    const removed = [
+      originalKey("t1", "m1", "hash", "png"),
+      derivativeKey("t1", "m1", "thumb_512.webp"),
+      uploadTempKey("t1", "m1"),
+    ];
+    const kept = [
+      originalKey("t1", "m10", "hash", "png"), // an id that starts the same way
+      originalKey("t2", "m1", "hash", "png"), // the same id in another archive
+      exportKey("t1", "e1"),
+    ];
+    for (const key of [...removed, ...kept]) await put(key, key);
+
+    await driver.deletePrefix(mediaPrefix("t1", "m1"));
+
+    for (const key of removed) await expect(driver.getStream(key)).rejects.toThrow(/ENOENT/);
+    for (const key of kept) expect(await readAll(await driver.getStream(key))).toBe(key);
+
+    // A retried removal finds nothing left and must not fail.
+    await expect(driver.deletePrefix(mediaPrefix("t1", "m1"))).resolves.toBeUndefined();
   });
 });

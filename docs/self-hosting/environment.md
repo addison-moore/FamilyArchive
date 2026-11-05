@@ -30,7 +30,7 @@ error.
 | `MEDIA_STORAGE_DRIVER` | `local`       | `local` or `s3`                                                                            |
 | `MEDIA_LOCAL_PATH`     | `/data/media` | Media path for the local driver (fixed inside the compose deployment; a bare-metal knob)   |
 | `MEDIA_MAX_UPLOAD_MB`  | `500`         | Per-file upload cap                                                                        |
-| `MEDIA_QUOTA_MB`       | `0`           | Total media storage cap (originals + previews); `0` = unlimited                            |
+| `MEDIA_QUOTA_MB`       | `0`           | Total media storage cap (originals + previews, including Trash); `0` = unlimited           |
 | `METRICS_TOKEN`        | —             | Enables `GET /api/admin/usage` (bearer auth) for external tooling                          |
 | `TRUST_PROXY_HEADERS`  | `false`       | Read `X-Forwarded-For` / `X-Real-IP` when rate limiting; only enable behind your own proxy |
 | `S3_*`                 | —             | S3-compatible storage; see [storage.md](storage.md) and the `.env` template                |

@@ -1,6 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { isUniqueViolation } from "./errors";
+import { isForeignKeyViolation, isUniqueViolation } from "./errors";
+
+describe("isForeignKeyViolation", () => {
+  it("recognizes a driver error wrapped by drizzle", () => {
+    const wrapped = new Error("Failed query: insert into media_derivatives ...", {
+      cause: Object.assign(new Error("violates foreign key constraint"), { code: "23503" }),
+    });
+    expect(isForeignKeyViolation(wrapped)).toBe(true);
+  });
+
+  it("rejects other database errors and anything else", () => {
+    for (const value of [{ code: "23505" }, new Error("23503"), null, undefined, "23503"]) {
+      expect(isForeignKeyViolation(value), String(value)).toBe(false);
+    }
+  });
+});
 
 /**
  * The wrapped cases are the ones that matter. Drizzle does not rethrow the

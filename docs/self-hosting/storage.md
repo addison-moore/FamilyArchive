@@ -56,3 +56,20 @@ Accepted upload types: JPEG, PNG, WebP, GIF, HEIC, TIFF images; MP4, WebM,
 QuickTime video; MP3, M4A, WAV, OGG audio; PDF. An upload is refused if its leading
 bytes don't match the type it declares, and files are stored under generated keys —
 never under their original filenames.
+
+## Deleted files and freeing space
+
+Deleting a file only moves it to the archive's [Trash](../concepts.md): its original
+and previews stay in storage, still count toward `MEDIA_QUOTA_MB`, and can be
+restored. An archive admin frees the space by removing the item permanently from
+Trash, which deletes the original and its previews from whichever driver stored them
+and updates the usage figures. If the removal fails, the item stays in Trash and the
+admin can try again. Nothing is removed automatically.
+
+On S3-compatible storage, the credentials need to list, read, write and delete
+objects in the bucket. If the bucket has versioning or object lock turned on, a delete
+may only hide an object, and its storage stays in use until your provider's lifecycle
+rules clear it. FamilyArchive can't see that from its side.
+
+Permanent removal doesn't reach copies made earlier: your
+[backups](backup-restore.md) and any [export bundle](export.md) still contain the file.

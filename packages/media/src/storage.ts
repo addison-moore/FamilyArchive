@@ -16,9 +16,10 @@ export interface StorageObjectStream {
 }
 
 /**
- * Storage driver seam. Originals are immutable: `delete` exists
- * for temp-upload cleanup and future derivative management, never for mutating
- * a stored original in place.
+ * Storage driver seam. Originals are immutable: nothing overwrites or alters one.
+ * `delete` and `deletePrefix` remove objects outright, and for an original that
+ * happens only when an admin permanently removes an item from Trash or an archive
+ * is deleted (PRD §5.6).
  */
 export interface PutOptions {
   /** Allowed only for regenerable derivatives — originals are never overwritten. */
@@ -31,9 +32,10 @@ export interface StorageDriver {
   move(fromKey: string, toKey: string): Promise<void>;
   delete(key: string): Promise<void>;
   /**
-   * Delete every object under a key prefix. Needed when an archive is deleted:
-   * the DB rows holding the storage keys cascade away, so without a prefix
-   * sweep the bytes are unreachable and would sit on disk forever.
+   * Delete every object under a key prefix: one media item's files when it is
+   * permanently removed from Trash, or a whole archive's once its rows have cascaded
+   * away. Missing objects are not an error, so a retry is safe. Any object it could
+   * not remove is, because callers go on to report the space as freed.
    */
   deletePrefix(prefix: string): Promise<void>;
 }
@@ -41,6 +43,18 @@ export interface StorageDriver {
 /** Everything stored for one archive. */
 export function treePrefix(treeId: string): string {
   return `trees/${treeId}/`;
+}
+
+/**
+ * Everything stored for one media item: its original, derivatives and any temp upload.
+ *
+ * The trailing slash matters on S3, where a prefix is a plain string match, so
+ * `…/media/abc` would also take `…/media/abcd`. Empty ids are refused because on the
+ * local driver `trees/t/media//` resolves to the whole archive's media.
+ */
+export function mediaPrefix(treeId: string, mediaId: string): string {
+  if (!treeId || !mediaId) throw new Error("A media prefix needs an archive id and a media id");
+  return `trees/${treeId}/media/${mediaId}/`;
 }
 
 /**

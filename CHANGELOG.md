@@ -8,7 +8,9 @@ history and media archive.
 - Multi-archive instances with per-archive roles (admin/editor/contributor/
   viewer), invite links, and SMTP invite emails
 - People, flexible relationships (adoption, step-parents, partners, and more),
-  places, notes, soft delete
+  places, notes
+- Trash: deleted people and files can be restored by editors, or permanently
+  removed by admins, which frees their storage
 - Interactive React Flow family tree with per-user starting person and view
   modes
 - GEDCOM import/export with raw-record preservation; import into an existing

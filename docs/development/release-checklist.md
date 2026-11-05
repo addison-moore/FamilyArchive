@@ -15,11 +15,13 @@ pnpm typecheck && pnpm lint && pnpm format:check && pnpm test:unit && pnpm build
 ```bash
 docker compose down -v
 docker compose -f compose.yaml -f docker/docker-compose.mailpit.yml up -d --build
-pnpm test:smoke
+SMOKE_APP_EXEC="docker compose exec -T app" pnpm test:smoke
 ```
 
 Expected: the `core`, `permissions`, and `features` projects all pass; the
-`quota` and `s3` projects report skipped (they run below).
+`quota` and `s3` projects report skipped (they run below). `SMOKE_APP_EXEC` lets
+the Trash spec check that permanently removed files have left the media volume.
+Without it, that one check is skipped.
 
 ## 3. Storage-quota pass (fresh stack with a tiny quota)
 
@@ -34,7 +36,8 @@ QUOTA_SMOKE=1 pnpm --filter @familyarchive/smoke-tests exec playwright test --pr
 ```bash
 docker compose down -v
 docker compose -f compose.yaml -f docker/docker-compose.s3.yml --profile minio up -d --build
-S3_SMOKE=1 pnpm --filter @familyarchive/smoke-tests exec playwright test --project=s3
+SMOKE_MINIO_EXEC="docker compose -f compose.yaml -f docker/docker-compose.s3.yml --profile minio exec -T minio" \
+  S3_SMOKE=1 pnpm --filter @familyarchive/smoke-tests exec playwright test --project=s3
 ```
 
 ## 5. Tag and publish

@@ -106,6 +106,20 @@ describe("database writes", () => {
   });
 });
 
+describe("removing stored files", () => {
+  it("happens only in the places that may remove an original", () => {
+    // An original leaves storage only by a deliberate, audited act (PRD §5.6): permanent
+    // removal from Trash, or deleting an archive. The worker's media job also clears
+    // what it stored for an item removed mid-run. A new caller needs that same scrutiny.
+    const callers = sourceFiles()
+      .filter((file) => !file.endsWith(".test.ts"))
+      .filter((file) => /\.deletePrefix\(/.test(readFileSync(file, "utf8")))
+      .map((file) => path.basename(file))
+      .sort();
+    expect(callers).toEqual(["media.ts", "trash.ts", "tree-cleanup.ts"]);
+  });
+});
+
 describe("authorization guard coverage", () => {
   it("every (app) server action calls a guard", () => {
     const files = findFiles("(app)", "actions.ts");

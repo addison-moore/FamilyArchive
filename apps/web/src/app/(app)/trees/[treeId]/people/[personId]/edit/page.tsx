@@ -115,14 +115,15 @@ export default async function EditPersonPage({
       <Card>
         <h2 className="mb-1 text-lg font-semibold text-danger">Delete person</h2>
         <p className="mb-4 text-sm text-archive-700">
-          {person.fullName} will disappear from the tree, lists, and search. Their record and photos
-          are kept on the server.
+          {person.fullName} will disappear from the tree, lists and search. Restoring them from
+          Trash brings back their relationships and photo tags. Their photos stay in the library
+          either way.
         </p>
         <form action={deletePersonAction}>
           <input type="hidden" name="treeId" value={treeId} />
           <input type="hidden" name="personId" value={personId} />
           <button type="submit" className={dangerButtonClass}>
-            Delete {person.fullName}
+            Move {person.fullName} to Trash
           </button>
         </form>
       </Card>

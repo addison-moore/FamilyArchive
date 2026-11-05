@@ -19,7 +19,8 @@ import { Alert, Badge, PageHeader } from "@/components/ui";
 
 import { ExportStatusPoller } from "@/components/export-status-poller";
 import { latestExport } from "@/lib/export";
-import { quotaState } from "@/lib/quota";
+import { QUOTA_FULL_ADMIN_MESSAGE, quotaState } from "@/lib/quota";
+import { trashSummary, trashUrl } from "@/lib/trash";
 
 import {
   changeMemberRoleAction,
@@ -51,7 +52,11 @@ export default async function TreeSettingsPage({
   const { error, invite: createdToken, emailed, smtp } = await searchParams;
 
   const db = getDb();
-  const [exportRow, storage] = await Promise.all([latestExport(treeId), quotaState()]);
+  const [exportRow, storage, trash] = await Promise.all([
+    latestExport(treeId),
+    quotaState(),
+    trashSummary(treeId),
+  ]);
   const [treeRows, members, activeInvites] = await Promise.all([
     db.select().from(trees).where(eq(trees.id, treeId)).limit(1),
     db
@@ -331,10 +336,7 @@ export default async function TreeSettingsPage({
               />
             </div>
             {(storage.percent ?? 0) >= 100 ? (
-              <p className="mt-3 text-sm text-danger">
-                Storage is full — new uploads are paused. Raise the limit on the server; deleting
-                media does not reclaim space, because originals are preserved.
-              </p>
+              <p className="mt-3 text-sm text-danger">{QUOTA_FULL_ADMIN_MESSAGE}</p>
             ) : (
               (storage.percent ?? 0) >= 90 && (
                 <p className="mt-3 text-sm text-warn">
@@ -344,6 +346,14 @@ export default async function TreeSettingsPage({
             )}
           </>
         )}
+        <p className="mt-3 text-sm text-archive-700">
+          {trash.media === 0
+            ? "No files in this archive's Trash."
+            : `This archive's Trash holds ${trash.media} ${trash.media === 1 ? "file" : "files"} using ${formatBytes(trash.bytes)}, which counts as used until removed permanently.`}{" "}
+          <Link href={trashUrl(treeId, "media")} className="text-accent-600 hover:underline">
+            Open Trash
+          </Link>
+        </p>
       </Card>
 
       <Card>
@@ -399,7 +409,7 @@ export default async function TreeSettingsPage({
             <form action={requestArchiveExportAction} className="space-y-3">
               <input type="hidden" name="treeId" value={treeId} />
               <CheckboxField name="includeDeleted">
-                Also include people and files that were deleted
+                Also include people and files in Trash
               </CheckboxField>
               <button type="submit" className={subtleButtonClass}>
                 {exportRow?.status === "complete" ? "Export a fresh copy" : "Export archive"}
@@ -415,7 +425,7 @@ export default async function TreeSettingsPage({
             Danger zone
           </h2>
           <p className="mb-4 text-sm text-archive-700">
-            Deleting an archive permanently removes its people, media records, memberships, and
+            Deleting an archive permanently removes its people, media files, memberships, and
             invites. Type the archive name (<strong>{tree.name}</strong>) to confirm.
           </p>
           <form action={deleteTreeAction} className="flex flex-wrap items-center gap-3">

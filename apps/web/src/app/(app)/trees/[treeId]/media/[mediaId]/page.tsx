@@ -525,14 +525,14 @@ export default async function MediaDetailPage({
                   </summary>
                   <div className="space-y-2 px-3 py-2">
                     <p className="text-xs text-archive-700">
-                      Removes this item from the library. The original file stays safely on the
-                      server.
+                      Moves this item to Trash. An editor can restore it from there with its tags
+                      and collections. It keeps using storage until an admin removes it permanently.
                     </p>
                     <form action={deleteMediaAction}>
                       <input type="hidden" name="treeId" value={treeId} />
                       <input type="hidden" name="mediaId" value={mediaId} />
                       <button type="submit" className={`${dangerButtonClass} w-full`}>
-                        Delete permanently from library
+                        Move to Trash
                       </button>
                     </form>
                   </div>

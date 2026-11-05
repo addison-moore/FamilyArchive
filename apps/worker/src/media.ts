@@ -8,12 +8,13 @@ import { promisify } from "node:util";
 
 import {
   getDb,
+  isForeignKeyViolation,
   mediaDerivatives,
   mediaItems,
   mergeMediaMetadata,
   recomputeInstanceUsage,
 } from "@familyarchive/db";
-import { derivativeKey } from "@familyarchive/media";
+import { derivativeKey, mediaPrefix } from "@familyarchive/media";
 import {
   FACES_QUEUE,
   isFaceDetectionEligible,
@@ -224,34 +225,43 @@ async function processMedia(
       outputs = await processPdf(sourcePath, workDir, job);
     } // audio: no derivatives
 
-    for (const output of outputs) {
-      const key = derivativeKey(treeId, mediaId, output.fileName);
-      await driver.putStream(key, createReadStream(output.localPath), { overwrite: true });
-      const size = (await stat(output.localPath)).size;
-      await db
-        .insert(mediaDerivatives)
-        .values({
-          mediaId,
-          kind: output.kind,
-          page: output.page,
-          storageDriver: media.storageDriver,
-          storageKey: key,
-          mimeType: "image/webp",
-          fileSize: size,
-          width: output.width,
-          height: output.height,
-        })
-        .onConflictDoUpdate({
-          target: [mediaDerivatives.mediaId, mediaDerivatives.kind, mediaDerivatives.page],
-          set: {
+    try {
+      for (const output of outputs) {
+        const key = derivativeKey(treeId, mediaId, output.fileName);
+        await driver.putStream(key, createReadStream(output.localPath), { overwrite: true });
+        const size = (await stat(output.localPath)).size;
+        await db
+          .insert(mediaDerivatives)
+          .values({
+            mediaId,
+            kind: output.kind,
+            page: output.page,
             storageDriver: media.storageDriver,
             storageKey: key,
+            mimeType: "image/webp",
             fileSize: size,
             width: output.width,
             height: output.height,
-            createdAt: new Date(),
-          },
-        });
+          })
+          .onConflictDoUpdate({
+            target: [mediaDerivatives.mediaId, mediaDerivatives.kind, mediaDerivatives.page],
+            set: {
+              storageDriver: media.storageDriver,
+              storageKey: key,
+              fileSize: size,
+              width: output.width,
+              height: output.height,
+              createdAt: new Date(),
+            },
+          });
+      }
+    } catch (error) {
+      // The item was permanently removed while this job ran. The file just stored has
+      // no row to belong to, so nothing would ever find it or count it.
+      if (!isForeignKeyViolation(error)) throw error;
+      await driver.deletePrefix(mediaPrefix(treeId, mediaId));
+      logger.info({ mediaId }, "media removed during processing, stored files cleaned up");
+      return;
     }
 
     await setStatus(mediaId, "processed");

@@ -113,7 +113,7 @@ export function MediaUpload({ treeId, accept }: { treeId: string; accept: string
         Upload media
       </button>
       {uploads.length > 0 && (
-        <ul className="basis-full space-y-1.5">
+        <ul className="order-last basis-full space-y-1.5">
           {uploads.map((upload, index) => (
             <li key={index} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
               <span className="max-w-56 min-w-0 truncate">{upload.name}</span>

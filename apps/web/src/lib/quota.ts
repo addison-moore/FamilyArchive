@@ -7,14 +7,17 @@ import { enqueueEmail } from "@/lib/jobs";
 
 /**
  * Shown wherever the quota blocks an upload. It deliberately does NOT suggest
- * deleting media: media deletion is a soft delete (PRD §5.6 keeps originals
- * immutable and on disk), and `recomputeInstanceUsage` counts soft-deleted rows
- * on purpose, so nothing a user can do in the app reduces the number. Raising
- * MEDIA_QUOTA_MB is the only remedy — promising otherwise sent people deleting
- * their own media to no effect.
+ * deleting media: that only moves it to Trash, where it keeps its files and still
+ * counts (`recomputeInstanceUsage` includes soft-deleted rows on purpose). Promising
+ * otherwise sent people deleting their own media to no effect. What frees space is an
+ * admin permanently removing items from Trash, or a higher MEDIA_QUOTA_MB.
  */
 export const QUOTA_FULL_MESSAGE =
-  "This archive's storage is full and new uploads are paused. Ask your administrator to raise the storage limit.";
+  "This archive's storage is full and new uploads are paused. Ask an admin to permanently remove items from Trash or raise the storage limit.";
+
+/** The same situation, for someone who can do something about it. */
+export const QUOTA_FULL_ADMIN_MESSAGE =
+  "Storage is full and new uploads are paused. Permanently removing items from Trash frees space, or you can raise the limit on the server.";
 
 export interface QuotaState {
   /** null = no quota configured (unlimited). */
@@ -70,7 +73,7 @@ export async function maybeNotifyOwners(): Promise<void> {
     level === 100 ? "Your archive's storage is full" : "Your archive's storage is almost full";
   const body =
     level === 100
-      ? `Media storage has reached its ${env.MEDIA_QUOTA_MB} MB limit — new uploads are paused until the limit is raised. Deleting media does not reclaim the space: originals are preserved on disk.`
+      ? `Media storage has reached its ${env.MEDIA_QUOTA_MB} MB limit, so new uploads are paused. Permanently removing items from an archive's Trash frees space, but moving them to Trash doesn't. You can also raise the limit on the server.`
       : `Media storage is at ${percent}% of its ${env.MEDIA_QUOTA_MB} MB limit.`;
   for (const owner of owners) {
     if (!owner.email) continue;

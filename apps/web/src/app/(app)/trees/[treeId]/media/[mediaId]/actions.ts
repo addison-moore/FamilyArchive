@@ -106,7 +106,7 @@ export async function updateMediaAction(formData: FormData): Promise<void> {
   redirect(mediaPath(treeId, mediaId));
 }
 
-/** Soft delete. The original file stays in storage. */
+/** Moves the item to Trash (PRD §5.8). Its files stay in storage until an admin removes it. */
 export async function deleteMediaAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const mediaId = String(formData.get("mediaId") ?? "");
@@ -126,8 +126,9 @@ export async function deleteMediaAction(formData: FormData): Promise<void> {
       action: "media.deleted",
       targetType: "media",
       targetId: mediaId,
-      summary: `Deleted media ${deleted[0].title || deleted[0].originalFilename}`,
+      summary: `Moved media ${deleted[0].title || deleted[0].originalFilename} to Trash`,
     });
+    redirect(`/trees/${treeId}/media?trashed=${mediaId}`);
   }
   redirect(`/trees/${treeId}/media`);
 }

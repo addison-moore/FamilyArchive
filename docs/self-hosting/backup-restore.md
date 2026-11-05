@@ -48,6 +48,16 @@ docker compose exec -u 0 app chown -R app:app /data/media       # cp leaves them
 Log in with your existing account — users, archives, and media metadata come
 from the database dump; the copied files line up via their stored storage keys.
 
+## Bringing back one deleted item
+
+You don't need a backup for this. Something deleted by mistake is in the archive's
+[Trash](../concepts.md), and an editor or admin can restore it from there.
+
+A backup only matters for an item an admin **removed permanently** from Trash, which
+deletes its files. Restoring a backup returns the whole instance to the moment it was
+taken, so if you only want that one item, restore the backup into a separate install
+and copy the file out.
+
 ## What about migrations?
 
 Restores must run against the **same or newer** application version than the

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui";
 import type { MediaRow } from "@/lib/media";
 import { mediaUrl } from "@/lib/media";
 
-const TYPE_ICONS: Record<string, string> = {
+export const TYPE_ICONS: Record<string, string> = {
   video: "🎞",
   audio: "🎙",
   pdf: "📄",
