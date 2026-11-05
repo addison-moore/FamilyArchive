@@ -210,7 +210,7 @@ export async function updatePersonAction(formData: FormData): Promise<void> {
   redirect(`${peoplePath(treeId)}/${personId}`);
 }
 
-/** Soft delete: the row is kept, flagged, and filtered out. */
+/** Moves the person to Trash (PRD §5.8): the row is kept, flagged, and filtered out. */
 export async function deletePersonAction(formData: FormData): Promise<void> {
   const treeId = String(formData.get("treeId") ?? "");
   const personId = String(formData.get("personId") ?? "");
@@ -228,8 +228,9 @@ export async function deletePersonAction(formData: FormData): Promise<void> {
       action: "person.deleted",
       targetType: "person",
       targetId: personId,
-      summary: `Deleted person ${deleted[0].fullName}`,
+      summary: `Moved person ${deleted[0].fullName} to Trash`,
     });
+    redirect(`${peoplePath(treeId)}?trashed=${personId}`);
   }
   redirect(peoplePath(treeId));
 }

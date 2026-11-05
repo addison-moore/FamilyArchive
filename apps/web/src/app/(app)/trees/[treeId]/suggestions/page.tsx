@@ -56,8 +56,10 @@ export default async function SuggestionsPage({
       submitterName: users.name,
       submitterEmail: users.email,
       personName: people.fullName,
+      personDeletedAt: people.deletedAt,
       mediaTitle: mediaItems.title,
       mediaFilename: mediaItems.originalFilename,
+      mediaDeletedAt: mediaItems.deletedAt,
     })
     .from(suggestions)
     .leftJoin(users, eq(suggestions.suggestedBy, users.id))
@@ -72,17 +74,20 @@ export default async function SuggestionsPage({
 
   const targetLabel = (row: (typeof rows)[number]): { label: string; href: string | null } => {
     const s = row.suggestion;
+    // Suggestions point at their target with no foreign key, so it can be in Trash or
+    // gone for good, and neither has a page to link to.
     if (s.targetType === "person" && s.targetId) {
-      return {
-        label: row.personName ?? "a person",
-        href: `/trees/${treeId}/people/${s.targetId}`,
-      };
+      if (!row.personName) return { label: "a person who was removed", href: null };
+      return row.personDeletedAt
+        ? { label: `${row.personName} (in Trash)`, href: null }
+        : { label: row.personName, href: `/trees/${treeId}/people/${s.targetId}` };
     }
     if (s.targetType === "media" && s.targetId) {
-      return {
-        label: row.mediaTitle ?? row.mediaFilename ?? "a media item",
-        href: `/trees/${treeId}/media/${s.targetId}`,
-      };
+      const name = row.mediaTitle ?? row.mediaFilename;
+      if (!name) return { label: "an item that was removed", href: null };
+      return row.mediaDeletedAt
+        ? { label: `${name} (in Trash)`, href: null }
+        : { label: name, href: `/trees/${treeId}/media/${s.targetId}` };
     }
     return { label: "the archive", href: null };
   };

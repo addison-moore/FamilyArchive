@@ -7,6 +7,7 @@ export {
   derivativeKey,
   exportKey,
   isMissingObject,
+  mediaPrefix,
   originalKey,
   treePrefix,
   uploadTempKey,

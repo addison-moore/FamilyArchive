@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { derivativeKey, exportKey, isMissingObject, originalKey, uploadTempKey } from "./storage";
+import {
+  derivativeKey,
+  exportKey,
+  isMissingObject,
+  mediaPrefix,
+  originalKey,
+  uploadTempKey,
+} from "./storage";
 
 describe("isMissingObject", () => {
   const named = (name: string) => Object.assign(new Error("x"), { name });
@@ -33,6 +40,29 @@ describe("storage keys", () => {
     expect(derivativeKey(treeId, mediaId, "thumb-320.webp")).toBe(
       "trees/tree-1/media/media-1/derivatives/thumb-320.webp",
     );
+  });
+
+  it("holds every key the app writes for an item, so removing the prefix removes them all", () => {
+    const prefix = mediaPrefix(treeId, mediaId);
+    for (const key of [
+      originalKey(treeId, mediaId, "abc123", "jpg"),
+      derivativeKey(treeId, mediaId, "thumb_512.webp"),
+      uploadTempKey(treeId, mediaId),
+    ]) {
+      expect(key.startsWith(prefix), key).toBe(true);
+    }
+  });
+
+  it("ends the media prefix in a slash, so a longer id can't match it on S3", () => {
+    const prefix = mediaPrefix(treeId, mediaId);
+    expect(prefix).toBe("trees/tree-1/media/media-1/");
+    expect(originalKey(treeId, "media-10", "abc123", "jpg").startsWith(prefix)).toBe(false);
+  });
+
+  it("refuses to build a media prefix from an empty id", () => {
+    // `trees/tree-1/media//` resolves to the whole archive's media on the local driver.
+    expect(() => mediaPrefix(treeId, "")).toThrow();
+    expect(() => mediaPrefix("", mediaId)).toThrow();
   });
 
   it("keeps export bundles outside the media prefix", () => {

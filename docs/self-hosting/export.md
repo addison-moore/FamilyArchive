@@ -34,8 +34,8 @@ curl -OJ https://your-host/api/trees/<archive-id>/export/download
 | `README.txt`    | What the bundle is and how to use it                                                                                                         |
 
 Per-file SHA-256 checksums for `media/` are the `hash` field on each media
-record in `data.json`. Deleted people and files are excluded unless the
-"Also include people and files that were deleted" option is checked.
+record in `data.json`. People and files in Trash are excluded unless the
+"Also include people and files in Trash" option is checked.
 
 ## Using the bundle
 
@@ -53,3 +53,5 @@ record in `data.json`. Deleted people and files are excluded unless the
   automatically wherever the originals are uploaded.
 - Bundles are stored next to your media (local disk or S3) but never count
   against a storage quota; expired bundles are cleaned up automatically.
+- A bundle is a snapshot: permanently removing an item from Trash doesn't change
+  a bundle made before that.

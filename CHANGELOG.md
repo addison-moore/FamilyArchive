@@ -11,7 +11,9 @@ history and media archive.
   list users and their archives, create one-time password reset links (the
   recovery path without SMTP), and remove accounts while keeping what they added
 - People, flexible relationships (adoption, step-parents, partners, and more),
-  places, notes, soft delete
+  places, notes
+- Trash: deleted people and files can be restored by editors, or permanently
+  removed by admins, which frees their storage
 - Interactive React Flow family tree with per-user starting person and view
   modes
 - GEDCOM import/export with raw-record preservation; import into an existing

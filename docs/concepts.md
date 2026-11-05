@@ -49,6 +49,22 @@ viewable by anyone with the link, with no account. Public visitors cannot
 edit, upload, tag, or suggest. Search-engine indexing is a separate opt-in;
 without it the pages carry a `noindex` tag.
 
+## Trash
+
+Deleting a person or file moves it to the archive's **Trash**. It disappears from
+the tree, lists and search, but nothing is lost: restoring brings back a person's
+relationships and photo tags, and a file's tags and collections. Editors and admins
+can restore from Trash, which they reach from the Media and People pages.
+
+An admin can also **remove an item permanently**, which deletes its record and, for
+a file, the original and its previews from storage. That is the only thing that
+frees the space a deleted file uses, and it can't be undone: only a backup or an
+earlier export can bring the item back. Nothing is ever removed automatically.
+
+Someone who was merged into another person stays in Trash as a record under
+**Merged**. They can't be restored, because everything they held moved to the person
+they were merged into.
+
 ## Suggestions and the audit log
 
 Members who can't edit directly (viewers and contributors) can **suggest

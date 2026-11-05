@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
 
 import { expect, test, type Page } from "@playwright/test";
@@ -12,9 +13,12 @@ import { createArchive, OWNER, samplePng, uploadMedia } from "./helpers";
  *   docker compose -f compose.yaml -f docker/docker-compose.s3.yml --profile minio up -d --build
  *   S3_SMOKE=1 pnpm --filter @familyarchive/smoke-tests exec playwright test --project=s3
  *
- * The default suite (`pnpm test:smoke`) skips them.
+ * The default suite (`pnpm test:smoke`) skips them. SMOKE_MINIO_EXEC is the command
+ * that reaches the MinIO container (see docs/development/release-checklist.md); with
+ * it, the removal test also looks in the bucket.
  */
 const enabled = process.env.S3_SMOKE === "1";
+const MINIO_EXEC = process.env.SMOKE_MINIO_EXEC;
 
 test.describe.configure({ mode: "serial" });
 test.skip(!enabled, "set S3_SMOKE=1 (with the s3 compose override stack) to run");
@@ -79,4 +83,35 @@ test("range requests are honored via the S3 ContentRange path", async () => {
   const body = await ranged.body();
   expect(body).toHaveLength(8);
   expect([...body.subarray(0, 4)]).toEqual([0x89, 0x50, 0x4e, 0x47]);
+});
+
+test("removing an item permanently deletes its objects from the bucket", async () => {
+  // MinIO keeps one xl.meta per object on disk. Its image has `ls` but not `find`.
+  const objects = () =>
+    execSync(
+      `${MINIO_EXEC} sh -c 'ls -R /data/familyarchive-media/trees/${treeId}/media/${photoId} 2>/dev/null || true'`,
+      { encoding: "utf8" },
+    )
+      .split("\n")
+      .filter((line) => line.trim() === "xl.meta");
+  if (MINIO_EXEC) expect(objects().length).toBeGreaterThanOrEqual(2);
+
+  await page.goto(`/trees/${treeId}/media/${photoId}`);
+  await page.locator('summary[title="More options"]').click();
+  await page.getByText("Delete…", { exact: true }).click();
+  await page.getByRole("button", { name: "Move to Trash" }).click();
+  await page.waitForURL(/\?trashed=/);
+  // Moving to Trash leaves the objects where they are.
+  if (MINIO_EXEC) expect(objects().length).toBeGreaterThanOrEqual(2);
+
+  await page.goto(`/trees/${treeId}/trash?view=media`);
+  const row = page.getByRole("listitem").filter({ hasText: "s3-photo.png" });
+  await row.getByText("Remove permanently…").click();
+  await row.getByLabel("Type REMOVE to confirm").fill("REMOVE");
+  await row.getByRole("button", { name: "Remove permanently", exact: true }).click();
+  await expect(page.getByText("Permanently removed.")).toBeVisible();
+
+  if (MINIO_EXEC) expect(objects()).toEqual([]);
+  const original = await page.request.get(`/api/trees/${treeId}/media/${photoId}/original`);
+  expect(original.status()).toBe(404);
 });

@@ -157,8 +157,8 @@ test("deleting a person soft-deletes: gone from lists, search, and direct URLs",
 
   await ownerPage.getByRole("link", { name: "Edit" }).click();
   await ownerPage.waitForURL(/\/edit$/);
-  await ownerPage.getByRole("button", { name: "Delete Cordelia Winslow" }).click();
-  await ownerPage.waitForURL(new RegExp(`/trees/${treeId}/people$`));
+  await ownerPage.getByRole("button", { name: "Move Cordelia Winslow to Trash" }).click();
+  await ownerPage.waitForURL(new RegExp(`/trees/${treeId}/people\\?trashed=`));
 
   await ownerPage.goto(`/trees/${treeId}/people?scope=all`);
   await expect(ownerPage.getByRole("link", { name: /Cordelia Winslow/ })).toHaveCount(0);
@@ -173,8 +173,8 @@ test("deleting media soft-deletes it out of the library", async () => {
   await ownerPage.goto(`/trees/${treeId}/media/${mediaId}`);
   await ownerPage.locator('summary[title="More options"]').click();
   await ownerPage.getByText("Delete…", { exact: true }).click();
-  await ownerPage.getByRole("button", { name: "Delete permanently from library" }).click();
-  await ownerPage.waitForURL(new RegExp(`/trees/${treeId}/media$`));
+  await ownerPage.getByRole("button", { name: "Move to Trash" }).click();
+  await ownerPage.waitForURL(new RegExp(`/trees/${treeId}/media\\?trashed=`));
 
   await ownerPage.goto(`/trees/${treeId}/media?scope=all`);
   await expect(ownerPage.locator(`a[href*="${mediaId}"]`)).toHaveCount(0);

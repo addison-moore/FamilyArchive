@@ -9,6 +9,7 @@ import {
   collectionMedia,
   collections,
   getDb,
+  isPurgeStarted,
   mediaFaces,
   mediaItems,
   mediaPeople,
@@ -115,7 +116,7 @@ async function runExport(job: Job<ArchiveExportJob>, logger: pino.Logger, emailQ
     allPeople,
     allPlaces,
     allRelationships,
-    allMedia,
+    mediaRows,
     allTags,
     allCollections,
     allSources,
@@ -130,6 +131,10 @@ async function runExport(job: Job<ArchiveExportJob>, logger: pino.Logger, emailQ
     db.select().from(sources).where(eq(sources.treeId, treeId)),
     db.select().from(suggestions).where(eq(suggestions.treeId, treeId)),
   ]);
+
+  // A permanent removal that didn't finish may already have taken the original, and one
+  // such row would fail every attempt at this export. It is on its way out anyway.
+  const allMedia = mediaRows.filter((media) => !isPurgeStarted(media.metadata));
 
   const personIds = new Set(allPeople.map((p) => p.id));
   const mediaIds = new Set(allMedia.map((m) => m.id));

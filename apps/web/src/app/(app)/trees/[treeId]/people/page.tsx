@@ -11,6 +11,7 @@ import { buttonClass, Card, inputClass, subtleButtonClass } from "@/components/f
 import { ListPager } from "@/components/list-pager";
 import { PersonAvatar, PersonSummary } from "@/components/person-summary";
 import { ScopeToggle } from "@/components/scope-toggle";
+import { TrashedNotice } from "@/components/trashed-notice";
 import { PageHeader } from "@/components/ui";
 import { resolveView } from "@/lib/branch";
 import { profilePhotoUrl } from "@/lib/media";
@@ -22,6 +23,7 @@ import {
   personLifespan,
 } from "@/lib/people";
 import { storedPeoplePageSize } from "@/lib/preferences";
+import { trashUrl } from "@/lib/trash";
 
 import { setPeoplePageSizeAction } from "./actions";
 
@@ -36,11 +38,19 @@ export default async function PeoplePage({
     scope?: string;
     page?: string;
     size?: string;
+    trashed?: string;
   }>;
 }) {
   const { treeId } = await params;
   const { user, role } = await requireTreeRole(treeId, "viewer");
-  const { q, selected, scope: scopeParam, page: pageParam, size: sizeParam } = await searchParams;
+  const {
+    q,
+    selected,
+    scope: scopeParam,
+    page: pageParam,
+    size: sizeParam,
+    trashed,
+  } = await searchParams;
 
   const [view, storedSize] = await Promise.all([
     resolveView(user?.id ?? null, treeId, scopeParam),
@@ -89,12 +99,24 @@ export default async function PeoplePage({
           title="People"
           actions={
             canEdit && (
-              <Link href={`/trees/${treeId}/people/new`} className={`${buttonClass} no-underline`}>
-                Add person
-              </Link>
+              <>
+                <Link
+                  href={`/trees/${treeId}/people/new`}
+                  className={`${buttonClass} no-underline`}
+                >
+                  Add person
+                </Link>
+                <Link
+                  href={trashUrl(treeId, "people")}
+                  className={`${subtleButtonClass} no-underline`}
+                >
+                  Trash
+                </Link>
+              </>
             )
           }
         />
+        {trashed && canEdit && <TrashedNotice treeId={treeId} kind="person" id={trashed} />}
         <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
           {user && (
             <ScopeToggle

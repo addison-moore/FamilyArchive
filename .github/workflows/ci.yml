@@ -75,6 +75,9 @@ jobs:
           exit 1
 
       - run: pnpm test:smoke
+        env:
+          # Lets the Trash spec check that permanently removed files left the volume.
+          SMOKE_APP_EXEC: docker compose exec -T app
 
       - name: Dump compose logs
         if: failure()

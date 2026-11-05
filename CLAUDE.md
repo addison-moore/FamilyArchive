@@ -93,9 +93,13 @@ familyarchive/
 - **Data model (PRD §27.5):** structured relational columns for core data + a
   `metadata` JSON column for forward compatibility (preserved GEDCOM fields, media
   metadata, OCR/AI provider details, processing diagnostics).
-- **Soft deletes:** people and media use soft-delete fields, not hard deletes.
+- **Soft deletes:** deleting a person or media item moves it to Trash (PRD §5.8), a
+  soft delete that editors can restore. They are hard-deleted in only two places: an
+  admin's permanent removal from Trash (`apps/web/src/lib/trash.ts`) and deleting a
+  whole archive.
 - **Original media is immutable (PRD §5.6):** never modify uploaded originals.
   Thumbnails, previews, OCR text, and face boxes are derivatives stored separately.
+  An original leaves storage only through those same two paths, never automatically.
 - **Multi-tenancy (PRD §10):** the container is an **archive** (the `trees`
   table; an isolated shared graph — UI copy says "archive", routes/columns keep
   the tree naming). Every query touching people, relationships, media,
