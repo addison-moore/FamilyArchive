@@ -28,8 +28,8 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   const rows = await getDb().select().from(users).where(eq(users.id, id)).limit(1);
   const user = rows[0];
   if (!user) return null;
-  // A password reset bumps users.updatedAt, so any token stamped before that
-  // was issued against the old credentials and is no longer valid. Sessions
+  // A password change or reset bumps users.updatedAt, so any token stamped before
+  // that was issued against the old credentials and is no longer valid. Sessions
   // predating the stamp carry no value and are left alone.
   const stamp = session?.credentialsStamp;
   if (typeof stamp === "number" && user.updatedAt.getTime() > stamp) return null;

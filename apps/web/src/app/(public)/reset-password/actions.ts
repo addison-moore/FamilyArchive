@@ -1,6 +1,6 @@
 "use server";
 
-import { hashPassword, MIN_PASSWORD_LENGTH } from "@familyarchive/auth";
+import { hashPassword, MIN_PASSWORD_LENGTH, signOut } from "@familyarchive/auth";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -32,4 +32,10 @@ export async function resetPasswordAction(formData: FormData): Promise<void> {
       redirect("/login?reset=1");
     }
   }
+}
+
+/** Signs out whoever opened the link and brings them back to it. */
+export async function signOutForResetAction(formData: FormData): Promise<void> {
+  const token = String(formData.get("token") ?? "");
+  await signOut({ redirectTo: `/reset-password?token=${encodeURIComponent(token)}` });
 }

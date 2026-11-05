@@ -65,6 +65,14 @@ export async function AppHeader({ nav, trailing }: { nav?: ReactNode; trailing?:
                 <Link href="/trees" className={menuItemClass}>
                   My archives
                 </Link>
+                <Link href="/account" className={menuItemClass}>
+                  Account settings
+                </Link>
+                {user.role === "owner" && (
+                  <Link href="/admin/users" className={menuItemClass}>
+                    Manage users
+                  </Link>
+                )}
                 <form
                   action={async () => {
                     "use server";

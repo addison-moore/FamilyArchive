@@ -60,7 +60,7 @@ export default async function SuggestionsPage({
       mediaFilename: mediaItems.originalFilename,
     })
     .from(suggestions)
-    .innerJoin(users, eq(suggestions.suggestedBy, users.id))
+    .leftJoin(users, eq(suggestions.suggestedBy, users.id))
     .leftJoin(people, eq(suggestions.targetId, people.id))
     .leftJoin(mediaItems, eq(suggestions.targetId, mediaItems.id))
     .where(eq(suggestions.treeId, treeId))
@@ -95,7 +95,9 @@ export default async function SuggestionsPage({
         <div className="flex flex-wrap items-start gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-sm">
-              <span className="font-medium">{row.submitterName ?? row.submitterEmail}</span>{" "}
+              <span className="font-medium">
+                {row.submitterName ?? row.submitterEmail ?? "A former member"}
+              </span>{" "}
               <span className="text-archive-700">
                 suggested for{" "}
                 {target.href ? (

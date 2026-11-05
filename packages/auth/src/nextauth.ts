@@ -24,9 +24,9 @@ declare module "next-auth" {
     };
     /**
      * `users.updatedAt` as of sign-in. The guards reject a session whose stamp
-     * predates the account's current `updatedAt`, which is how a password reset
-     * revokes tokens issued before it. Null on sessions minted before this
-     * existed — those are honoured until they expire.
+     * predates the account's current `updatedAt`, which is how a password change
+     * or reset revokes tokens issued before it. Null on sessions minted before
+     * this existed — those are honoured until they expire.
      */
     credentialsStamp?: number | null;
   }
@@ -108,8 +108,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => ({
      * JWTs, so the `sessions` table is inert and there is no server-side handle
      * to revoke — without this stamp a token stolen before a password reset kept
      * working for the full 30-day default afterwards. `users.updatedAt` is
-     * written only by `consumeResetToken`, so this invalidates sessions on a
-     * password change and on nothing else.
+     * written only when a password changes (`changePassword`, `consumeResetToken`),
+     * so this invalidates sessions then and on nothing else.
+     *
+     * `user` is present only on a sign-in, which has just proved the password. Do
+     * not stamp on `trigger: "update"` as well: a plain client POST to
+     * /api/auth/session fires it too, so a stolen token could refresh its own stamp
+     * and survive the password change. The account page keeps the current session
+     * by signing in again with the new password.
      */
     jwt: async ({ token, user }) => {
       if (user?.id) {

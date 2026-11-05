@@ -22,9 +22,8 @@ export const suggestions = pgTable(
     /** Person/media id; null for tree-level suggestions. */
     targetId: text("target_id"),
     message: text("message").notNull(),
-    suggestedBy: text("suggested_by")
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    /** Null once the submitter's account is removed; the suggestion itself stays. */
+    suggestedBy: text("suggested_by").references(() => users.id, { onDelete: "set null" }),
     /** "open" | "accepted" | "rejected". */
     status: text("status").notNull().default("open"),
     resolvedBy: text("resolved_by").references(() => users.id, { onDelete: "set null" }),

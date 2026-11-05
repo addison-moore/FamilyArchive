@@ -38,8 +38,10 @@ error.
 ## Rate limiting
 
 Sign-in, password reset and registration are throttled per email address and per
-source address, with counters held in Valkey for a few minutes. There is nothing
-to configure — the limits are fixed — but two things are worth knowing.
+source address, with counters held in Valkey for a few minutes. Guesses at the
+current password in Account settings are throttled per account, on a separate
+count. There is nothing to configure — the limits are fixed — but two things are
+worth knowing.
 
 `TRUST_PROXY_HEADERS` is off by default, which means every request appears to
 come from the same address and only the looser per-address bound is affected;
@@ -59,7 +61,8 @@ sign-in on a degraded instance.
 ## SMTP (optional)
 
 `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`. Without SMTP,
-invite links can still be created and shared manually.
+invite links can still be created and shared manually, and the Owner creates password
+reset links under **Manage users**. See [accounts and passwords](accounts.md).
 
 ## Audit log
 

@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 
 import { Card } from "@/components/form";
 import { PageHeader } from "@/components/ui";
+import { formerActorLabel } from "@/lib/audit";
 
 /** Admin-only audit view. Retention is instance-configured. */
 export default async function AuditPage({ params }: { params: Promise<{ treeId: string }> }) {
@@ -71,7 +72,10 @@ export default async function AuditPage({ params }: { params: Promise<{ treeId: 
                     })}
                   </td>
                   <td className="block sm:table-cell sm:px-4 sm:py-2.5 sm:whitespace-nowrap">
-                    {entry.actorName ?? entry.actorEmail ?? "system"}
+                    {entry.actorName ??
+                      entry.actorEmail ??
+                      formerActorLabel(entry.log.metadata) ??
+                      "system"}
                   </td>
                   <td className="block sm:table-cell sm:px-4 sm:py-2.5 sm:whitespace-nowrap">
                     <code className="rounded bg-archive-100 px-1.5 py-0.5 text-xs">

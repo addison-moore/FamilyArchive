@@ -117,6 +117,12 @@ export const SIGN_IN_PER_IP: RateLimitRule = { limit: 50, windowSeconds: 15 * 60
 export const RESET_PER_EMAIL: RateLimitRule = { limit: 5, windowSeconds: 15 * 60 };
 export const RESET_PER_IP: RateLimitRule = { limit: 20, windowSeconds: 15 * 60 };
 export const REGISTER_PER_IP: RateLimitRule = { limit: 10, windowSeconds: 60 * 60 };
+/**
+ * Guesses at the current password on the account page. The caller is signed in, but
+ * that session may be borrowed, and each guess costs a bcrypt hash. Keyed on the user
+ * and counted apart from sign-in, so it can never lock anyone out of signing in.
+ */
+export const CURRENT_PASSWORD_PER_USER: RateLimitRule = { limit: 10, windowSeconds: 15 * 60 };
 
 /** "in about 3 minutes" — for the message shown to a throttled user. */
 export function describeRetryAfter(seconds: number): string {

@@ -38,8 +38,13 @@ export default async function ForgotPasswordPage({
       <Card>
         <h1 className="mb-2 text-xl font-semibold">Reset your password</h1>
         <p className="text-sm leading-relaxed text-archive-700">
-          This server isn&apos;t set up to send email, so passwords can&apos;t be reset
-          automatically. Ask the person who runs your FamilyArchive to reset it for you.
+          This server isn&apos;t set up to send email, so a reset link has to come from the person
+          who runs your FamilyArchive. Ask them to open <strong>Manage users</strong> in their
+          account menu and create one for you. It works once and lasts an hour.
+        </p>
+        <p className="mt-3 text-sm leading-relaxed text-archive-700">
+          If you run this server and can&apos;t sign in yourself, see “Accounts and passwords” in
+          the self-hosting guide.
         </p>
         <p className="mt-4 text-sm">
           <Link href="/login" className="text-accent-600 hover:underline">
