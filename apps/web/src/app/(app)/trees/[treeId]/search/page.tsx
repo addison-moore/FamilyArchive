@@ -6,12 +6,13 @@ import Link from "next/link";
 
 import { buttonClass, Card, inputClass } from "@/components/form";
 import { MediaThumb } from "@/components/media-thumb";
-import { PersonAvatar, personLifespan } from "@/components/person-summary";
+import { PersonPicker } from "@/components/person-picker";
+import { PersonAvatar } from "@/components/person-summary";
 import { ScopeToggle } from "@/components/scope-toggle";
 import { PageHeader } from "@/components/ui";
 import { resolveView } from "@/lib/branch";
 import { thumbUrls } from "@/lib/media";
-import { listPeopleOptions } from "@/lib/people";
+import { getPersonChoice, personLifespan } from "@/lib/people";
 import { searchArchive, type SearchResults } from "@/lib/search";
 
 /** Archive search: grouped results, filters, branch scope. */
@@ -36,10 +37,10 @@ export default async function SearchPage({
   const query = q?.trim() ?? "";
 
   const db = getDb();
-  const [view, treeTags, peopleList, uploaders] = await Promise.all([
+  const [view, treeTags, filteredPerson, uploaders] = await Promise.all([
     resolveView(user?.id ?? null, treeId, scopeParam),
     db.select().from(tags).where(eq(tags.treeId, treeId)).orderBy(asc(tags.name)),
-    listPeopleOptions(treeId),
+    person ? getPersonChoice(treeId, person) : null,
     // Public mode opens the archive's content, not the list of who belongs to it:
     // anonymous visitors were being shown every member's name in this filter.
     isMember
@@ -125,14 +126,15 @@ export default async function SearchPage({
               </option>
             ))}
           </select>
-          <select name="person" defaultValue={person ?? ""} className={inputClass}>
-            <option value="">Anyone</option>
-            {peopleList.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.fullName}
-              </option>
-            ))}
-          </select>
+          <PersonPicker
+            // A new filter in the URL means a new starting point, not an edit of this one.
+            key={person ?? ""}
+            treeId={treeId}
+            name="person"
+            ariaLabel="Filter by person"
+            placeholder="Anyone"
+            initial={filteredPerson}
+          />
           {isMember && (
             <select name="uploader" defaultValue={uploader ?? ""} className={inputClass}>
               <option value="">Any uploader</option>

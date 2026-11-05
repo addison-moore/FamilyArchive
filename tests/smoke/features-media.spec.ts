@@ -5,6 +5,7 @@ import {
   fetchPortrait,
   login,
   OWNER,
+  pickPerson,
   samplePdf,
   samplePng,
   submitAction,
@@ -125,12 +126,9 @@ test("tags can be added and removed on media", async () => {
 test("a person can be tagged without a face box and set as profile photo", async () => {
   await page.goto(`/trees/${treeId}/media/${photoId}`);
   await page.getByText("+ Tag someone").click();
-  const personForm = page.locator('form:has(select[name="personId"])');
-  const beatrice = await personForm
-    .locator("option", { hasText: "Beatrice Holloway" })
-    .getAttribute("value");
-  await personForm.locator('select[name="personId"]').selectOption(beatrice!);
-  await personForm.getByRole("button", { name: "Tag" }).click();
+  const person = page.getByRole("combobox", { name: "Person to tag" });
+  await pickPerson(person, "Beatrice Holloway");
+  await page.locator("form", { has: person }).getByRole("button", { name: "Tag" }).click();
   await expect(page.getByRole("link", { name: /Beatrice Holloway/ })).toBeVisible();
 
   await page.locator('summary[title="More options"]').click();
@@ -166,8 +164,7 @@ test("a detected face box can be assigned to a person", async () => {
   // Boxes fade in on hover; dispatch the click straight to the handler.
   await box.dispatchEvent("click");
   await expect(page.getByText("Who is this?")).toBeVisible();
-  const assign = page.locator('select:has(option:text("— unassigned —"))');
-  await assign.selectOption({ label: "Beatrice Holloway" });
+  await pickPerson(page.getByRole("combobox", { name: "Who is this?" }), "Beatrice Holloway");
   await expect(page.locator('button[title="Beatrice Holloway"]').first()).toBeVisible();
 });
 

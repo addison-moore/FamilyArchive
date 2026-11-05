@@ -34,6 +34,21 @@ export async function submitAction(page: Page, button: Locator): Promise<void> {
   await answered;
 }
 
+/**
+ * Choose someone in a person picker through the real control: type, then click the
+ * option. Options read "Name (lifespan)", so `option` defaults to matching by name.
+ */
+export async function pickPerson(
+  picker: Locator,
+  search: string,
+  option: string | RegExp = search,
+): Promise<void> {
+  await picker.fill(search);
+  // Scoped to the picker's list: native selects' <option>s have the same role.
+  const list = picker.page().getByRole("listbox", { name: "People" });
+  await list.getByRole("option", { name: option }).click();
+}
+
 /** Create an archive as the signed-in user and return its tree id. */
 export async function createArchive(page: Page, name: string): Promise<string> {
   await page.goto("/trees/new");

@@ -1,11 +1,25 @@
 import { getDb, people, personNames, places, relationships } from "@familyarchive/db";
 import {
   dateSortKey,
+  formatLifespan,
   isParentRelationshipType,
   isPartnerRelationshipType,
   type RelationshipType,
 } from "@familyarchive/shared";
-import { and, asc, count, eq, ilike, inArray, isNull, or, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  eq,
+  ilike,
+  inArray,
+  isNull,
+  notInArray,
+  or,
+  sql,
+  type AnyColumn,
+  type SQL,
+} from "drizzle-orm";
 
 export type PersonRow = typeof people.$inferSelect;
 
@@ -34,20 +48,135 @@ export const PERSON_OPTION_COLUMNS = {
   deathApprox: people.deathApprox,
 };
 
-/**
- * Everyone in a tree, by name, with just what a person picker shows. Pickers appear
- * on most pages, and selecting whole rows carried every biography and preserved raw
- * GEDCOM record along with them on each page load.
- */
-export async function listPeopleOptions(treeId: string) {
-  return getDb()
-    .select(PERSON_OPTION_COLUMNS)
-    .from(people)
-    .where(and(eq(people.treeId, treeId), isNull(people.deletedAt)))
-    .orderBy(asc(people.fullName), asc(people.id));
+export type PersonOption = Pick<PersonRow, keyof typeof PERSON_OPTION_COLUMNS>;
+
+export function personLifespan(person: PersonOption): string | null {
+  return formatLifespan(
+    {
+      year: person.birthYear,
+      month: person.birthMonth,
+      day: person.birthDay,
+      approx: person.birthApprox,
+    },
+    {
+      year: person.deathYear,
+      month: person.deathMonth,
+      day: person.deathDay,
+      approx: person.deathApprox,
+    },
+  );
 }
 
-export type PersonOption = Awaited<ReturnType<typeof listPeopleOptions>>[number];
+/** A person as the picker shows and submits them. Nothing else about them reaches the browser. */
+export interface PersonChoice {
+  id: string;
+  fullName: string;
+  lifespan: string | null;
+}
+
+function personChoice(person: PersonOption): PersonChoice {
+  return { id: person.id, fullName: person.fullName, lifespan: personLifespan(person) };
+}
+
+/** One person for a picker that opens already showing them, such as a filter in the URL. */
+export async function getPersonChoice(
+  treeId: string,
+  personId: string,
+): Promise<PersonChoice | null> {
+  const rows = await getDb()
+    .select(PERSON_OPTION_COLUMNS)
+    .from(people)
+    .where(and(eq(people.id, personId), eq(people.treeId, treeId), isNull(people.deletedAt)))
+    .limit(1);
+  return rows[0] ? personChoice(rows[0]) : null;
+}
+
+export const PERSON_SEARCH_LIMIT = 20;
+const MAX_SEARCH_LENGTH = 100;
+const MAX_SEARCH_WORDS = 6;
+const MAX_EXCLUDED_PEOPLE = 100;
+
+/**
+ * The words of a picker search, bounded because this is reachable by anyone on a
+ * public archive. Control characters go too: Postgres rejects a NUL in a parameter,
+ * so `?q=%00` would otherwise be a 500.
+ */
+export function personSearchWords(query: string): string[] {
+  return (
+    query
+      .slice(0, MAX_SEARCH_LENGTH)
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u001f\u007f]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, MAX_SEARCH_WORDS)
+  );
+}
+
+/** Every word appears somewhere in `column`, in any order. */
+function containsWords(column: AnyColumn, words: string[]): SQL {
+  return and(...words.map((word) => ilike(column, likePattern(word))))!;
+}
+
+/**
+ * Who a picker search can find: this archive's people, minus `excludeIds`, whose
+ * full name or any one alternate name holds every word. Alternate names count
+ * because archive search already finds people by them, and a married or maiden name
+ * is often the one remembered.
+ */
+export function personSearchCondition(treeId: string, words: string[], excludeIds: string[]): SQL {
+  const conditions: SQL[] = [eq(people.treeId, treeId), isNull(people.deletedAt)];
+  const excluded = excludeIds
+    .filter((id) => /^[\w-]{1,64}$/.test(id))
+    .slice(0, MAX_EXCLUDED_PEOPLE);
+  if (excluded.length > 0) conditions.push(notInArray(people.id, excluded));
+  if (words.length > 0) {
+    conditions.push(
+      or(
+        containsWords(people.fullName, words),
+        sql`exists (select 1 from ${personNames} where ${and(
+          eq(personNames.personId, people.id),
+          containsWords(personNames.name, words),
+        )})`,
+      )!,
+    );
+  }
+  return and(...conditions)!;
+}
+
+/**
+ * Up to PERSON_SEARCH_LIMIT people for a picker; no words means the first by name.
+ * Fetching one extra answers "are there more?" without a count on every keystroke.
+ *
+ * Names where every word starts a word sort first. With a cap, a plain alphabetical
+ * sort lets twenty people called Ambrose hide everyone called Rose. People who share
+ * a name read in birth order, which is how their lifespans tell them apart.
+ */
+export async function searchPersonChoices(
+  treeId: string,
+  query: string,
+  excludeIds: string[] = [],
+): Promise<{ people: PersonChoice[]; hasMore: boolean }> {
+  const words = personSearchWords(query);
+  const wordStarts = words.map(
+    (word) => sql`(' ' || ${people.fullName}) ILIKE ${likePattern(` ${word}`)}`,
+  );
+  const rows = await getDb()
+    .select(PERSON_OPTION_COLUMNS)
+    .from(people)
+    .where(personSearchCondition(treeId, words, excludeIds))
+    .orderBy(
+      ...(words.length > 0 ? [sql`CASE WHEN ${and(...wordStarts)} THEN 0 ELSE 1 END`] : []),
+      asc(people.fullName),
+      asc(people.birthYear),
+      asc(people.id),
+    )
+    .limit(PERSON_SEARCH_LIMIT + 1);
+  return {
+    people: rows.slice(0, PERSON_SEARCH_LIMIT).map(personChoice),
+    hasMore: rows.length > PERSON_SEARCH_LIMIT,
+  };
+}
 
 /** Filters shared by the People list's count and page queries. */
 interface PeopleFilter {

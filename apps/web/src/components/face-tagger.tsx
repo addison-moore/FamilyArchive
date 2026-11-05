@@ -2,13 +2,9 @@
 
 import { useRef, useState, useTransition } from "react";
 
-import { buttonClass, dangerButtonClass, inputClass, subtleButtonClass } from "@/components/form";
+import { buttonClass, dangerButtonClass, subtleButtonClass } from "@/components/form";
+import { PersonPicker } from "@/components/person-picker";
 import type { FaceBox } from "@/lib/faces";
-
-interface PersonOption {
-  id: string;
-  fullName: string;
-}
 
 interface DraftBox {
   x: number;
@@ -30,7 +26,7 @@ export function FaceTagger({
   imageUrl,
   alt,
   faces,
-  people,
+  treeId,
   canTag,
   assignAction,
   removeAction,
@@ -40,7 +36,7 @@ export function FaceTagger({
   imageUrl: string;
   alt: string;
   faces: FaceBox[];
-  people: PersonOption[];
+  treeId: string;
   canTag: boolean;
   assignAction: (formData: FormData) => Promise<void>;
   removeAction: (formData: FormData) => Promise<void>;
@@ -60,6 +56,14 @@ export function FaceTagger({
       data.set(key, value);
     }
     return data;
+  };
+
+  /** An empty `personId` leaves the box in place with nobody assigned. */
+  const assign = (faceId: string, personId: string) => {
+    startTransition(async () => {
+      await assignAction(withHidden({ faceId, personId }));
+      setSelectedId(null);
+    });
   };
 
   /** Create a face box centered on the clicked spot ("click a face to tag"). */
@@ -161,30 +165,30 @@ export function FaceTagger({
                   "Who is this?"
                 )}
               </span>
-              <select
-                // The panel stays mounted when the selection moves to another
-                // box, and React ignores a changed defaultValue on an
-                // uncontrolled select — so without this key the dropdown showed
-                // the previous face's person while reviewing box by box.
+              <PersonPicker
+                // The panel stays mounted when the selection moves to another box, and
+                // whatever was typed for the last face shouldn't carry over to this one.
                 key={selected.id}
-                defaultValue={selected.personId ?? ""}
-                onChange={(event) => {
-                  const personId = event.target.value;
-                  startTransition(async () => {
-                    await assignAction(withHidden({ faceId: selected.id, personId }));
-                    setSelectedId(null);
-                  });
-                }}
+                treeId={treeId}
+                ariaLabel={selected.personName ? "Change who this is" : "Who is this?"}
+                placeholder={selected.personName ? "Change to…" : "Type a name…"}
+                autoFocus
                 disabled={isPending}
-                className={`${inputClass} w-auto`}
-              >
-                <option value="">— unassigned —</option>
-                {people.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {person.fullName}
-                  </option>
-                ))}
-              </select>
+                onChange={(person) => {
+                  if (person) assign(selected.id, person.id);
+                }}
+                className="w-64 max-w-full"
+              />
+              {selected.personId && (
+                <button
+                  type="button"
+                  disabled={isPending}
+                  onClick={() => assign(selected.id, "")}
+                  className={subtleButtonClass}
+                >
+                  Unassign
+                </button>
+              )}
               <button
                 type="button"
                 disabled={isPending}
@@ -202,45 +206,44 @@ export function FaceTagger({
           )}
 
           {draft && (
-            <div className="flex flex-wrap items-center gap-2 rounded-md border border-archive-100 bg-archive-50 p-3">
+            <form
+              // A real form, so a name that was typed but never chosen is refused rather
+              // than saved as an untagged box. Empty still means "tag later".
+              onSubmit={(event) => {
+                event.preventDefault();
+                const personId = String(new FormData(event.currentTarget).get("personId") ?? "");
+                const box = draft;
+                startTransition(async () => {
+                  await addAction(
+                    withHidden({
+                      x: String(box.x),
+                      y: String(box.y),
+                      width: String(box.width),
+                      height: String(box.height),
+                      personId,
+                    }),
+                  );
+                  setDraft(null);
+                });
+              }}
+              className="flex flex-wrap items-center gap-2 rounded-md border border-archive-100 bg-archive-50 p-3"
+            >
               <span className="text-sm">Who is this?</span>
-              <select id="face-draft-person" className={`${inputClass} w-auto`} defaultValue="">
-                <option value="">— tag later —</option>
-                {people.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {person.fullName}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => {
-                  const personId =
-                    (document.getElementById("face-draft-person") as HTMLSelectElement | null)
-                      ?.value ?? "";
-                  const box = draft;
-                  startTransition(async () => {
-                    await addAction(
-                      withHidden({
-                        x: String(box.x),
-                        y: String(box.y),
-                        width: String(box.width),
-                        height: String(box.height),
-                        personId,
-                      }),
-                    );
-                    setDraft(null);
-                  });
-                }}
-                className={buttonClass}
-              >
+              <PersonPicker
+                treeId={treeId}
+                name="personId"
+                ariaLabel="Who is this?"
+                placeholder="Type a name, or tag later"
+                autoFocus
+                className="w-64 max-w-full"
+              />
+              <button type="submit" disabled={isPending} className={buttonClass}>
                 Save tag
               </button>
               <button type="button" onClick={() => setDraft(null)} className={subtleButtonClass}>
                 Cancel
               </button>
-            </div>
+            </form>
           )}
         </div>
       )}

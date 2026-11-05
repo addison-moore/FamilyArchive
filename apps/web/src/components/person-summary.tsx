@@ -1,9 +1,9 @@
-import { formatLifespan, RELATIONSHIP_TYPE_LABELS, treeRoleAtLeast } from "@familyarchive/shared";
+import { RELATIONSHIP_TYPE_LABELS, treeRoleAtLeast } from "@familyarchive/shared";
 import type { TreeRole } from "@familyarchive/shared";
 import Link from "next/link";
 
 import { buttonClass, subtleButtonClass } from "@/components/form";
-import type { PersonOption, PersonRow, RelationshipGraph } from "@/lib/people";
+import { personLifespan, type PersonRow, type RelationshipGraph } from "@/lib/people";
 
 export function PersonAvatar({
   name,
@@ -39,23 +39,6 @@ export function PersonAvatar({
     >
       {initials || "?"}
     </div>
-  );
-}
-
-export function personLifespan(person: PersonOption): string | null {
-  return formatLifespan(
-    {
-      year: person.birthYear,
-      month: person.birthMonth,
-      day: person.birthDay,
-      approx: person.birthApprox,
-    },
-    {
-      year: person.deathYear,
-      month: person.deathMonth,
-      day: person.deathDay,
-      approx: person.deathApprox,
-    },
   );
 }
 

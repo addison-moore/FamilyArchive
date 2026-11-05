@@ -9,12 +9,18 @@ import Link from "next/link";
 
 import { buttonClass, Card, inputClass, subtleButtonClass } from "@/components/form";
 import { ListPager } from "@/components/list-pager";
-import { PersonAvatar, personLifespan, PersonSummary } from "@/components/person-summary";
+import { PersonAvatar, PersonSummary } from "@/components/person-summary";
 import { ScopeToggle } from "@/components/scope-toggle";
 import { PageHeader } from "@/components/ui";
 import { resolveView } from "@/lib/branch";
 import { profilePhotoUrl } from "@/lib/media";
-import { countPeople, getPerson, getRelationshipGraph, listPeoplePage } from "@/lib/people";
+import {
+  countPeople,
+  getPerson,
+  getRelationshipGraph,
+  listPeoplePage,
+  personLifespan,
+} from "@/lib/people";
 import { storedPeoplePageSize } from "@/lib/preferences";
 
 import { setPeoplePageSizeAction } from "./actions";
