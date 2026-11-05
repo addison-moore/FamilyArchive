@@ -1,5 +1,4 @@
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { accounts, getDb, sessions, users, verificationTokens } from "@familyarchive/db";
+import { getDb, users } from "@familyarchive/db";
 import { eq } from "drizzle-orm";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -44,12 +43,6 @@ const credentialsSchema = z.object({
  * roles are read fresh from the database by the guards in ./guards.ts.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth(() => ({
-  adapter: DrizzleAdapter(getDb(), {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
   session: { strategy: "jwt" },
   // Self-hosted: the deployment host is operator-controlled (APP_URL), not a
   // platform-verified domain, so Auth.js must be told to trust it.

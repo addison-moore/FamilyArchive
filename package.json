@@ -10,14 +10,7 @@
   "engines": {
     "node": ">=22"
   },
-  "packageManager": "pnpm@10.30.0",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "msgpackr-extract",
-      "sharp"
-    ]
-  },
+  "packageManager": "pnpm@10.34.9",
   "scripts": {
     "dev": "pnpm --parallel --filter @familyarchive/web --filter @familyarchive/worker dev",
     "build": "pnpm -r build",
@@ -31,13 +24,13 @@
     "test:unit": "vitest run"
   },
   "devDependencies": {
-    "@eslint/js": "^9.30.0",
-    "@next/eslint-plugin-next": "^15.3.4",
-    "eslint": "^9.30.0",
+    "@eslint/js": "^10.0.1",
+    "@next/eslint-plugin-next": "^16.4.5",
+    "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.10",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.72.1",
-    "vitest": "^3.2.4"
+    "vitest": "^5.1.0"
   }
 }

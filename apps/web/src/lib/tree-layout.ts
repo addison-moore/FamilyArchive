@@ -1,4 +1,4 @@
-import dagre from "@dagrejs/dagre";
+import dagre, { type Graph, type NodeLabel } from "@dagrejs/dagre";
 
 import { deriveFamilies } from "@/lib/tree-families";
 import type { TreeGraphPayload, TreePersonNode } from "@/lib/tree-visibility";
@@ -307,7 +307,7 @@ function groupPartners(
   return [...new Set([...heads, ...people].map((id) => groupOf.get(id)!))];
 }
 
-type OrderedNode = dagre.Node<{ rank: number; order: number }>;
+type OrderedNode = NodeLabel & { rank: number; order: number };
 
 /**
  * Puts each family's children in birth order, as the end of dagre's ordering
@@ -322,7 +322,7 @@ type OrderedNode = dagre.Node<{ rank: number; order: number }>;
  * centring parents over children whose edges it sees crossing.
  */
 function seatSiblings(
-  layered: dagre.graphlib.Graph,
+  layered: Graph,
   families: string[][],
   partnerNodes: Map<string, string[]>,
 ): void {

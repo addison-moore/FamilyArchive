@@ -2,3 +2,18 @@ packages:
   - apps/*
   - packages/*
   - tests/*
+
+# Packages allowed to run install scripts.
+onlyBuiltDependencies:
+  - esbuild
+  - msgpackr-extract
+  - sharp
+
+# Patched versions of transitive build and test tooling, none of which ships in the
+# images. Drop an entry once the package that pulls it in has caught up.
+overrides:
+  brace-expansion@>=4 <5.0.12: ^5.0.12
+  esbuild@<0.25.0: ^0.25.12
+  minimatch@>=7 <11.0.1: ^11.0.1
+  source-map-js@<1.2.2: ^1.2.2
+  vite: ^7.3.7

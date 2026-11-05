@@ -11,18 +11,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@auth/drizzle-adapter": "^1.10.0",
     "@familyarchive/config": "workspace:*",
     "@familyarchive/db": "workspace:*",
     "@familyarchive/shared": "workspace:*",
     "bcryptjs": "^3.0.3",
-    "drizzle-orm": "^0.44.7",
-    "ioredis": "^5.10.1",
-    "next-auth": "^5.0.0-beta.29",
-    "zod": "^3.25.76"
+    "drizzle-orm": "^0.45.4",
+    "ioredis": "^6.0.0",
+    "next-auth": "5.0.0-beta.32",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^3.0.0",
     "@types/node": "^22.20.0",
     "typescript": "^5.8.3"
   }
